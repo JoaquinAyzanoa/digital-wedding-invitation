@@ -1,0 +1,21 @@
+:root {
+  --color-bg: #fbfaf7;
+  --color-ink: #2e2a3a;
+  --color-muted: #6b6878;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Jost', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}

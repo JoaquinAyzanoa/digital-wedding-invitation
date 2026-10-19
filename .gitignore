@@ -1,0 +1,17 @@
+#docs
+docs/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# os / editor
+.DS_Store
+Thumbs.db
