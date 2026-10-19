@@ -15,7 +15,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --passWithNoTests",
-    "supabase": "supabase"
+    "supabase": "supabase",
+    "db:start": "supabase start -x realtime,edge-runtime,logflare,vector,supavisor",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local --schema public > src/shared/types/database.types.ts && prettier --write src/shared/types/database.types.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
