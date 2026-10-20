@@ -47,6 +47,8 @@ export function createDemoApi(): PublicApi {
                 age: a.kind === 'child' ? a.age : null,
                 menu: a.menu || null,
                 dietary: a.dietary || null,
+                // Like the server: only the last 3 digits come back.
+                dniHint: a.dni ? a.dni.slice(-3) : null,
               }))
             : [],
         },

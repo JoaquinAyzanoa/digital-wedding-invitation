@@ -55,6 +55,7 @@ export type Database = {
         Row: {
           age: number | null;
           dietary: string | null;
+          dni: string | null;
           full_name: string;
           id: string;
           invitation_id: string;
@@ -66,6 +67,7 @@ export type Database = {
         Insert: {
           age?: number | null;
           dietary?: string | null;
+          dni?: string | null;
           full_name: string;
           id?: string;
           invitation_id: string;
@@ -76,6 +78,7 @@ export type Database = {
         Update: {
           age?: number | null;
           dietary?: string | null;
+          dni?: string | null;
           full_name?: string;
           id?: string;
           invitation_id?: string;

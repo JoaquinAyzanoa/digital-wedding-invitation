@@ -121,6 +121,7 @@ describe('export', () => {
         age: 6,
         menu: 'Infantil',
         dietary: 'Maní',
+        dni: null,
       },
       {
         id: 'a',
@@ -131,6 +132,7 @@ describe('export', () => {
         age: null,
         menu: 'Carne',
         dietary: null,
+        dni: '01234567',
       },
     ],
   } satisfies InvitationWithAttendees;
@@ -151,9 +153,9 @@ describe('export', () => {
     const rows = Papa.parse<Record<string, string>>(attendeesCsv([invitation]).slice(1), {
       header: true,
     }).data;
-    expect(rows.map((r) => [r.nombre, r.tipo, r.edad])).toEqual([
-      ['Marta', 'Adulto', ''],
-      ['Sofía', 'Niño', '6'],
+    expect(rows.map((r) => [r.nombre, r.dni, r.tipo, r.edad])).toEqual([
+      ['Marta', '01234567', 'Adulto', ''],
+      ['Sofía', '', 'Niño', '6'],
     ]);
   });
 });

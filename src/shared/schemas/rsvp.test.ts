@@ -7,7 +7,7 @@ import {
   type RsvpFormValues,
 } from './rsvp';
 
-const questions = { transport: true, lodging: false, song: true, parts: true };
+const questions = { transport: true, lodging: false, song: true, parts: true, dni: false };
 const schema = rsvpFormSchema({ seats: 3, menuOptions: ['Carne', 'Infantil'], questions });
 
 function values(overrides: Partial<RsvpFormValues> = {}): RsvpFormValues {
@@ -86,7 +86,14 @@ describe('toRsvpInput', () => {
     expect(input).toEqual({
       attending: true,
       attendees: [
-        { fullName: 'Ana Pérez', kind: 'adult', age: null, menu: 'Carne', dietary: null },
+        {
+          fullName: 'Ana Pérez',
+          kind: 'adult',
+          age: null,
+          menu: 'Carne',
+          dietary: null,
+          dni: null,
+        },
       ],
       needsTransport: false,
       needsLodging: null,
@@ -114,5 +121,90 @@ describe('rsvpDefaults', () => {
     expect(
       rsvpDefaults({ displayName: 'Familia Pérez', seats: 4, response: null }).attendees,
     ).toEqual([emptyAttendee()]);
+  });
+});
+
+describe('DNI', () => {
+  const withDni = rsvpFormSchema({
+    seats: 3,
+    menuOptions: [],
+    questions: { ...questions, dni: true },
+  });
+  const issues = (input: RsvpFormValues, schemaToUse = withDni) =>
+    schemaToUse.safeParse(input).error?.issues.map((i) => [i.path.join('.'), i.message]) ?? [];
+  const person = (fullName: string, dni: string, extra = {}) => ({
+    ...emptyAttendee(fullName),
+    dni,
+    ...extra,
+  });
+
+  it('is required for everyone and has 8 digits', () => {
+    expect(issues(values({ attendees: [person('Ana', '')] }))).toEqual([
+      ['attendees.0.dni', 'Escribe el DNI'],
+    ]);
+    expect(issues(values({ attendees: [person('Ana', '1234567a')] }))).toEqual([
+      ['attendees.0.dni', 'El DNI tiene 8 números'],
+    ]);
+    expect(issues(values({ attendees: [person('Mateo', '', { kind: 'child', age: 6 })] }))).toEqual(
+      [['attendees.0.dni', 'Escribe el DNI']],
+    );
+    expect(issues(values({ attendees: [person('Ana', '01234567')] }))).toEqual([]);
+  });
+
+  it('cannot repeat within the invitation', () => {
+    expect(
+      issues(values({ attendees: [person('Ana', '12345678'), person('Luis', '12345678')] })),
+    ).toEqual([['attendees.1.dni', 'Este DNI ya está en otra persona']]);
+  });
+
+  it('may stay empty when already given for the same name (changing the answer)', () => {
+    const saved = { savedDniHint: '678', savedName: 'Ana Pérez' };
+    expect(issues(values({ attendees: [person(' ana pérez ', '', saved)] }))).toEqual([]);
+    expect(issues(values({ attendees: [person('Rosa Pérez', '', saved)] }))).toEqual([
+      ['attendees.0.dni', 'Escribe el DNI'],
+    ]);
+  });
+
+  it('is optional for the admin', () => {
+    const admin = rsvpFormSchema({
+      seats: 3,
+      menuOptions: [],
+      questions: { ...questions, dni: true },
+      dniOptional: true,
+    });
+    expect(issues(values({ attendees: [person('Ana', '')] }), admin)).toEqual([]);
+    expect(issues(values({ attendees: [person('Ana', '123')] }), admin)).toEqual([
+      ['attendees.0.dni', 'El DNI tiene 8 números'],
+    ]);
+  });
+
+  it('is sent only while asked, empty as null (the server keeps the saved one)', () => {
+    const form = values({ attendees: [person('Ana', ' 12345678 '), person('Luis', '')] });
+    expect(toRsvpInput(form, { ...questions, dni: true }).attendees.map((a) => a.dni)).toEqual([
+      '12345678',
+      null,
+    ]);
+    expect(toRsvpInput(form, questions).attendees.map((a) => a.dni)).toEqual([null, null]);
+  });
+
+  it('comes back to the guest only as a hint', () => {
+    const defaults = rsvpDefaults({
+      displayName: 'Familia',
+      seats: 2,
+      response: {
+        attending: true,
+        parts: { ceremony: true, reception: true },
+        needsTransport: null,
+        needsLodging: null,
+        contactPhone: null,
+        songRequest: null,
+        message: null,
+        respondedAt: '2026-10-20T00:00:00Z',
+        attendees: [
+          { fullName: 'Ana', kind: 'adult', age: null, menu: null, dietary: null, dniHint: '678' },
+        ],
+      },
+    });
+    expect(defaults.attendees[0]).toMatchObject({ dni: '', savedDniHint: '678', savedName: 'Ana' });
   });
 });

@@ -21,6 +21,7 @@ export function responseFromRow(row: InvitationWithAttendees): RsvpResponse | nu
         age: a.age,
         menu: a.menu,
         dietary: a.dietary,
+        dni: a.dni,
       })),
   };
 }

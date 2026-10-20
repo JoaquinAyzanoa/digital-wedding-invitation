@@ -68,6 +68,7 @@ const list = [
         age: null,
         menu: null,
         dietary: null,
+        dni: null,
       },
     ],
   }),

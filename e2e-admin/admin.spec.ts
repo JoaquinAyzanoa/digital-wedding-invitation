@@ -127,6 +127,8 @@ test('creates an invitation, records the RSVP for the guest and resets it', asyn
   await panel.getByRole('tab', { name: 'Respuesta' }).click();
   await panel.getByText('Asiste', { exact: true }).click();
   await panel.getByLabel('Nombre completo').fill('Pedro E2E');
+  // The admin sees the whole DNI and may leave it empty (answers taken by phone).
+  await panel.getByLabel(/^DNI/).fill('01234567');
   await panel.getByLabel('Menú').selectOption('Carne');
   await panel.getByRole('button', { name: /Agregar persona/ }).click();
   await panel.getByLabel('Nombre completo').nth(1).fill('Lucía E2E');
@@ -141,6 +143,11 @@ test('creates an invitation, records the RSVP for the guest and resets it', asyn
   await expect(page.getByRole('button', { name: 'Editar Familia E2E' })).toContainText(
     'Asiste · 2',
   );
+  await page.getByRole('button', { name: 'Editar Familia E2E' }).click();
+  await panel.getByRole('tab', { name: 'Respuesta' }).click();
+  await expect(panel.getByLabel(/^DNI/).first()).toHaveValue('01234567');
+  await expect(panel.getByLabel(/^DNI/).nth(1)).toHaveValue('');
+  await panel.getByRole('button', { name: 'Cerrar' }).click();
 
   // Reset to pending.
   await page.getByRole('button', { name: 'Editar Familia E2E' }).click();

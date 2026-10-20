@@ -26,6 +26,10 @@ export interface RsvpResponse {
     age: number | null;
     menu: string | null;
     dietary: string | null;
+    /** Guests: the last 3 digits of the DNI they gave (never the whole number). */
+    dniHint?: string | null;
+    /** The admin only (read from the table): the whole DNI. */
+    dni?: string | null;
   }>;
 }
 
@@ -39,6 +43,8 @@ export interface RsvpInput {
     age: number | null;
     menu: string | null;
     dietary: string | null;
+    /** Empty when changing an answer: the DNI already given for the same name is kept. */
+    dni?: string | null;
   }>;
   needsTransport?: boolean | null;
   needsLodging?: boolean | null;

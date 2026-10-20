@@ -158,6 +158,8 @@ export const publicContentSchema = z.object({
       lodging: z.boolean(),
       song: z.boolean(),
       parts: z.boolean(),
+      /** DNI of each person (8 digits, required). Missing in older content: on. */
+      dni: z.boolean().default(true),
     }),
   }),
   album: z.object({

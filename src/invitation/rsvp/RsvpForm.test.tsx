@@ -130,6 +130,10 @@ describe('RSVP form', () => {
     await user.type(await screen.findByLabelText('Nombre completo'), 'Ana Torres');
     await user.selectOptions(screen.getByLabelText('Menú'), 'Pescado');
     await user.type(screen.getByLabelText(/canción/), 'Vivir mi vida');
+    // The DNI is required: without it the step does not move on.
+    await next(user);
+    expect(await screen.findByText('Escribe el DNI')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('DNI'), '07654321');
     await next(user);
     await user.type(await screen.findByLabelText(/Tu mensaje/), '¡Felicidades!');
     await user.click(screen.getByRole('button', { name: 'Enviar respuesta' }));
@@ -138,7 +142,14 @@ describe('RSVP form', () => {
     expect(api.submitRsvp).toHaveBeenCalledWith('demo', {
       attending: true,
       attendees: [
-        { fullName: 'Ana Torres', kind: 'adult', age: null, menu: 'Pescado', dietary: null },
+        {
+          fullName: 'Ana Torres',
+          kind: 'adult',
+          age: null,
+          menu: 'Pescado',
+          dietary: null,
+          dni: '07654321',
+        },
       ],
       needsTransport: null,
       needsLodging: null,

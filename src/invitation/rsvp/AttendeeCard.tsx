@@ -1,5 +1,5 @@
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { RsvpFormValues } from '@/shared/schemas/rsvp';
+import { keepsSavedDni, type RsvpFormValues } from '@/shared/schemas/rsvp';
 import { FieldError } from './fields';
 import styles from './form.module.css';
 
@@ -7,18 +7,28 @@ interface AttendeeCardProps {
   index: number;
   idPrefix: string;
   menuOptions: string[];
+  /** Ask each person's DNI (content: rsvp.questions.dni). */
+  askDni: boolean;
   onRemove?: () => void;
 }
 
 const AGES = Array.from({ length: 18 }, (_, age) => age);
 
-export function AttendeeCard({ index, idPrefix, menuOptions, onRemove }: AttendeeCardProps) {
+export function AttendeeCard({
+  index,
+  idPrefix,
+  menuOptions,
+  askDni,
+  onRemove,
+}: AttendeeCardProps) {
   const {
     register,
     control,
     formState: { errors },
   } = useFormContext<RsvpFormValues>();
   const kind = useWatch({ control, name: `attendees.${index}.kind` });
+  const attendee = useWatch({ control, name: `attendees.${index}` });
+  const savedDni = attendee && keepsSavedDni(attendee) ? attendee.savedDniHint : null;
   const fieldErrors = errors.attendees?.[index];
   const id = (field: string) => `${idPrefix}-a${index}-${field}`;
   const describedBy = (field: string, error?: unknown) =>
@@ -51,6 +61,33 @@ export function AttendeeCard({ index, idPrefix, menuOptions, onRemove }: Attende
         />
         <FieldError id={id('name-error')} message={fieldErrors?.fullName?.message} />
       </div>
+
+      {askDni && (
+        <div className={styles.field}>
+          <label htmlFor={id('dni')} className={styles.label}>
+            DNI
+          </label>
+          <input
+            id={id('dni')}
+            className={styles.input}
+            inputMode="numeric"
+            maxLength={8}
+            autoComplete="off"
+            placeholder={savedDni ? `•••••${savedDni}` : '8 números'}
+            aria-invalid={Boolean(fieldErrors?.dni)}
+            aria-describedby={
+              fieldErrors?.dni ? id('dni-error') : savedDni ? id('dni-hint') : undefined
+            }
+            {...register(`attendees.${index}.dni`)}
+          />
+          {savedDni && !fieldErrors?.dni && (
+            <p id={id('dni-hint')} className={styles.hint}>
+              Ya lo registraste. Déjalo vacío para mantenerlo.
+            </p>
+          )}
+          <FieldError id={id('dni-error')} message={fieldErrors?.dni?.message} />
+        </div>
+      )}
 
       <fieldset className={styles.fieldset}>
         <legend className={styles.label}>¿Adulto o niño?</legend>

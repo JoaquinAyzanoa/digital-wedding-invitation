@@ -9,11 +9,23 @@ export interface RsvpRules {
   seats: number;
   menuOptions: string[];
   questions: PublicContent['rsvp']['questions'];
+  /** The admin may leave a DNI empty (e.g. an answer taken by phone). */
+  dniOptional?: boolean;
 }
 
 const PHONE = /^[0-9+() -]{6,30}$/;
+const DNI = /^[0-9]{8}$/;
 
-function attendeeSchema(menuOptions: string[]) {
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** The DNI was given before for this same person: an empty field keeps it. */
+export function keepsSavedDni(attendee: AttendeeValues): boolean {
+  return Boolean(
+    attendee.savedDniHint && attendee.savedName && sameName(attendee.fullName, attendee.savedName),
+  );
+}
+
+function attendeeSchema(menuOptions: string[], askDni: boolean, dniOptional: boolean) {
   return z
     .object({
       fullName: z
@@ -25,8 +37,19 @@ function attendeeSchema(menuOptions: string[]) {
       age: z.number().int().min(0).max(17).nullable(),
       menu: z.string(),
       dietary: z.string().trim().max(300, 'Máximo 300 caracteres'),
+      dni: z.string(),
+      savedDniHint: z.string().nullable(),
+      savedName: z.string().nullable(),
     })
     .superRefine((attendee, ctx) => {
+      if (askDni) {
+        const dni = attendee.dni.trim();
+        if (dni && !DNI.test(dni)) {
+          ctx.addIssue({ code: 'custom', path: ['dni'], message: 'El DNI tiene 8 números' });
+        } else if (!dni && !dniOptional && !keepsSavedDni(attendee)) {
+          ctx.addIssue({ code: 'custom', path: ['dni'], message: 'Escribe el DNI' });
+        }
+      }
       if (attendee.kind === 'child' && attendee.age === null) {
         ctx.addIssue({ code: 'custom', path: ['age'], message: 'Indica la edad' });
       }
@@ -43,12 +66,12 @@ const contactPhone = z
 const message = z.string().trim().max(1000, 'Máximo 1000 caracteres');
 
 /** Validates the form values for one invitation. */
-export function rsvpFormSchema({ seats, menuOptions, questions }: RsvpRules) {
+export function rsvpFormSchema({ seats, menuOptions, questions, dniOptional = false }: RsvpRules) {
   const attending = z
     .object({
       attending: z.literal(true),
       attendees: z
-        .array(attendeeSchema(menuOptions))
+        .array(attendeeSchema(menuOptions, questions.dni, dniOptional))
         .min(1, 'Agrega al menos una persona')
         .max(seats, `Solo hay ${seats} ${seats === 1 ? 'lugar' : 'lugares'} reservados`),
       parts: z.object({ ceremony: z.boolean(), reception: z.boolean() }),
@@ -59,6 +82,21 @@ export function rsvpFormSchema({ seats, menuOptions, questions }: RsvpRules) {
       message,
     })
     .superRefine((values, ctx) => {
+      if (questions.dni) {
+        const seen = new Set<string>();
+        values.attendees.forEach((attendee, index) => {
+          const dni = attendee.dni.trim();
+          if (!dni) return;
+          if (seen.has(dni)) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['attendees', index, 'dni'],
+              message: 'Este DNI ya está en otra persona',
+            });
+          }
+          seen.add(dni);
+        });
+      }
       if (questions.parts && !values.parts.ceremony && !values.parts.reception) {
         ctx.addIssue({ code: 'custom', path: ['parts'], message: 'Elige al menos una' });
       }
@@ -90,6 +128,12 @@ export type AttendeeValues = {
   age: number | null;
   menu: string;
   dietary: string;
+  /** What is typed (the admin sees the whole DNI here; guests start empty). */
+  dni: string;
+  /** Guests changing their answer: the last 3 digits of the DNI already given… */
+  savedDniHint: string | null;
+  /** …and the name it was given for. */
+  savedName: string | null;
 };
 
 /** What the form edits (looser than the schema: `attending` starts unanswered). */
@@ -105,7 +149,16 @@ export interface RsvpFormValues {
 }
 
 export function emptyAttendee(fullName = ''): AttendeeValues {
-  return { fullName, kind: 'adult', age: null, menu: '', dietary: '' };
+  return {
+    fullName,
+    kind: 'adult',
+    age: null,
+    menu: '',
+    dietary: '',
+    dni: '',
+    savedDniHint: null,
+    savedName: null,
+  };
 }
 
 /** Initial values: the previous answer when changing it, otherwise a blank form. */
@@ -136,6 +189,9 @@ export function rsvpDefaults(
             age: a.age,
             menu: a.menu ?? '',
             dietary: a.dietary ?? '',
+            dni: a.dni ?? '',
+            savedDniHint: a.dniHint ?? null,
+            savedName: a.fullName,
           }))
         : [emptyAttendee(invitation.seats === 1 ? invitation.displayName : '')],
     parts: {
@@ -168,6 +224,8 @@ export function toRsvpInput(values: RsvpFormValues, questions: RsvpRules['questi
       age: a.kind === 'child' ? a.age : null,
       menu: a.menu || null,
       dietary: a.dietary.trim() || null,
+      // Empty: keeps the DNI already given for the same name (or none, for the admin).
+      dni: questions.dni ? a.dni.trim() || null : null,
     })),
     ...(questions.parts ? { parts: values.parts } : {}),
     needsTransport: questions.transport ? values.needsTransport : null,

@@ -452,6 +452,10 @@ export function ContentPage() {
               <Toggle name="public.rsvp.questions.transport" label="¿Necesitan transporte?" />
               <Toggle name="public.rsvp.questions.lodging" label="¿Necesitan hospedaje?" />
               <Toggle name="public.rsvp.questions.song" label="Canción que no puede faltar" />
+              <Toggle
+                name="public.rsvp.questions.dni"
+                label="DNI de cada persona (obligatorio, 8 números)"
+              />
             </fieldset>
           </Group>
 

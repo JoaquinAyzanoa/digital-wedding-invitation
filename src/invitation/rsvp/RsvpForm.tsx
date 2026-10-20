@@ -265,6 +265,7 @@ export function RsvpForm({ content, invitation, onDone, onCancel, autoFocus }: R
                     index={index}
                     idPrefix={idPrefix}
                     menuOptions={menuOptions}
+                    askDni={questions.dni}
                     onRemove={
                       attendees.fields.length > 1 ? () => attendees.remove(index) : undefined
                     }

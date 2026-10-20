@@ -72,6 +72,7 @@ export function RsvpEditor({
         seats: invitation.seats,
         menuOptions: rules.menuOptions,
         questions: rules.questions,
+        dniOptional: true,
       }),
     [invitation.seats, rules],
   );
@@ -214,6 +215,23 @@ export function RsvpEditor({
                     />
                     {fieldError(e?.fullName?.message)}
                   </div>
+                  {rules.questions.dni && (
+                    <div className={ui.field}>
+                      <label htmlFor={fid('dni')} className={ui.label}>
+                        DNI <span className={ui.muted}>(opcional aquí)</span>
+                      </label>
+                      <input
+                        id={fid('dni')}
+                        className={ui.input}
+                        inputMode="numeric"
+                        maxLength={8}
+                        autoComplete="off"
+                        aria-invalid={Boolean(e?.dni)}
+                        {...register(`attendees.${index}.dni`)}
+                      />
+                      {fieldError(e?.dni?.message)}
+                    </div>
+                  )}
                   <div className={ui.row}>
                     <div className={ui.field}>
                       <label htmlFor={fid('kind')} className={ui.label}>

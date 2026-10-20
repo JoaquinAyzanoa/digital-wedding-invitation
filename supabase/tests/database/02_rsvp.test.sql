@@ -14,7 +14,7 @@ set public_data = '{
     "deadline": "2999-01-01",
     "closed": false,
     "menuOptions": ["Carne", "Infantil"],
-    "questions": { "transport": true, "lodging": false, "song": true, "parts": false }
+    "questions": { "transport": true, "lodging": false, "song": true, "parts": false, "dni": false }
   },
   "album": { "enabled": false }
 }'

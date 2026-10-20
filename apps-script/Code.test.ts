@@ -183,6 +183,7 @@ const EXPORT = {
       invitation: 'Familia López',
       position: 1,
       fullName: 'Ana López',
+      dni: '01234567',
       kind: 'adult',
       age: null,
       menu: 'Carne',
@@ -193,6 +194,7 @@ const EXPORT = {
       invitation: 'Familia López',
       position: 2,
       fullName: 'Mateo López',
+      dni: null,
       kind: 'child',
       age: 6,
       menu: 'Infantil',
@@ -332,8 +334,9 @@ describe('Apps Script sync', () => {
 
     const attendees = env.spreadsheet.getSheetByName('Asistentes')!.table()!;
     expect(attendees.slice(1)).toEqual([
-      ['abc234', 'Familia López', 1, 'Ana López', 'Adulto', '', 'Carne', ''],
-      ['abc234', 'Familia López', 2, 'Mateo López', 'Niño', 6, 'Infantil', 'Maní'],
+      // The DNI stays text (a leading 0 must not be lost).
+      ['abc234', 'Familia López', 1, 'Ana López', "'01234567", 'Adulto', '', 'Carne', ''],
+      ['abc234', 'Familia López', 2, 'Mateo López', '', 'Niño', 6, 'Infantil', 'Maní'],
     ]);
     expect(env.spreadsheet.getSheetByName('Invitaciones')!.rules).toEqual([
       { text: 'Sí', color: '#d9ead3' },
@@ -395,7 +398,7 @@ describe('Apps Script sync', () => {
     expect(env.script.column!(['A', 'B'], 'B')).toBe('B');
     expect(formula('Pendientes')).toBe('=COUNTIF(Invitaciones!F2:F,"Pendiente")');
     expect(formula('Personas confirmadas')).toBe('=SUM(Invitaciones!G2:G)');
-    expect(formula('Niños')).toBe('=COUNTIF(Asistentes!E2:E,"Niño")');
+    expect(formula('Niños')).toBe('=COUNTIF(Asistentes!F2:F,"Niño")');
     expect(formula('Transporte (personas)')).toBe(
       '=SUMIF(Invitaciones!J2:J,"Sí",Invitaciones!G2:G)',
     );

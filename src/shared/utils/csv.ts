@@ -212,6 +212,7 @@ export function attendeesCsv(invitations: InvitationWithAttendees[]): string {
           codigo: i.code,
           invitacion: i.display_name,
           nombre: a.full_name,
+          dni: a.dni ?? '',
           tipo: a.kind === 'child' ? 'Niño' : 'Adulto',
           edad: a.age ?? '',
           menu: a.menu ?? '',
