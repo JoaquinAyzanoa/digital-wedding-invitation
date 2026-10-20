@@ -14,6 +14,7 @@ export const keys = {
   invitations: ['invitations'] as const,
   dashboard: ['dashboard'] as const,
   rsvpRules: ['rsvpRules'] as const,
+  sheet: ['sheet'] as const,
 };
 
 /** Turns a Supabase/PostgREST error into a message for the admin. */
@@ -204,5 +205,30 @@ export function useResetRsvp() {
     mutationFn: async (id: string) =>
       check(await supabase.rpc('admin_reset_rsvp', { p_invitation_id: id })),
     onSuccess: invalidate,
+  });
+}
+
+export interface SheetSettings {
+  secret: string;
+  lastSyncAt: string | null;
+}
+
+/** The Google Sheet script's secret and its last sync (admins only). */
+export function useSheetSettings() {
+  return useQuery({
+    queryKey: keys.sheet,
+    queryFn: async () =>
+      check(await supabase.rpc('admin_sheet_settings')) as unknown as SheetSettings,
+    // The script syncs every 5 minutes: keep the status fresh while the page is open.
+    refetchInterval: 60_000,
+  });
+}
+
+/** A new secret: the script stops syncing until it gets it. */
+export function useRotateSheetSecret() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => check(await supabase.rpc('admin_rotate_sheet_secret')),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.sheet }),
   });
 }

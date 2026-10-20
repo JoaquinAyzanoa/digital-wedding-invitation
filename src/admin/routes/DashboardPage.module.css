@@ -174,3 +174,7 @@
 .messages span {
   font-size: 13px;
 }
+
+.sheetLink {
+  color: inherit;
+}

@@ -6,6 +6,7 @@ import { AdminLayout } from './layout/AdminLayout';
 import { ContentPage } from './routes/ContentPage';
 import { DashboardPage } from './routes/DashboardPage';
 import { InvitationsPage } from './routes/InvitationsPage';
+import { SettingsPage } from './routes/SettingsPage';
 import { ThemePage } from './routes/ThemePage';
 import { hasBackend } from './supabase';
 import ui from './ui/ui.module.css';
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="invitations" element={<InvitationsPage />} />
             <Route path="content" element={<ContentPage />} />
             <Route path="theme" element={<ThemePage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

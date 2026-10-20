@@ -202,7 +202,9 @@ export function DashboardPage() {
               <strong>{d.album.photos}</strong>
             </li>
             <li>
-              <span>Última sincronización del Sheet</span>
+              <Link to="/settings" className={styles.sheetLink}>
+                Última sincronización del Sheet
+              </Link>
               <strong>{when(d.sheet.lastSyncAt)}</strong>
             </li>
           </ul>

@@ -201,8 +201,10 @@ export type Database = {
     Functions: {
       admin_dashboard: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_reset_rsvp: { Args: { p_invitation_id: string }; Returns: undefined };
+      admin_rotate_sheet_secret: { Args: Record<PropertyKey, never>; Returns: string };
       admin_save_rsvp: { Args: { p_invitation_id: string; p_payload: Json }; Returns: Json };
-      export_for_sheet: { Args: { p_secret: string }; Returns: Json };
+      admin_sheet_settings: { Args: Record<PropertyKey, never>; Returns: Json };
+      export_for_sheet: { Args: { p_hash?: string; p_secret: string }; Returns: Json };
       get_content: { Args: Record<PropertyKey, never>; Returns: Json };
       get_invitation: { Args: { p_code: string; p_track?: boolean }; Returns: Json };
       ping: { Args: Record<PropertyKey, never>; Returns: number };

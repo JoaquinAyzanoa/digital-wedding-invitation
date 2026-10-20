@@ -35,7 +35,7 @@ select table_privs_are('private', 'settings', 'authenticated', array[]::text[],
 -- function privileges
 select function_privs_are('public', 'admin_dashboard', array[]::name[], 'anon', array[]::text[],
   'anon cannot execute admin_dashboard');
-select function_privs_are('public', 'export_for_sheet', array['text'], 'authenticated',
+select function_privs_are('public', 'export_for_sheet', array['text', 'text'], 'authenticated',
   array[]::text[], 'authenticated cannot execute export_for_sheet');
 select function_privs_are('public', 'submit_rsvp', array['text', 'jsonb'], 'anon',
   array['EXECUTE'], 'anon can execute submit_rsvp');

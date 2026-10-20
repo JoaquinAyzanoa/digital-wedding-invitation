@@ -21,5 +21,26 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Google Apps Script: classic script, Google services as globals, entry points called by
+    // the trigger or by hand (sync, setup) and helpers shared with the tests.
+    files: ['apps-script/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        SpreadsheetApp: 'readonly',
+        PropertiesService: 'readonly',
+        LockService: 'readonly',
+        UrlFetchApp: 'readonly',
+        ScriptApp: 'readonly',
+        module: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(sync|setup)$' }],
+    },
+  },
   prettier,
 ]);

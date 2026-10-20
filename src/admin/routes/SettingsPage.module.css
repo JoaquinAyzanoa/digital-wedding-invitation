@@ -1,0 +1,80 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  font-size: 24px;
+}
+
+.status {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.status[data-tone='ok'] {
+  background: #e6f4ea;
+  color: #1e5631;
+}
+
+.status[data-tone='warn'] {
+  background: #fff4d6;
+  color: #7a5300;
+}
+
+.status[data-tone='off'] {
+  background: var(--color-bg);
+  color: var(--color-muted);
+}
+
+.subtitle {
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.steps {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 4px;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.steps a {
+  color: var(--color-primary);
+}
+
+.values {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.value {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+}
+
+.value > :first-child {
+  grid-column: 1 / -1;
+}
+
+.code {
+  min-width: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.valueActions {
+  display: flex;
+  gap: 4px;
+}
