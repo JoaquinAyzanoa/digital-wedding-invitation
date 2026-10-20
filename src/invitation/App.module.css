@@ -1,7 +1,4 @@
 .page {
-  min-height: 100dvh;
-  display: grid;
-  place-content: center;
-  padding: 24px;
-  text-align: center;
+  min-height: 100svh;
+  overflow-x: clip;
 }

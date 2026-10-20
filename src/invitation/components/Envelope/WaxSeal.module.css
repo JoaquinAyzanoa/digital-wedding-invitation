@@ -1,0 +1,20 @@
+.monogram {
+  font-family: var(--font-script);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.shine {
+  transform: skewX(-18deg);
+  animation: shine 3.6s var(--ease-soft) infinite;
+}
+
+@keyframes shine {
+  0%,
+  55% {
+    transform: translateX(0) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(190px) skewX(-18deg);
+  }
+}

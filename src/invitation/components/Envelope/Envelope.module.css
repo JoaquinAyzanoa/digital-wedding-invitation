@@ -1,0 +1,287 @@
+.overlay {
+  /* Envelope paper, derived from the theme's primary color */
+  --env: color-mix(in oklab, var(--color-primary) 50%, #eef3fa);
+  --env-side: color-mix(in oklab, var(--color-primary) 44%, #f3f6fb);
+  --env-bottom: color-mix(in oklab, var(--color-primary) 38%, #f6f8fc);
+  --env-inside: color-mix(in oklab, var(--color-primary) 68%, #e3e9f2);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden auto;
+  padding: max(24px, env(safe-area-inset-top)) var(--gutter) max(24px, env(safe-area-inset-bottom));
+  background: var(--color-bg);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.2svh, 22px);
+  width: 100%;
+  max-width: var(--page-width);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-soft);
+}
+
+.content[data-ready='true'] {
+  opacity: 1;
+}
+
+.decoration {
+  position: absolute;
+  width: min(62vw, 300px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.decorationTop {
+  top: 0;
+  right: 0;
+}
+
+.decorationBottom {
+  bottom: 0;
+  left: 0;
+}
+
+.skip {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  z-index: 2;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.kicker {
+  font-size: clamp(20px, 5.6vw, 24px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.names {
+  font-family: var(--font-script);
+  font-size: clamp(46px, 13.5vw, 66px);
+  line-height: 1.15;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.amp {
+  font-family: var(--font-serif);
+  font-size: 0.62em;
+}
+
+.date {
+  font-size: clamp(19px, 5.2vw, 22px);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+}
+
+/* ---------------------------------------------------------------- envelope */
+
+.envelope {
+  position: relative;
+  width: min(82vw, 340px);
+  aspect-ratio: 3 / 2;
+  margin: clamp(8px, 2svh, 18px) 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  perspective: 900px;
+  filter: drop-shadow(0 16px 18px rgb(40 50 80 / 0.18));
+}
+
+.envelope:disabled {
+  cursor: default;
+}
+
+.envelope:focus-visible {
+  outline-offset: 8px;
+  border-radius: 6px;
+}
+
+.back {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: var(--env-inside);
+}
+
+.card {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  left: 6%;
+  height: 88%;
+  z-index: 2;
+  display: grid;
+  place-items: start center;
+  padding-top: 8%;
+  border-radius: 3px;
+  background: #fffdf8;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+}
+
+.cardMonogram {
+  font-family: var(--font-script);
+  font-size: 34px;
+  color: var(--color-primary);
+}
+
+.pocket {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.side {
+  fill: var(--env-side);
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 0.8;
+}
+
+.bottom {
+  fill: var(--env-bottom);
+  stroke: rgb(255 255 255 / 0.5);
+  stroke-width: 0.8;
+}
+
+.flap {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  transform-origin: top center;
+  filter: drop-shadow(0 3px 3px rgb(30 40 70 / 0.18));
+}
+
+.flap svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--env);
+}
+
+.flap[data-open='true'] {
+  z-index: 1;
+}
+
+.flap[data-open='true'] svg {
+  fill: var(--env-inside);
+}
+
+/* --------------------------------------------------------------------- seal */
+
+.seal {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  z-index: 5;
+  width: 27%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.sealWhole,
+.sealHalf {
+  position: absolute;
+  inset: 0;
+}
+
+.sealWhole {
+  filter: drop-shadow(0 2px 2px rgb(60 40 10 / 0.35));
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.sealHalf {
+  opacity: 0;
+}
+
+.sealWhole svg,
+.sealHalf svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hint {
+  position: absolute;
+  inset: -18%;
+  width: 136%;
+  height: 136%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hint text {
+  fill: #fff;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+
+/* ----------------------------------------------------------------- reserved */
+
+.reserved {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.guest {
+  font-size: 22px;
+  font-style: italic;
+  color: var(--color-ink);
+}
+
+.reservedText {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.seats {
+  display: grid;
+  place-items: center;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 12px;
+  border: 1.5px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
+  border-radius: 12px;
+  color: var(--color-primary);
+  font-size: 46px;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}

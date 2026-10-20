@@ -1,0 +1,59 @@
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.units {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(4px, 2vw, 12px);
+}
+
+.unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 2.2ch;
+}
+
+.value {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 1.15em;
+  font-size: clamp(44px, 13vw, 58px);
+  line-height: 1.15;
+  color: var(--color-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.digits {
+  display: block;
+}
+
+.colon {
+  font-size: clamp(36px, 10vw, 48px);
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+
+.label {
+  font-size: 17px;
+  color: var(--color-ink);
+}
+
+.done {
+  font-family: var(--font-script);
+  font-size: 44px;
+  color: var(--color-primary);
+}

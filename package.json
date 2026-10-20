@@ -23,11 +23,14 @@
     "db:types": "supabase gen types typescript --local --schema public > src/shared/types/database.types.ts && prettier --write src/shared/types/database.types.ts"
   },
   "dependencies": {
+    "motion": "^14.4.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

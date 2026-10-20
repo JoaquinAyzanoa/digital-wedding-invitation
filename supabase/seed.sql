@@ -11,6 +11,7 @@ set public_data = $json$
     "text": "Bienvenidos a un día que marcará nuestra historia. Nos llena de alegría compartir este momento con quienes han sido parte esencial de nuestra vida.",
     "quote": "Gracias por estar aquí, por celebrar nuestro amor y por seguir siendo parte de nuestro camino."
   },
+  "dateIntro": "Tenemos el honor de invitarte a la ceremonia religiosa que se celebrará el día:",
   "music": null,
   "photos": { "hero": null, "divider1": null, "divider2": null, "divider3": null, "closing": null },
   "decorations": {},
