@@ -220,6 +220,8 @@ function load() {
     ['google_register_folder', () => ({ status: 200, body: '' })],
   ]);
   const drive = new FakeDrive();
+  /** A project at script.google.com (not inside a Sheet). */
+  let standalone = false;
   const responses: Array<{ status: number; body: unknown }> = [];
   const triggers: string[] = [];
   const conditionalRule = () => {
@@ -235,7 +237,7 @@ function load() {
   const context: Record<string, unknown> = {
     module: { exports: {} },
     SpreadsheetApp: {
-      getActiveSpreadsheet: () => spreadsheet,
+      getActiveSpreadsheet: () => (standalone ? null : spreadsheet),
       newConditionalFormatRule: conditionalRule,
     },
     PropertiesService: {
@@ -257,7 +259,7 @@ function load() {
       MimeType: { JSON: 'json' },
       createTextOutput: (text: string) => ({ text, setMimeType: () => ({ text }) }),
     },
-    console: { error: () => {} },
+    console: { error: () => {}, log: () => {} },
     UrlFetchApp: {
       fetch: (url: string, options: { payload: string }) => {
         const payload = JSON.parse(options.payload);
@@ -290,7 +292,10 @@ function load() {
   runInNewContext(readFileSync('apps-script/Code.js', 'utf8'), context);
   const script = (context.module as { exports: Record<string, (...args: unknown[]) => unknown> })
     .exports;
-  return { script, spreadsheet, props, requests, responses, triggers, rpc, drive };
+  const noSpreadsheet = () => {
+    standalone = true;
+  };
+  return { script, spreadsheet, props, requests, responses, triggers, rpc, drive, noSpreadsheet };
 }
 
 describe('Apps Script sync', () => {
@@ -371,6 +376,14 @@ describe('Apps Script sync', () => {
     expect(env.triggers).toEqual(['sync every 10']);
     const exports = env.requests.filter((r) => r.url.endsWith('/export_for_sheet'));
     expect(exports[0]!.payload.p_hash).toBeNull();
+    // The Sheet's setup leaves the album alone (it may live in another Google account).
+    expect(env.drive.all.size).toBe(0);
+    expect(env.requests.some((r) => r.url.endsWith('/google_register_folder'))).toBe(false);
+  });
+
+  it('setup explains when the project is not inside a Sheet', () => {
+    env.noSpreadsheet();
+    expect(() => env.script.setup!()).toThrow('Este proyecto no está dentro de una hoja');
   });
 
   it('summary formulas point at the right columns', () => {
@@ -407,9 +420,9 @@ describe('Apps Script album (photos to Google Drive)', () => {
       ...extra,
     });
 
-  it('setup creates the album folder once and registers its link', () => {
-    env.script.setup!();
-    env.script.setup!();
+  it('setupAlbum creates the album folder once and registers its link', () => {
+    env.script.setupAlbum!();
+    env.script.setupAlbum!();
     const albums = [...env.drive.all.values()].filter((f) => f.name === 'Fotos de la boda');
     expect(albums).toHaveLength(1);
     const registered = env.requests.filter((r) => r.url.endsWith('/google_register_folder'));

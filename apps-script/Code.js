@@ -6,19 +6,22 @@
  * changed since the last run, Supabase answers with a few bytes and nothing is rewritten.
  * These calls also keep the free Supabase project from pausing for inactivity.
  *
- * Deployed as a web app, the same script receives the guests' album photos (`doPost`) and
- * saves them, at their original quality, in the "Fotos de la boda" folder of this Google
- * Drive, in a subfolder per invitation. Supabase says whether the code exists and the album
- * is open, and keeps the count.
+ * Deployed as a web app, the same code receives the guests' album photos (`doPost`) and
+ * saves them, at their original quality, in the "Fotos de la boda" folder of the Google Drive
+ * of the account that runs it, in a subfolder per invitation. Supabase says whether the code
+ * exists and the album is open, and keeps the count.
  *
- * Setup (see README.md in this folder): paste this file into Extensions → Apps Script of a
- * new Google Sheet, fill the script properties, run `setup` once and deploy it as a web app.
+ * The Sheet and the photos can live in different Google accounts: the same file goes into
+ * two projects (see README.md in this folder).
+ *   - Sheet account: Extensions → Apps Script of a Google Sheet, run `setup`.
+ *   - Photos account: a new project at script.google.com, run `setupAlbum` and deploy it as
+ *     a web app. (One account for both: run both functions in the Sheet's project.)
  *
- * Script properties:
+ * Script properties (the same in both projects):
  *   SUPABASE_URL  https://<project>.supabase.co
  *   SUPABASE_KEY  publishable key (sb_publishable_…)
- *   SECRET        shown in the admin, Ajustes → Google Sheet
- *   SITE_URL      https://your-domain (for the personal links)
+ *   SECRET        shown in the admin, Ajustes
+ *   SITE_URL      https://your-domain (for the personal links; the Sheet only)
  */
 
 const SHEET_NAMES = {
@@ -105,16 +108,17 @@ function sync() {
   }
 }
 
-/**
- * Run once by hand: Lima time zone, the 5-minute trigger, the album folder (its link goes to
- * the admin) and a first sync.
- */
+/** The Sheet, run once by hand: Lima time zone, the 10-minute trigger and a first sync. */
 function setup() {
   const props = PropertiesService.getScriptProperties();
-  const config = readConfig_(props);
-  rpc_(config, 'google_register_folder', { p_folder_url: albumFolder_(props).getUrl() });
-
+  readConfig_(props);
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    throw new Error(
+      'Este proyecto no está dentro de una hoja: para la hoja usa Extensiones → Apps Script ' +
+        'desde la hoja; aquí ejecuta setupAlbum.',
+    );
+  }
   spreadsheet.setSpreadsheetTimeZone('America/Lima');
   for (const trigger of ScriptApp.getProjectTriggers()) {
     if (trigger.getHandlerFunction() === 'sync') ScriptApp.deleteTrigger(trigger);
@@ -123,6 +127,19 @@ function setup() {
   // Forget the last hash so everything is written again (e.g. after deleting a sheet).
   props.deleteProperty('LAST_HASH');
   sync();
+}
+
+/**
+ * The album, run once by hand in the project of the account whose Drive keeps the photos:
+ * creates "Fotos de la boda" and registers its link (the admin opens it from the panel).
+ * Then deploy this project as a web app.
+ */
+function setupAlbum() {
+  const props = PropertiesService.getScriptProperties();
+  const config = readConfig_(props);
+  const folder = albumFolder_(props);
+  rpc_(config, 'google_register_folder', { p_folder_url: folder.getUrl() });
+  console.log(`Carpeta del álbum: ${folder.getUrl()}`);
 }
 
 function readConfig_(props) {
@@ -463,6 +480,7 @@ if (typeof module !== 'undefined') {
   module.exports = {
     sync,
     setup,
+    setupAlbum,
     doGet,
     doPost,
     photoName,

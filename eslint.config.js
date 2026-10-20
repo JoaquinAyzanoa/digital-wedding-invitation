@@ -44,7 +44,7 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^(sync|setup|doGet|doPost)$' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(sync|setup|setupAlbum|doGet|doPost)$' }],
     },
   },
   prettier,

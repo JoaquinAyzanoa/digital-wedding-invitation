@@ -18,35 +18,48 @@ La hoja tiene tres pestañas:
 
 ## Configuración (una sola vez)
 
-El panel muestra estos mismos pasos, con botones para copiar cada valor, en **Ajustes →
-Google Sheet**.
+La hoja y las fotos pueden estar en **cuentas de Google distintas**: el mismo `Code.js` va
+en dos proyectos. El panel muestra estos pasos, con botones para copiar cada valor, en
+**Ajustes**.
+
+Propiedades del script (en los dos proyectos, **Configuración del proyecto → Propiedades
+del script**):
+
+| Propiedad      | Valor                                                              |
+| -------------- | ------------------------------------------------------------------ |
+| `SUPABASE_URL` | `https://<proyecto>.supabase.co`                                   |
+| `SUPABASE_KEY` | la clave publicable (`sb_publishable_…`)                           |
+| `SECRET`       | el secreto de Ajustes (no lo compartas)                            |
+| `SITE_URL`     | el dominio de la invitación, para los links personales (solo hoja) |
+
+### 1. La hoja (cuenta A)
 
 1. Crea una hoja en [Google Sheets](https://sheets.new) y abre **Extensiones → Apps Script**.
 2. Reemplaza el contenido de `Code.gs` por el de `Code.js` (botón «Copiar código del
-   script» en Ajustes).
-3. En **Configuración del proyecto → Propiedades del script**, agrega:
+   script» en Ajustes) y agrega las cuatro propiedades.
+3. Elige la función `setup` y pulsa **Ejecutar**. Acepta los permisos. Pone la zona
+   horaria de Lima, crea el activador cada 10 minutos y hace la primera sincronización.
 
-   | Propiedad      | Valor                                                  |
-   | -------------- | ------------------------------------------------------ |
-   | `SUPABASE_URL` | `https://<proyecto>.supabase.co`                       |
-   | `SUPABASE_KEY` | la clave publicable (`sb_publishable_…`)               |
-   | `SECRET`       | el secreto de Ajustes (no lo compartas)                |
-   | `SITE_URL`     | el dominio de la invitación, para los links personales |
+### 2. El álbum (cuenta B, cuyo Drive guarda las fotos)
 
-4. Elige la función `setup` y pulsa **Ejecutar**. Acepta los permisos (es tu propio
-   script: hoja y Drive). `setup` pone la zona horaria de Lima, crea el activador cada
-   10 minutos, crea la carpeta «Fotos de la boda» (su enlace aparece en el panel) y hace la
-   primera sincronización.
-5. Para el álbum: **Implementar → Nueva implementación**, tipo **Aplicación web**,
-   «Ejecutar como»: **Yo**, «Quién tiene acceso»: **Cualquier usuario**. Copia la URL
-   (`https://script.google.com/macros/s/…/exec`) y pégala en el panel, Ajustes, paso 5.
+1. Con la cuenta B, crea un proyecto en [script.google.com](https://script.google.com/home/projects/create),
+   pega el mismo código y agrega `SUPABASE_URL`, `SUPABASE_KEY` y `SECRET`.
+2. Elige la función `setupAlbum` y pulsa **Ejecutar**. Acepta los permisos. Crea la
+   carpeta «Fotos de la boda» en el Drive de la cuenta B y registra su enlace (aparece en
+   el panel).
+3. **Implementar → Nueva implementación**, tipo **Aplicación web**, «Ejecutar como»:
+   **Yo**, «Quién tiene acceso»: **Cualquier usuario**. Copia la URL
+   (`https://script.google.com/macros/s/…/exec`) y pégala en el panel, Ajustes, paso 8.
    «Probar conexión» confirma que responde.
 
-Si cambias el código más adelante: **Implementar → Gestionar implementaciones → Editar →
-Versión nueva**. Así la URL de la aplicación web no cambia.
+¿Todo en una sola cuenta? Haz los pasos del álbum en el mismo proyecto de la hoja.
 
-Si el script falla (por ejemplo, porque se cambió el secreto), Google envía un correo con
-el error. Para forzar una copia completa, vuelve a ejecutar `setup`.
+Si cambias el código del álbum más adelante: **Implementar → Gestionar implementaciones →
+Editar → Versión nueva**. Así la URL de la aplicación web no cambia.
+
+Si un script falla (por ejemplo, porque se cambió el secreto), Google le envía un correo con
+el error a su cuenta. Para forzar una copia completa de la hoja, vuelve a ejecutar `setup`.
+Si cambias el secreto en Ajustes, actualiza `SECRET` en los dos proyectos.
 
 ## Cómo funciona
 
@@ -59,7 +72,7 @@ el error. Para forzar una copia completa, vuelve a ejecutar `setup`.
   registra (`register_drive_photo`) para que el panel muestre cuántas llegaron.
 - Hasta 25 MB por foto. La URL de la aplicación web solo se entrega a quien tiene un código
   válido, mientras el álbum está abierto.
-- Espacio: el de tu cuenta de Google (15 GB gratis, compartidos con Gmail y Fotos).
+- Espacio: el de la cuenta del álbum (15 GB gratis, compartidos con Gmail y Fotos).
 
 ### Hoja
 

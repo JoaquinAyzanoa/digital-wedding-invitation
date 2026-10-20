@@ -54,7 +54,7 @@ function AlbumStatus({ settings }: { settings: SheetSettings }) {
   if (!settings.albumUploadUrl) {
     return (
       <p className={styles.status} data-tone="off">
-        Álbum sin conectar: los invitados todavía no ven el botón para subir fotos (paso 5).
+        Álbum sin conectar: los invitados todavía no ven el botón para subir fotos (pasos 5 a 8).
       </p>
     );
   }
@@ -183,7 +183,7 @@ export function SettingsPage() {
   async function rotateSecret() {
     try {
       await rotate.mutateAsync();
-      toast('Secreto cambiado: actualiza SECRET en el script');
+      toast('Secreto cambiado: actualiza SECRET en los scripts');
     } catch (error) {
       toast(adminErrorMessage(error));
     } finally {
@@ -214,7 +214,9 @@ export function SettingsPage() {
             <SyncStatus lastSyncAt={settings.data.lastSyncAt} />
             <AlbumStatus settings={settings.data} />
 
-            <h3 className={styles.subtitle}>Cómo conectarlo (una sola vez)</h3>
+            <h3 className={styles.subtitle}>
+              1. La hoja (en la cuenta de Google donde la quieres)
+            </h3>
             <ol className={styles.steps}>
               <li>
                 Crea una hoja nueva en{' '}
@@ -243,25 +245,50 @@ export function SettingsPage() {
                 </div>
               </li>
               <li>
-                En el editor, elige la función <code>setup</code> y pulsa <strong>Ejecutar</strong>.
-                Acepta los permisos que pide Google (es tu propio script: hoja y Drive). Crea las
-                hojas, un activador cada 10 minutos y la carpeta «Fotos de la boda» en tu Drive.
+                Elige la función <code>setup</code> y pulsa <strong>Ejecutar</strong>. Acepta los
+                permisos (es tu propio script). Crea las hojas y un activador cada 10 minutos.
+              </li>
+            </ol>
+
+            <h3 className={styles.subtitle}>
+              2. El álbum (en la cuenta de Google cuyo Drive guardará las fotos)
+            </h3>
+            <ol className={styles.steps} start={5}>
+              <li>
+                Con esa cuenta, abre{' '}
+                <a
+                  href="https://script.google.com/home/projects/create"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  script.google.com → Nuevo proyecto
+                </a>{' '}
+                y pega el mismo código.{' '}
+                <Btn size="sm" variant="secondary" onClick={copyScript}>
+                  Copiar código del script
+                </Btn>
               </li>
               <li>
-                Para el álbum: <strong>Implementar → Nueva implementación</strong>, tipo{' '}
+                En sus <strong>Propiedades del script</strong> agrega las mismas{' '}
+                <code>SUPABASE_URL</code>, <code>SUPABASE_KEY</code> y <code>SECRET</code> del paso
+                3.
+              </li>
+              <li>
+                Elige la función <code>setupAlbum</code> y pulsa <strong>Ejecutar</strong>. Acepta
+                los permisos: crea la carpeta «Fotos de la boda» en el Drive de esa cuenta.
+              </li>
+              <li>
+                <strong>Implementar → Nueva implementación</strong>, tipo{' '}
                 <strong>Aplicación web</strong>, «Ejecutar como»: <strong>Yo</strong>, «Quién tiene
                 acceso»: <strong>Cualquier usuario</strong>. Pulsa Implementar, copia la URL de la
                 aplicación web y pégala aquí:
                 <AlbumConnection settings={settings.data} />
               </li>
-              <li>
-                Listo: los estados de arriba pasan a verde. Si el script falla, Google te avisa por
-                correo.
-              </li>
             </ol>
             <p className={ui.hint}>
-              ¿Ya habías conectado la hoja antes? Pega el código nuevo, ejecuta <code>setup</code>{' '}
-              otra vez y sigue desde el paso 5. Si más adelante cambias el código, usa{' '}
+              Listo: los dos estados de arriba pasan a verde. Si un script falla, Google le avisa
+              por correo a la cuenta dueña. ¿Todo en una sola cuenta? Haz los pasos 7 y 8 en el
+              mismo script de la hoja. Si más adelante cambias el código del álbum, usa{' '}
               <strong>Implementar → Gestionar implementaciones → Editar → Versión nueva</strong>:
               así la URL no cambia.
             </p>
@@ -269,7 +296,7 @@ export function SettingsPage() {
             <h3 className={styles.subtitle}>Secreto</h3>
             <p className={ui.hint}>
               Con el secreto, cualquiera puede leer la lista de invitados. Si crees que alguien lo
-              vio, cámbialo y actualiza <code>SECRET</code> en el script.
+              vio, cámbialo y actualiza <code>SECRET</code> en los dos scripts (hoja y álbum).
             </p>
             <Btn variant="secondary" onClick={() => setConfirmRotate(true)}>
               Cambiar secreto
@@ -281,7 +308,7 @@ export function SettingsPage() {
       {confirmRotate && (
         <ConfirmDialog
           title="¿Cambiar el secreto?"
-          message="La hoja deja de actualizarse hasta que pegues el nuevo SECRET en el script."
+          message="La hoja y el álbum dejan de funcionar hasta que pegues el nuevo SECRET en los dos scripts."
           confirmLabel="Cambiar"
           danger
           busy={rotate.isPending}

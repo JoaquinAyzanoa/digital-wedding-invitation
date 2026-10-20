@@ -30,7 +30,7 @@ test('connects the Google Sheet: values to paste, status and a new secret', asyn
   await expect(page.getByText('Hoja: aún no se sincroniza.', { exact: false })).toBeVisible();
 
   // The script's code, copied for pasting into Apps Script.
-  await page.getByRole('button', { name: 'Copiar código del script' }).click();
+  await page.getByRole('button', { name: 'Copiar código del script' }).first().click();
   await expect(page.getByText('Código del script copiado')).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('function sync()');
 
@@ -49,7 +49,7 @@ test('connects the Google Sheet: values to paste, status and a new secret', asyn
   // A new secret: the old one stops working.
   await page.getByRole('button', { name: 'Cambiar secreto' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Cambiar' }).click();
-  await expect(page.getByText('Secreto cambiado: actualiza SECRET en el script')).toBeVisible();
+  await expect(page.getByText('Secreto cambiado: actualiza SECRET en los scripts')).toBeVisible();
   await secretBox.getByRole('button', { name: 'Mostrar' }).click();
   await expect(secretBox.locator('code')).not.toHaveText(secret);
   expect((await exportForSheet(secret)).status).not.toBe(200);
