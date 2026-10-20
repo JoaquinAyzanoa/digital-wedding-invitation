@@ -138,6 +138,8 @@ export const publicContentSchema = z.object({
     deadline: dateOrDateTime,
     closed: z.boolean(),
     intro: text(500),
+    /** Shown once the RSVP has closed (e.g. how to reach the couple). */
+    closedText: text(300).optional(),
     menuOptions: z.array(requiredText(60)),
     questions: z.object({
       transport: z.boolean(),

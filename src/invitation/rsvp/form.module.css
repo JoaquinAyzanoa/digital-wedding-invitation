@@ -1,0 +1,253 @@
+.form {
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
+}
+
+.progress {
+  margin-bottom: 8px;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.question {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 26px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.question:focus {
+  outline: none;
+}
+
+.hint {
+  color: var(--color-muted);
+  font-size: 18px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------- big choices */
+
+.choices {
+  display: grid;
+  gap: 12px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 14px 18px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 16px;
+  background: #fff;
+  font-size: 21px;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+
+.choice[data-checked='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.choice:has(input:focus-visible),
+.segment:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------- fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 18px;
+}
+
+.optional {
+  color: var(--color-muted);
+  font-size: 15px;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-a25);
+}
+
+.input[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: #b3261e;
+}
+
+.error {
+  color: #b3261e;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+.counter {
+  align-self: flex-end;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------- segmented (yes / no) */
+
+.segments {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
+.segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 999px;
+  background: #fff;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.segment[data-checked='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--color-primary);
+}
+
+/* ------------------------------------------------------- attendee cards */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.linkButton {
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.add {
+  align-self: center;
+}
+
+/* -------------------------------------------------------------- actions */
+
+.actions {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.alert {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fdecea;
+  color: #8c1d18;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  text-align: center;
+}

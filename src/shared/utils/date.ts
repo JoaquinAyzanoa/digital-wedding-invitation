@@ -42,3 +42,12 @@ export function countdown(target: Date, now: Date): Countdown {
     done: false,
   };
 }
+
+/** "15 de abril" for a bare date (read in Lima) or an ISO datetime. */
+export function dayMonthInLima(dateOrDateTime: string): string {
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(dateOrDateTime)
+    ? `${dateOrDateTime}T12:00:00-05:00`
+    : dateOrDateTime;
+  const { day, month } = datePartsInLima(iso);
+  return `${day} de ${month}`;
+}

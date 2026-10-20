@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countdown, datePartsInLima } from './date';
+import { countdown, datePartsInLima, dayMonthInLima } from './date';
 
 describe('datePartsInLima', () => {
   it('formats the date in Spanish', () => {
@@ -44,5 +44,12 @@ describe('countdown', () => {
       seconds: 0,
       done: true,
     });
+  });
+});
+
+describe('dayMonthInLima', () => {
+  it('formats bare dates and datetimes', () => {
+    expect(dayMonthInLima('2027-04-15')).toBe('15 de abril');
+    expect(dayMonthInLima('2027-04-16T03:00:00Z')).toBe('15 de abril');
   });
 });

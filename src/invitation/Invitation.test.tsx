@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { demoContent, demoInvitation } from '@/demo/content';
+import { createDemoApi } from '@/shared/api/demoApi';
 import type { PublicContent } from '@/shared/schemas/content';
 import { Invitation } from './Invitation';
 import type { CodeStatus } from './useInvitationData';
@@ -13,6 +14,7 @@ function renderInvitation({
 }: { content?: PublicContent; codeStatus?: CodeStatus } = {}) {
   return render(
     <Invitation
+      api={createDemoApi()}
       content={content}
       invitation={codeStatus === 'valid' ? demoInvitation : null}
       codeStatus={codeStatus}

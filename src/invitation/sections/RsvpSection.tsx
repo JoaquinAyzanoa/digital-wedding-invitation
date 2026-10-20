@@ -1,24 +1,74 @@
+import { useCallback, useState } from 'react';
 import { CodeEntry } from '@/invitation/components/CodeEntry/CodeEntry';
+import { Confetti } from '@/invitation/components/Confetti/Confetti';
 import { Reveal } from '@/invitation/components/Reveal';
-import { useToast } from '@/invitation/toast/toastContext';
+import { RsvpForm } from '@/invitation/rsvp/RsvpForm';
+import { RsvpSummary } from '@/invitation/rsvp/RsvpSummary';
 import { Icon } from '@/shared/icons/Icon';
 import { Button } from '@/shared/ui/Button';
-import { datePartsInLima } from '@/shared/utils/date';
+import { dayMonthInLima } from '@/shared/utils/date';
 import styles from './RsvpSection.module.css';
 import { Section, SectionTitle } from './Section';
 import text from './text.module.css';
 import { sectionTitle, type SectionProps } from './types';
 
-/** "15 de abril" from a date or datetime deadline. */
-function deadlineLabel(deadline: string) {
-  const iso = /^\d{4}-\d{2}-\d{2}$/.test(deadline) ? `${deadline}T12:00:00-05:00` : deadline;
-  const { day, month } = datePartsInLima(iso);
-  return `${day} de ${month}`;
-}
-
 export function RsvpSection({ content, invitation, entry }: SectionProps) {
-  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [justAnswered, setJustAnswered] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
+  const stopCelebrating = useCallback(() => setCelebrate(false), []);
   const response = invitation?.response;
+
+  function renderBody() {
+    if (!invitation) {
+      return <CodeEntry message="Ingresa el código de tu invitación para confirmar:" />;
+    }
+
+    if (editing && invitation.rsvpOpen) {
+      return (
+        <RsvpForm
+          content={content}
+          invitation={invitation}
+          onCancel={response ? () => setEditing(false) : undefined}
+          onDone={(attending) => {
+            setEditing(false);
+            setJustAnswered(true);
+            if (attending) setCelebrate(true);
+          }}
+        />
+      );
+    }
+
+    if (response) {
+      return (
+        <RsvpSummary
+          content={content}
+          invitation={{ ...invitation, response }}
+          focusOnMount={justAnswered}
+          onChange={() => {
+            setJustAnswered(false);
+            setEditing(true);
+          }}
+        />
+      );
+    }
+
+    if (invitation.rsvpOpen) {
+      return (
+        <>
+          <Button onClick={() => setEditing(true)}>Confirma aquí</Button>
+          <p className={text.small}>Confirma antes del {dayMonthInLima(content.rsvp.deadline)}.</p>
+        </>
+      );
+    }
+
+    return (
+      <p className={text.body}>
+        {content.rsvp.closedText ||
+          'La confirmación ya cerró. Si aún quieres confirmar, escríbenos.'}
+      </p>
+    );
+  }
 
   return (
     <Section content={content} entry={entry} labelledBy="rsvp-title">
@@ -28,46 +78,16 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
       <Reveal>
         <SectionTitle id="rsvp-title">{sectionTitle(content, 'rsvp')}</SectionTitle>
       </Reveal>
-      {content.rsvp.intro && (
+      {content.rsvp.intro && !editing && (
         <Reveal>
           <p className={text.body}>{content.rsvp.intro}</p>
         </Reveal>
       )}
 
-      <Reveal className={styles.body}>
-        {!invitation && <CodeEntry message="Ingresa el código de tu invitación para confirmar:" />}
+      {/* Not wrapped in Reveal: a remount would reset the form. */}
+      <div className={styles.body}>{renderBody()}</div>
 
-        {invitation && response && (
-          <div className={styles.summary}>
-            <p className={text.upper}>
-              {response.attending ? '¡Gracias por confirmar!' : 'Gracias por avisarnos'}
-            </p>
-            {response.attending && (
-              <ul className={styles.attendees}>
-                {response.attendees.map((attendee, i) => (
-                  <li key={i}>{attendee.fullName}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {invitation && invitation.rsvpOpen && (
-          <>
-            {/* Phase 4: the multi-step form. */}
-            <Button onClick={() => toast('Muy pronto podrás confirmar aquí')}>
-              {response ? 'Cambiar mi respuesta' : 'Confirma aquí'}
-            </Button>
-            <p className={text.small}>Confirma antes del {deadlineLabel(content.rsvp.deadline)}.</p>
-          </>
-        )}
-
-        {invitation && !invitation.rsvpOpen && (
-          <p className={text.small}>
-            La confirmación ya cerró. Si necesitas cambiar algo, escríbenos.
-          </p>
-        )}
-      </Reveal>
+      {celebrate && <Confetti onDone={stopCelebrating} />}
     </Section>
   );
 }

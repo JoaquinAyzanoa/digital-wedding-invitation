@@ -22,6 +22,7 @@ export default function App() {
   }
   return (
     <Invitation
+      api={api}
       content={state.content}
       invitation={state.invitation}
       codeStatus={state.codeStatus}

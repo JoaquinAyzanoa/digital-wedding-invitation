@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
 // Only for component tests (`// @vitest-environment jsdom`); unit tests run in node.
 if (typeof window !== 'undefined') {
+  // Animated step transitions run slower in jsdom than in a browser.
+  configure({ asyncUtilTimeout: 3000 });
+
   afterEach(() => {
     cleanup();
     localStorage.clear();

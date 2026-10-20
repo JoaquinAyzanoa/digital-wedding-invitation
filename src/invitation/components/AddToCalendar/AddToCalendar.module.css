@@ -1,0 +1,26 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+.options a,
+.options button {
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

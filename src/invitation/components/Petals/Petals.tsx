@@ -1,19 +1,12 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect } from 'react';
+import { seededRandom } from '@/shared/utils/random';
 import styles from './Petals.module.css';
 
 const COLORS = ['var(--seal-hi)', 'var(--env-bottom)', 'var(--env-side)'];
 
-// mulberry32: a tiny seeded hash, so the layout is scattered but the same for every guest.
-function random(seed: number) {
-  let t = (seed + 0x6d2b79f5) | 0;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
-
 const PETALS = Array.from({ length: 16 }, (_, i) => {
-  const r = (n: number) => random(i * 97 + n * 7919);
+  const r = (n: number) => seededRandom(i * 97 + n * 7919);
   return {
     left: 4 + r(1) * 92,
     size: 12 + r(2) * 10,
