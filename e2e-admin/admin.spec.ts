@@ -121,7 +121,7 @@ test('creates an invitation, records the RSVP for the guest and resets it', asyn
   await expect(page.getByRole('status')).toContainText('Invitación creada');
   // The panel switches to the new invitation, with its link.
   await expect(panel.getByRole('heading', { name: 'Familia E2E' })).toBeVisible();
-  await expect(panel.getByText(/\?i=[a-z2-9]{6}$/)).toBeVisible();
+  await expect(panel.getByText(/\/\?[a-z2-9]{4}$/)).toBeVisible();
 
   // RSVP on the guest's behalf (they answered by phone).
   await panel.getByRole('tab', { name: 'Respuesta' }).click();

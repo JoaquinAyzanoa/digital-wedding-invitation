@@ -198,7 +198,7 @@ export function InvitationDataForm({
           <span className={ui.hint}>
             {invitation
               ? 'Si lo cambias, el enlace que ya enviaste deja de funcionar.'
-              : '6 caracteres. Déjalo vacío para generarlo automáticamente.'}
+              : '4 caracteres. Déjalo vacío para generarlo automáticamente.'}
           </span>
         )}
       </div>

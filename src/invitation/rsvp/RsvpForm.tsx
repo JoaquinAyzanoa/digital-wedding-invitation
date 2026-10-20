@@ -165,7 +165,9 @@ export function RsvpForm({ content, invitation, onDone, onCancel, autoFocus }: R
         setServerError(
           code === 'invalid_attendees' || code === 'invalid_payload'
             ? 'Algunos datos no son válidos. Revísalos e inténtalo de nuevo.'
-            : 'No pudimos enviar tu respuesta. Revisa tu conexión e inténtalo de nuevo.',
+            : code === 'rate_limited'
+              ? 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.'
+              : 'No pudimos enviar tu respuesta. Revisa tu conexión e inténtalo de nuevo.',
         );
       }
     },

@@ -91,7 +91,7 @@ describe('Code entry', () => {
     const envelope = within(screen.getByRole('dialog'));
     await userEvent.type(envelope.getByRole('textbox'), 'ab');
     await userEvent.click(envelope.getByRole('button', { name: 'Ver mi invitación' }));
-    expect(envelope.getByRole('alert')).toHaveTextContent('6 letras y números');
+    expect(envelope.getByRole('alert')).toHaveTextContent('4 letras o números');
   });
 });
 

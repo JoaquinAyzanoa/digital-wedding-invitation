@@ -35,6 +35,15 @@ export function ErrorScreen({ error, onRetry }: { error: ApiError; onRetry: () =
     );
   }
 
+  if (error.code === 'rate_limited') {
+    return (
+      <div className={styles.screen} role="alert">
+        <p className={styles.title}>Demasiados intentos con códigos que no existen.</p>
+        <p className={styles.text}>Espera unos minutos y vuelve a abrir tu enlace.</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.screen} role="alert">
       <p className={styles.title}>No pudimos cargar la invitación.</p>

@@ -3,7 +3,7 @@ import { Button } from '@/shared/ui/Button';
 import { isWellFormedCode, normalizeCode } from '@/shared/utils/code';
 import styles from './CodeEntry.module.css';
 
-/** Asks for the 6-character code from the guest's message and reloads with `?i=<code>`. */
+/** Asks for the code at the end of the guest's link and reloads with `?<code>`. */
 export function CodeEntry({ message }: { message: string }) {
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
@@ -13,11 +13,11 @@ export function CodeEntry({ message }: { message: string }) {
     event.preventDefault();
     const code = normalizeCode(value);
     if (!code || !isWellFormedCode(code)) {
-      setError('El código tiene 6 letras y números. Lo encuentras al final de tu enlace.');
+      setError('El código tiene 4 letras o números. Lo encuentras al final de tu enlace.');
       return;
     }
     const url = new URL(window.location.href);
-    url.searchParams.set('i', code);
+    url.search = `?${code}`;
     window.location.assign(url);
   }
 

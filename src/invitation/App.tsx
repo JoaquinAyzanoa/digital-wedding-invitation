@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { selectPublicApi } from '@/shared/api';
-import { normalizeCode } from '@/shared/utils/code';
+import { codeFromSearch } from '@/shared/utils/code';
 import { Invitation } from './Invitation';
 import { ErrorScreen, LoadingScreen } from './StatusScreen';
 import { useInvitationData } from './useInvitationData';
 import { usePreviewContent } from './usePreviewContent';
 
 const params = new URLSearchParams(window.location.search);
-const code = normalizeCode(params.get('i'));
+const code = codeFromSearch(window.location.search);
 // Previews and links opened from the admin must not count as guest visits.
 const preview = params.has('preview');
 const track = !preview && !params.has('notrack');

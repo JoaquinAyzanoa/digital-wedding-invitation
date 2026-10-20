@@ -62,6 +62,8 @@ export function createSupabaseApi(): PublicApi {
         p_payload: rsvp as unknown as Json,
       });
       if (error) throw toApiError(error);
+      // Unknown code: null (so the miss counts towards the guessing brake).
+      if (!data) throw new ApiError('invitation_not_found');
       return data as unknown as InvitationView;
     },
 

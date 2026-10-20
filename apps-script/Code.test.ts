@@ -314,7 +314,7 @@ describe('Apps Script sync', () => {
     expect(cell(lopez, 'Hospedaje')).toBe('');
     expect(cell(lopez, 'Teléfono')).toBe("'987654321");
     expect(cell(lopez, 'Respondió')).toEqual(new Date('2026-10-21T16:05:00Z'));
-    expect(cell(lopez, 'Link')).toBe('https://example.com/?i=abc234');
+    expect(cell(lopez, 'Link')).toBe('https://example.com/?abc234');
     expect(cell(carla, 'Estado')).toBe('Pendiente');
     expect(cell(carla, 'Enviada')).toBe('');
     expect(cell(carla, 'Teléfono')).toBe('');

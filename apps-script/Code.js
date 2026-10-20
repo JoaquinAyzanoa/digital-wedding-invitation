@@ -332,7 +332,7 @@ function invitationRows(invitations, siteUrl) {
     i.openCount || 0,
     toDate(i.lastOpenedAt),
     i.notes || '',
-    siteUrl ? `${siteUrl}/?i=${i.code}` : '',
+    siteUrl ? `${siteUrl}/?${i.code}` : '',
   ]);
 }
 

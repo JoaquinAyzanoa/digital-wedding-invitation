@@ -5,10 +5,10 @@ export function siteUrl(): string {
 
 /** The guest's personal link. */
 export function invitationLink(code: string): string {
-  return `${siteUrl()}/?i=${code}`;
+  return `${siteUrl()}/?${code}`;
 }
 
 /** Opening an invitation from the admin: same deployment, and the visit is not counted. */
 export function adminPreviewLink(code: string): string {
-  return `${window.location.origin}/?i=${code}&notrack=1`;
+  return `${window.location.origin}/?${code}&notrack=1`;
 }

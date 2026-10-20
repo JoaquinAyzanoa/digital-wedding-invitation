@@ -40,7 +40,7 @@ export const invitationInputSchema = z.object({
     .toLowerCase()
     .refine(
       (v) => v === '' || isInvitationCode(v),
-      'Código de 6 caracteres, sin 0, 1, i, l ni o (vacío = automático)',
+      'Código de 4 caracteres, sin 0, 1, i, l ni o (vacío = automático)',
     ),
 });
 

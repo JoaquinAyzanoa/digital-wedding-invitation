@@ -82,17 +82,18 @@ test.describe('invitation (demo)', () => {
     await code.scrollIntoViewIfNeeded();
     await code.fill('DEMO');
     await page.getByRole('button', { name: 'Ver mi invitación' }).click();
-    await expect(page).toHaveURL(/\?i=demo/);
+    // The short link form: /?demo
+    await expect(page).toHaveURL(/\/\?demo$/);
     await expect(page.getByRole('dialog').getByText('Familia Demo')).toBeVisible();
   });
 
   test('unknown code: says so inside the envelope', async ({ page }) => {
-    await page.goto('/?i=zzzzzz');
+    await page.goto('/?zzzz');
     const envelope = page.getByRole('dialog');
     await expect(envelope.getByText('No encontramos tu invitación.')).toBeVisible();
     await envelope.getByRole('textbox').fill('ab');
     await envelope.getByRole('button', { name: 'Ver mi invitación' }).click();
-    await expect(envelope.getByRole('alert')).toContainText('6 letras y números');
+    await expect(envelope.getByRole('alert')).toContainText('4 letras o números');
   });
 
   test('reduced motion: the envelope simply fades', async ({ browser }) => {

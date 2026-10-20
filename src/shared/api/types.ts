@@ -11,6 +11,7 @@ export const API_ERROR_CODES = [
   'album_full',
   'too_large',
   'forbidden',
+  'rate_limited',
   'content_invalid',
   'network',
   'unknown',

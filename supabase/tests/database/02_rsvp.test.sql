@@ -43,8 +43,8 @@ select is((select updated_at from public.invitations where code = 'tst234'),
 
 -- submit_rsvp: validation
 set local role anon;
-select throws_ok($$select public.submit_rsvp('zzzzzz', '{"attending": false}')$$,
-  'P0001', 'invitation_not_found', 'unknown code');
+select is(public.submit_rsvp('zzzzzz', '{"attending": false}'), null,
+  'unknown code: null (the miss counts towards the guessing brake)');
 select throws_ok($$select public.submit_rsvp('tst234', '{}')$$,
   'P0001', 'invalid_payload', 'attending is required');
 select throws_ok($$select public.submit_rsvp('tst234', '{"attending": "yes"}')$$,

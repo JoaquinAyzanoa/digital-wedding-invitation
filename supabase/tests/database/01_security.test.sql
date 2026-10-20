@@ -88,7 +88,7 @@ select lives_ok('select public.admin_dashboard()', 'admin can call admin_dashboa
 select lives_ok($$insert into public.invitations (display_name) values ('Nueva')$$,
   'admin can insert an invitation without a code');
 select matches((select code from public.invitations where display_name = 'Nueva'),
-  '^[abcdefghjkmnpqrstuvwxyz23456789]{6}$', 'generated code uses the unambiguous alphabet');
+  '^[abcdefghjkmnpqrstuvwxyz23456789]{4}$', 'generated code: 4 characters of the unambiguous alphabet');
 select lives_ok($$update public.site_content set public_data = '{"a": 1}' where id = 1$$,
   'admin can update site_content');
 set local role postgres;
