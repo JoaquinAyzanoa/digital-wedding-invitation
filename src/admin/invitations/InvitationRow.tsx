@@ -10,7 +10,6 @@ import { useToast } from '@/shared/toast/toastContext';
 import { copyText } from '@/shared/utils/clipboard';
 import { adminPreviewLink, invitationLink } from '@/shared/utils/links';
 import styles from './InvitationRow.module.css';
-import { useInvitationPdf } from './useInvitationPdf';
 
 const STATUS_LABEL = { pending: 'Pendiente', attending: 'Asiste', declined: 'No asiste' };
 
@@ -19,10 +18,19 @@ interface InvitationRowProps {
   selected: boolean;
   onToggle: () => void;
   onOpen: () => void;
+  onDownloadPdf: () => void;
+  /** A PDF is being generated (one at a time). */
+  pdfBusy: boolean;
 }
 
-export function InvitationRow({ invitation: i, selected, onToggle, onOpen }: InvitationRowProps) {
-  const pdf = useInvitationPdf();
+export function InvitationRow({
+  invitation: i,
+  selected,
+  onToggle,
+  onOpen,
+  onDownloadPdf,
+  pdfBusy,
+}: InvitationRowProps) {
   const toast = useToast();
   const status = responseStatus(i);
   const people = status === 'attending' ? i.attendees.length : 0;
@@ -71,9 +79,9 @@ export function InvitationRow({ invitation: i, selected, onToggle, onOpen }: Inv
           className={styles.icon}
           aria-label={`Descargar PDF de ${i.display_name}`}
           title="Descargar PDF"
-          disabled={pdf.busy}
-          aria-busy={pdf.busy}
-          onClick={() => pdf.download(i)}
+          disabled={pdfBusy}
+          aria-busy={pdfBusy}
+          onClick={onDownloadPdf}
         >
           <UiIcon name="download" size={20} />
         </button>

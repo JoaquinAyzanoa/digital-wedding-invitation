@@ -83,7 +83,15 @@ test('imports 150 invitations by CSV and manages them from the phone', async ({ 
   await page.getByRole('button', { name: 'Filtros' }).click();
   await page.getByLabel('Grupo').selectOption('Grupo 3');
   await expect(page.getByText('30 de 155')).toBeVisible();
+  // Typing and changing a filter right away: the delayed search update must not undo it.
+  await page.getByLabel('Buscar invitaciones').fill('csv');
+  await page.getByLabel('Lado').selectOption('bride');
+  await page.waitForTimeout(600);
+  await expect(page.getByLabel('Lado')).toHaveValue('bride');
+  await expect(page.getByLabel('Grupo')).toHaveValue('Grupo 3');
+  await expect(page).toHaveURL(/q=csv/);
   await page.getByRole('button', { name: 'Quitar filtros' }).click();
+  await expect(page.getByLabel('Buscar invitaciones')).toHaveValue('');
 
   // Bulk delete with confirmation.
   await page.getByLabel('Buscar invitaciones').fill('Invitado CSV 15');

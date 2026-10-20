@@ -16,6 +16,7 @@ import { ImportDialog } from '@/admin/invitations/ImportDialog';
 import { InvitationPanel } from '@/admin/invitations/InvitationPanel';
 import { InvitationRow } from '@/admin/invitations/InvitationRow';
 import { PdfZipDialog } from '@/admin/invitations/PdfZipDialog';
+import { useInvitationPdf } from '@/admin/invitations/useInvitationPdf';
 import { Btn } from '@/admin/ui/Btn';
 import { ConfirmDialog } from '@/admin/ui/ConfirmDialog';
 import ui from '@/admin/ui/ui.module.css';
@@ -24,6 +25,15 @@ import { useToast } from '@/shared/toast/toastContext';
 import { attendeesCsv, downloadText, invitationsCsv } from '@/shared/utils/csv';
 import { invitationLink } from '@/shared/utils/links';
 import styles from './InvitationsPage.module.css';
+
+/**
+ * The filters in the address bar right now. Not react-router's params: those belong to the
+ * render that scheduled a write, and navigation renders are interruptible, so with a long
+ * list a delayed search write could land before the filter change commits and undo it.
+ */
+function liveFilters(): InvitationFilters {
+  return filtersFromParams(new URLSearchParams(window.location.hash.split('?')[1] ?? ''));
+}
 
 type Panel =
   | { kind: 'new' }
@@ -36,6 +46,8 @@ type Panel =
 export function InvitationsPage() {
   const invitations = useInvitations();
   const remove = useDeleteInvitations();
+  // One for the whole list (not one per row): rows only trigger it.
+  const pdf = useInvitationPdf();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const urlFilters = useMemo(() => filtersFromParams(params), [params]);
@@ -46,9 +58,8 @@ export function InvitationsPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setParams((current) => filtersToParams({ ...filtersFromParams(current), q: query }), {
-        replace: true,
-      });
+      const live = liveFilters();
+      if (live.q !== query) setParams(filtersToParams({ ...live, q: query }), { replace: true });
     }, 250);
     return () => clearTimeout(timer);
   }, [query, setParams]);
@@ -65,13 +76,7 @@ export function InvitationsPage() {
   const selectedRows = visible.filter((i) => selected.has(i.id));
 
   function setFilter<K extends keyof InvitationFilters>(key: K, value: InvitationFilters[K]) {
-    // From the current URL, not this render's copy, so quick changes never undo each other.
-    setParams(
-      (current) => filtersToParams({ ...filtersFromParams(current), q: query, [key]: value }),
-      {
-        replace: true,
-      },
-    );
+    setParams(filtersToParams({ ...liveFilters(), q: query, [key]: value }), { replace: true });
   }
 
   function toggle(id: string) {
@@ -287,6 +292,8 @@ export function InvitationsPage() {
               selected={selected.has(invitation.id)}
               onToggle={() => toggle(invitation.id)}
               onOpen={() => setPanel({ kind: 'edit', id: invitation.id })}
+              onDownloadPdf={() => pdf.download(invitation)}
+              pdfBusy={pdf.busy}
             />
           ))}
         </ul>
