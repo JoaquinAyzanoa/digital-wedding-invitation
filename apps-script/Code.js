@@ -7,21 +7,23 @@
  * These calls also keep the free Supabase project from pausing for inactivity.
  *
  * Deployed as a web app, the same code receives the guests' album photos (`doPost`) and
- * saves them, at their original quality, in the "Fotos de la boda" folder of the Google Drive
- * of the account that runs it, in a subfolder per invitation. Supabase says whether the code
- * exists and the album is open, and keeps the count.
+ * saves them, at their original quality, in a Google Drive folder (property FOLDER_ID). It
+ * does not talk to Supabase: no codes, no limits, anyone with the page can upload (the
+ * invitation and the /photos/ page with the QR on the tables).
  *
  * The Sheet and the photos can live in different Google accounts: the same file goes into
  * two projects (see README.md in this folder).
- *   - Sheet account: Extensions → Apps Script of a Google Sheet, run `setup`.
- *   - Photos account: a new project at script.google.com, run `setupAlbum` and deploy it as
- *     a web app. (One account for both: run both functions in the Sheet's project.)
+ *   - Sheet account: Extensions → Apps Script of a Google Sheet, properties SUPABASE_URL,
+ *     SUPABASE_KEY, SECRET and SITE_URL, run `setup`.
+ *   - Photos account: a new project at script.google.com, property FOLDER_ID (the link of
+ *     the Drive folder), run `setupAlbum` and deploy it as a web app.
  *
- * Script properties (the same in both projects):
- *   SUPABASE_URL  https://<project>.supabase.co
- *   SUPABASE_KEY  publishable key (sb_publishable_…)
- *   SECRET        shown in the admin, Ajustes
- *   SITE_URL      https://your-domain (for the personal links; the Sheet only)
+ * Script properties:
+ *   SUPABASE_URL  https://<project>.supabase.co            (Sheet)
+ *   SUPABASE_KEY  publishable key (sb_publishable_…)       (Sheet)
+ *   SECRET        shown in the admin, Ajustes              (Sheet)
+ *   SITE_URL      https://your-domain, for the links       (Sheet)
+ *   FOLDER_ID     the Drive folder's link or id            (album)
  */
 
 const SHEET_NAMES = {
@@ -131,15 +133,12 @@ function setup() {
 
 /**
  * The album, run once by hand in the project of the account whose Drive keeps the photos:
- * creates "Fotos de la boda" and registers its link (the admin opens it from the panel).
- * Then deploy this project as a web app.
+ * checks the FOLDER_ID folder (and makes Google ask for the Drive permission). Then deploy
+ * this project as a web app.
  */
 function setupAlbum() {
-  const props = PropertiesService.getScriptProperties();
-  const config = readConfig_(props);
-  const folder = albumFolder_(props);
-  rpc_(config, 'google_register_folder', { p_folder_url: folder.getUrl() });
-  console.log(`Carpeta del álbum: ${folder.getUrl()}`);
+  const folder = albumFolder_();
+  console.log(`Las fotos se guardarán en «${folder.getName()}»: ${folder.getUrl()}`);
 }
 
 function readConfig_(props) {
@@ -178,65 +177,47 @@ function fetchExport_(config, lastHash) {
 }
 
 // ---------------------------------------------------------------------------------------
-// Album: the guests' photos, to Google Drive
+// Album: the guests' photos, to a Google Drive folder
 // ---------------------------------------------------------------------------------------
 
-const ALBUM_FOLDER_NAME = 'Fotos de la boda';
 /** Original photos from phones weigh 2–10 MB; this leaves room and stays within the limits. */
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
-const UPLOAD_ERRORS = [
-  'invitation_not_found',
-  'album_closed',
-  'album_full',
-  'invalid_payload',
-  'too_large',
-  'forbidden',
-];
 
-/** The admin's "Probar conexión": the web app answers. */
+/** The admin's "Probar conexión": the web app answers and says where the photos go. */
 function doGet() {
-  return reply_({ ok: true, service: 'album' });
+  try {
+    const folder = albumFolder_();
+    return reply_({
+      ok: true,
+      service: 'album',
+      folderName: folder.getName(),
+      folderUrl: folder.getUrl(),
+    });
+  } catch (error) {
+    return reply_({ ok: false, error: String((error && error.message) || error) });
+  }
 }
 
 /**
- * A guest's photo: { code, name, type, data (base64) }, sent as text/plain (no CORS
- * preflight). Answers { ok: true } or { ok: false, error }.
+ * A guest's photo: { name, type, data (base64) }, sent as text/plain (no CORS preflight).
+ * Saved as it is in the folder. Answers { ok: true } or { ok: false, error }.
  */
 function doPost(e) {
   try {
     const request = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    const code = String(request.code || '')
-      .trim()
-      .toLowerCase();
     const type = String(request.type || '');
-    if (
-      !/^[a-z2-9]{4,8}$/.test(code) ||
-      !/^image\/[\w.+-]+$/.test(type) ||
-      typeof request.data !== 'string'
-    ) {
+    if (!/^image\/[\w.+-]+$/.test(type) || typeof request.data !== 'string') {
       return reply_({ ok: false, error: 'invalid_payload' });
     }
     if (request.data.length > Math.ceil(MAX_PHOTO_BYTES / 3) * 4) {
       return reply_({ ok: false, error: 'too_large' });
     }
-
-    const props = PropertiesService.getScriptProperties();
-    const config = readConfig_(props);
-    const guest = rpc_(config, 'album_drive_check', { p_code: code });
     const bytes = Utilities.base64Decode(request.data);
-    const name = photoName(request.name, type);
-    const file = guestFolder_(props, guest).createFile(Utilities.newBlob(bytes, type, name));
-    rpc_(config, 'register_drive_photo', {
-      p_code: code,
-      p_file_id: file.getId(),
-      p_name: name,
-      p_bytes: bytes.length,
-    });
+    albumFolder_().createFile(Utilities.newBlob(bytes, type, photoName(request.name, type)));
     return reply_({ ok: true });
   } catch (error) {
-    const message = String((error && error.message) || error);
-    if (!UPLOAD_ERRORS.includes(message)) console.error(`Subida de foto: ${message}`);
-    return reply_({ ok: false, error: UPLOAD_ERRORS.includes(message) ? message : 'unknown' });
+    console.error(`Subida de foto: ${String((error && error.message) || error)}`);
+    return reply_({ ok: false, error: 'unknown' });
   }
 }
 
@@ -252,71 +233,14 @@ function photoName(name, type) {
   return `foto-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
 }
 
-/** Calls a Supabase RPC with the secret; the database's error code becomes the message. */
-function rpc_(config, name, params) {
-  const response = UrlFetchApp.fetch(`${config.url}/rest/v1/rpc/${name}`, {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { apikey: config.key },
-    payload: JSON.stringify(Object.assign({ p_secret: config.secret }, params)),
-    muteHttpExceptions: true,
-  });
-  const body = response.getContentText();
-  if (response.getResponseCode() !== 200) {
-    let message = body.slice(0, 300);
-    try {
-      message = JSON.parse(body).message || message;
-    } catch {
-      // not JSON: keep the text
-    }
-    throw new Error(message);
+/** The folder in the FOLDER_ID property: its id or its whole link (…/folders/<id>). */
+function albumFolder_() {
+  const raw = (PropertiesService.getScriptProperties().getProperty('FOLDER_ID') || '').trim();
+  const id = (/folders\/([\w-]+)/.exec(raw) || [])[1] || raw;
+  if (!id) {
+    throw new Error('Falta la propiedad FOLDER_ID: el enlace de tu carpeta de Drive (ver README).');
   }
-  return body ? JSON.parse(body) : null;
-}
-
-/** "Fotos de la boda" in My Drive, created once (its id is kept in the properties). */
-function albumFolder_(props) {
-  const id = props.getProperty('ALBUM_FOLDER_ID');
-  if (id) {
-    try {
-      const folder = DriveApp.getFolderById(id);
-      if (!folder.isTrashed()) return folder;
-    } catch {
-      // deleted: create it again
-    }
-  }
-  const folder = DriveApp.createFolder(ALBUM_FOLDER_NAME);
-  props.setProperty('ALBUM_FOLDER_ID', folder.getId());
-  return folder;
-}
-
-/** "Familia López (abc234)" inside the album folder. Locked: two photos at once, one folder. */
-function guestFolder_(props, guest) {
-  const key = `FOLDER_${guest.code}`;
-  const find = () => {
-    const id = props.getProperty(key);
-    if (!id) return null;
-    try {
-      const folder = DriveApp.getFolderById(id);
-      return folder.isTrashed() ? null : folder;
-    } catch {
-      return null;
-    }
-  };
-  const existing = find();
-  if (existing) return existing;
-
-  const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    const again = find();
-    if (again) return again;
-    const folder = albumFolder_(props).createFolder(`${guest.displayName} (${guest.code})`);
-    props.setProperty(key, folder.getId());
-    return folder;
-  } finally {
-    lock.releaseLock();
-  }
+  return DriveApp.getFolderById(id);
 }
 
 function reply_(body) {

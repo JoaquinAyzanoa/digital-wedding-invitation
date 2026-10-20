@@ -1,0 +1,56 @@
+.page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 72px var(--gutter) 48px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.flowers {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(48vw, 240px);
+  pointer-events: none;
+}
+
+.names {
+  position: relative;
+  font-family: var(--font-script);
+  font-size: clamp(44px, 13vw, 64px);
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
+.amp {
+  color: var(--color-accent);
+}
+
+.icon {
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text {
+  max-width: 32ch;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+.closed {
+  max-width: 30ch;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}

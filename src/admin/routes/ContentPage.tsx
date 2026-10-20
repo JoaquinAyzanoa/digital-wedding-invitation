@@ -13,8 +13,10 @@ import {
 } from '@/admin/content/fields';
 import { sectionOfPath, type ContentForm, type ContentSectionKey } from '@/admin/content/form';
 import { uploadDecoration, uploadMusic, uploadPhoto } from '@/admin/data/storage';
+import { Btn } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import { ICON_KEYS, PHOTO_SLOTS, SECTION_IDS, type SectionId } from '@/shared/schemas/content';
+import { useToast } from '@/shared/toast/toastContext';
 import styles from './ContentPage.module.css';
 
 const ICON_LABELS: Record<(typeof ICON_KEYS)[number], string> = {
@@ -145,6 +147,48 @@ function SectionEntryFields({ index }: { index: number }) {
       </div>
       <Toggle name={`public.sections.${index}.visible`} label="Visible" />
     </>
+  );
+}
+
+/**
+ * Asks the album's web app whether it answers (doGet) and fills in the Drive folder's link
+ * it reports.
+ */
+function AlbumConnectionTest() {
+  const toast = useToast();
+  const { control, setValue } = useFormContext<ContentForm>();
+  const url = useWatch({ control, name: 'public.album.uploadUrl' });
+  const [testing, setTesting] = useState(false);
+
+  async function test() {
+    setTesting(true);
+    try {
+      const reply = (await (await fetch(url!)).json()) as { ok?: boolean; folderUrl?: string };
+      if (!reply.ok) throw new Error('bad reply');
+      if (reply.folderUrl) {
+        setValue('public.album.folderUrl', reply.folderUrl, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+      toast('Conexión correcta: el script responde. Recuerda guardar.');
+    } catch {
+      toast('No respondió. ¿Implementaste como aplicación web con acceso «Cualquier usuario»?');
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <Btn
+      size="sm"
+      variant="secondary"
+      className={styles.inlineButton}
+      onClick={test}
+      disabled={!url || testing}
+    >
+      {testing ? 'Probando…' : 'Probar conexión'}
+    </Btn>
   );
 }
 
@@ -418,6 +462,21 @@ export function ContentPage() {
               <DateField name="public.album.closesAt" label="Cierra el" />
             </div>
             <TextField name="public.album.text" label="Texto del álbum" multiline />
+            <TextField
+              name="public.album.uploadUrl"
+              label="URL de la aplicación web (Google Drive)"
+              placeholder="https://script.google.com/macros/s/…/exec"
+              hint="La del script del álbum: Implementar → Aplicación web (ver Ajustes). Sin ella no aparece el botón para subir fotos."
+              emptyAsUndefined
+            />
+            <AlbumConnectionTest />
+            <TextField
+              name="public.album.folderUrl"
+              label="Enlace de la carpeta de Drive"
+              placeholder="https://drive.google.com/drive/folders/…"
+              hint="Se llena solo al probar la conexión. Para abrir las fotos desde el panel."
+              emptyAsUndefined
+            />
             <TextField name="public.farewell" label="Despedida" />
           </Group>
 

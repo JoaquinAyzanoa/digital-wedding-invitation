@@ -49,6 +49,18 @@ const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora en formato 24 h
 
 // Only http(s): content URLs end up in href/src, and `javascript:` is a valid URL.
 const httpUrl = z.url({ protocol: /^https?$/, error: 'Debe ser un enlace https://' });
+const webAppUrl = z
+  .string()
+  .regex(
+    /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/,
+    'La URL de la aplicación web: https://script.google.com/macros/s/…/exec',
+  );
+const driveFolderUrl = z
+  .string()
+  .regex(
+    /^https:\/\/drive\.google\.com\/[A-Za-z0-9/_?=&.-]+$/,
+    'Un enlace de Google Drive: https://drive.google.com/…',
+  );
 // Font names and ids are written into CSS (font-family, @font-face): no quotes or braces.
 const fontFamily = z.string().regex(/^[A-Za-z0-9 ]{1,60}$/, 'Solo letras, números y espacios');
 const fontId = z.string().regex(/^[a-z0-9-]{1,40}$/, 'Solo minúsculas, números y guiones');
@@ -153,6 +165,10 @@ export const publicContentSchema = z.object({
     opensAt: dateOrDateTime,
     closesAt: dateOrDateTime,
     text: text(500),
+    /** The Apps Script web app that saves the photos in Google Drive. */
+    uploadUrl: webAppUrl.optional(),
+    /** The Drive folder with the photos (shown in the admin). */
+    folderUrl: driveFolderUrl.optional(),
   }),
   farewell: text(200),
   sections: z.array(

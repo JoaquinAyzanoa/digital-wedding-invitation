@@ -24,17 +24,14 @@ const MESSAGES = {
   notPhoto: 'Este archivo no es una foto.',
   tooLarge: 'Pesa más de 25 MB.',
   closed: 'El álbum ya no recibe fotos.',
-  full: 'Llegaste al máximo de fotos para tu invitación. ¡Gracias!',
   failed: 'No se pudo subir. Revisa tu conexión y reintenta.',
 };
 
 /** Answers that will not change by trying again. */
 const FINAL: Partial<Record<ApiErrorCode, string>> = {
   album_closed: MESSAGES.closed,
-  album_full: MESSAGES.full,
   too_large: MESSAGES.tooLarge,
   invalid_payload: MESSAGES.notPhoto,
-  invitation_not_found: MESSAGES.closed,
 };
 
 type Sleep = (ms: number) => Promise<void>;
@@ -58,7 +55,6 @@ export class AlbumUploadQueue {
   constructor(
     private api: PublicApi,
     private uploadUrl: string,
-    private code: string,
     private sleep: Sleep = defaultSleep,
   ) {}
 
@@ -136,7 +132,7 @@ export class AlbumUploadQueue {
     for (let attempt = 0; ; attempt++) {
       this.update(id, { status: 'uploading', progress: 0 });
       try {
-        await this.api.uploadAlbumPhoto(this.uploadUrl, this.code, file, {
+        await this.api.uploadAlbumPhoto(this.uploadUrl, file, {
           signal,
           onProgress: (progress) => this.update(id, { progress }),
         });

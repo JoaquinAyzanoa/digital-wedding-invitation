@@ -51,6 +51,25 @@ test.describe('invitation (demo)', () => {
     await expect(page.getByText('Este archivo no es una foto.')).toBeVisible();
   });
 
+  test('the /photos/ page (QR on the tables) lets anyone upload, without a code', async ({
+    page,
+  }) => {
+    await page.goto('/photos/');
+    await expect(page.getByRole('heading', { name: 'Comparte tus fotos' })).toBeVisible();
+    await expect(page.getByText('Valeria & Mateo')).toBeVisible();
+    await page.locator('input[type="file"]').setInputFiles([
+      {
+        name: 'mesa.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4AWM8AQQMQMDEAAUAMKYDJOk+9mYAAAAASUVORK5CYII=',
+          'base64',
+        ),
+      },
+    ]);
+    await expect(page.getByText('¡Gracias! Subiste 1 foto.')).toBeVisible({ timeout: 20_000 });
+  });
+
   test('copies a payment method', async ({ page }) => {
     await page.goto('/?i=demo');
     await openEnvelope(page);

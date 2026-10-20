@@ -21,18 +21,10 @@ function statusText(item: UploadItem) {
  * "Subir fotos": several at once, from the gallery or the camera, each with its progress.
  * They go at their original quality to the couple's Google Drive.
  */
-export function AlbumUploader({
-  api,
-  uploadUrl,
-  code,
-}: {
-  api: PublicApi;
-  uploadUrl: string;
-  code: string;
-}) {
+export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: string }) {
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
-  const [queue] = useState(() => new AlbumUploadQueue(api, uploadUrl, code));
+  const [queue] = useState(() => new AlbumUploadQueue(api, uploadUrl));
   const items = useSyncExternalStore(queue.subscribe, queue.getSnapshot);
 
   const done = items.filter((i) => i.status === 'done').length;

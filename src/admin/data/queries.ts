@@ -211,10 +211,6 @@ export function useResetRsvp() {
 export interface SheetSettings {
   secret: string;
   lastSyncAt: string | null;
-  /** The Apps Script web app that receives the album photos. */
-  albumUploadUrl: string | null;
-  /** The Drive folder with the photos (registered by the script's setup). */
-  albumFolderUrl: string | null;
 }
 
 /** The Google Sheet script's secret and its last sync (admins only). */
@@ -233,16 +229,6 @@ export function useRotateSheetSecret() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => check(await supabase.rpc('admin_rotate_sheet_secret')),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.sheet }),
-  });
-}
-
-/** The web app URL the guests' photos go to (null disconnects the album). */
-export function useSetAlbumUploadUrl() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (url: string | null) =>
-      check(await supabase.rpc('admin_set_album_upload_url', { p_url: url as string })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.sheet }),
   });
 }

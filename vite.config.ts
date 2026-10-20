@@ -54,6 +54,8 @@ export default defineConfig(({ mode }) => ({
       input: {
         invitation: fileURLToPath(new URL('./index.html', import.meta.url)),
         admin: fileURLToPath(new URL('./login/index.html', import.meta.url)),
+        // /photos/: the album page the QR on the tables opens.
+        photos: fileURLToPath(new URL('./photos/index.html', import.meta.url)),
       },
     },
   },

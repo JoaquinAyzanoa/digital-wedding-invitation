@@ -46,10 +46,5 @@ export interface PublicApi {
   getInvitation(code: string, options?: GetInvitationOptions): Promise<InvitationView | null>;
   submitRsvp(code: string, rsvp: RsvpInput): Promise<InvitationView>;
   /** Sends an original photo to the album (Google Drive, through `uploadUrl`). */
-  uploadAlbumPhoto(
-    uploadUrl: string,
-    code: string,
-    file: File,
-    options?: UploadOptions,
-  ): Promise<void>;
+  uploadAlbumPhoto(uploadUrl: string, file: File, options?: UploadOptions): Promise<void>;
 }

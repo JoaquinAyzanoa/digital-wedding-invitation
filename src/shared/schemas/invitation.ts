@@ -7,8 +7,6 @@ export interface InvitationView {
   seats: number;
   rsvpOpen: boolean;
   albumOpen: boolean;
-  /** Where the photos go (the Google Apps Script web app); null if not connected yet. */
-  albumUploadUrl: string | null;
   response: RsvpResponse | null;
   private: PrivateContent;
 }

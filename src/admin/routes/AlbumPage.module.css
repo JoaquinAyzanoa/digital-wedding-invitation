@@ -17,7 +17,7 @@
 }
 
 .notice {
-  margin: 12px 0;
+  margin-top: 12px;
   padding: 10px 12px;
   border-radius: 10px;
   background: #fff4d6;
@@ -25,23 +25,32 @@
   font-size: 14px;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
+.qrBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.qr {
+  display: block;
+  width: 180px;
+  height: 180px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.qrActions {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.url {
   font-size: 14px;
-}
-
-.table th,
-.table td {
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--color-line);
-  text-align: left;
-}
-
-.table th[scope='row'] {
-  font-weight: 400;
-}
-
-.table td {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }

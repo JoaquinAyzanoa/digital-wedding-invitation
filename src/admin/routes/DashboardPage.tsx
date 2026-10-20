@@ -198,10 +198,6 @@ export function DashboardPage() {
               <strong>{d.logistics.lodging.people} personas</strong>
             </li>
             <li>
-              <span>Fotos en el álbum</span>
-              <strong>{d.album.photos}</strong>
-            </li>
-            <li>
               <Link to="/settings" className={styles.sheetLink}>
                 Última sincronización del Sheet
               </Link>

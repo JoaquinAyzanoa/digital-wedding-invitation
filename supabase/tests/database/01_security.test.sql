@@ -45,9 +45,8 @@ select is(
       and has_function_privilege('anon', p.oid, 'execute')
       and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
     order by p.proname::text collate "C"),
-  array['album_drive_check', 'export_for_sheet', 'get_content', 'get_invitation',
-        'google_register_folder', 'ping', 'register_drive_photo', 'submit_rsvp'],
-  'anon can execute only the guest RPCs and the Google script ones (behind the secret)');
+  array['export_for_sheet', 'get_content', 'get_invitation', 'ping', 'submit_rsvp'],
+  'anon can execute only the guest RPCs and the Sheet export (behind its secret)');
 select is(
   array(select p.proname::text from pg_proc p
     where p.pronamespace = 'private'::regnamespace

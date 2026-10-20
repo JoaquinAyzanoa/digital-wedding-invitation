@@ -34,12 +34,10 @@ function readBase64(file: File): Promise<string> {
  */
 export async function uploadToDrive(
   uploadUrl: string,
-  code: string,
   file: File,
   { onProgress, signal }: UploadOptions = {},
 ): Promise<void> {
   const body = JSON.stringify({
-    code,
     name: file.name,
     type: photoType(file),
     data: await readBase64(file),

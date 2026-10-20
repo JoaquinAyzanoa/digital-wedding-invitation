@@ -12,3 +12,8 @@ export function invitationLink(code: string): string {
 export function adminPreviewLink(code: string): string {
   return `${window.location.origin}/?${code}&notrack=1`;
 }
+
+/** The album page the QR on the tables opens: anyone can upload there, no code needed. */
+export function photosPageUrl(): string {
+  return `${siteUrl()}/photos/`;
+}

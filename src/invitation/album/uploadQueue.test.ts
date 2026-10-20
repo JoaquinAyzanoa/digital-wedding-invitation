@@ -15,7 +15,7 @@ function setup(upload: PublicApi['uploadAlbumPhoto']) {
     uploadAlbumPhoto: ReturnType<typeof vi.fn>;
   };
   const sleep = vi.fn(async () => {});
-  const queue = new AlbumUploadQueue(api, URL, 'abc234', sleep);
+  const queue = new AlbumUploadQueue(api, URL, sleep);
   return { api, queue, sleep };
 }
 
@@ -25,7 +25,7 @@ describe('AlbumUploadQueue', () => {
   it(`sends the original files, at most ${CONCURRENCY} at a time`, async () => {
     let active = 0;
     let peak = 0;
-    const { queue, api } = setup(async (_url, _code, _file, options) => {
+    const { queue, api } = setup(async (_url, _file, options) => {
       active++;
       peak = Math.max(peak, active);
       options?.onProgress?.(0.5);
@@ -39,8 +39,8 @@ describe('AlbumUploadQueue', () => {
     expect(queue.getSnapshot().every((i) => i.status === 'done')).toBe(true);
     expect(peak).toBe(CONCURRENCY);
     // The very same File objects: nothing is recompressed.
-    expect(api.uploadAlbumPhoto.mock.calls.map((c) => c[2])).toEqual(files);
-    expect(api.uploadAlbumPhoto.mock.calls[0]!.slice(0, 2)).toEqual([URL, 'abc234']);
+    expect(api.uploadAlbumPhoto.mock.calls.map((c) => c[1])).toEqual(files);
+    expect(api.uploadAlbumPhoto.mock.calls[0]![0]).toBe(URL);
   });
 
   it('retries a failed upload automatically, then succeeds', async () => {
@@ -72,7 +72,6 @@ describe('AlbumUploadQueue', () => {
 
   it.each([
     ['album_closed', 'El álbum ya no recibe fotos.'],
-    ['album_full', 'Llegaste al máximo de fotos para tu invitación. ¡Gracias!'],
     ['too_large', 'Pesa más de 25 MB.'],
   ] as const)('does not retry when the album answers %s', async (code, message) => {
     const { queue, api } = setup(async () => {

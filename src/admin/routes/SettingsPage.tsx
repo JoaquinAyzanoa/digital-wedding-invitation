@@ -1,11 +1,7 @@
-import { useId, useState } from 'react';
-import {
-  adminErrorMessage,
-  useRotateSheetSecret,
-  useSetAlbumUploadUrl,
-  useSheetSettings,
-  type SheetSettings,
-} from '@/admin/data/queries';
+import { useState } from 'react';
+import { Link } from 'react-router';
+import { useSiteContent } from '@/admin/data/content';
+import { adminErrorMessage, useRotateSheetSecret, useSheetSettings } from '@/admin/data/queries';
 import { Btn } from '@/admin/ui/Btn';
 import { ConfirmDialog } from '@/admin/ui/ConfirmDialog';
 import ui from '@/admin/ui/ui.module.css';
@@ -50,8 +46,12 @@ function SyncStatus({ lastSyncAt }: { lastSyncAt: string | null }) {
   );
 }
 
-function AlbumStatus({ settings }: { settings: SheetSettings }) {
-  if (!settings.albumUploadUrl) {
+/** The album is connected when the content has the web app's URL. */
+function AlbumStatus() {
+  const content = useSiteContent();
+  const album = content.data?.public.album;
+  if (!album) return null;
+  if (!album.uploadUrl) {
     return (
       <p className={styles.status} data-tone="off">
         Álbum sin conectar: los invitados todavía no ven el botón para subir fotos (pasos 5 a 8).
@@ -60,11 +60,11 @@ function AlbumStatus({ settings }: { settings: SheetSettings }) {
   }
   return (
     <p className={styles.status} data-tone="ok">
-      Álbum conectado: las fotos van a tu Google Drive.
-      {settings.albumFolderUrl && (
+      Álbum conectado: las fotos van a tu carpeta de Google Drive.
+      {album.folderUrl && (
         <>
           {' '}
-          <a href={settings.albumFolderUrl} target="_blank" rel="noopener noreferrer">
+          <a href={album.folderUrl} target="_blank" rel="noopener noreferrer">
             Abrir carpeta
           </a>
         </>
@@ -99,75 +99,6 @@ function CopyValue({ label, value, secret }: { label: string; value: string; sec
   );
 }
 
-const WEB_APP_URL = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
-
-/** Step 5: the web app that receives the album photos, and a quick check that it answers. */
-function AlbumConnection({ settings }: { settings: SheetSettings }) {
-  const id = useId();
-  const toast = useToast();
-  const save = useSetAlbumUploadUrl();
-  const [url, setUrl] = useState(settings.albumUploadUrl ?? '');
-  const [error, setError] = useState('');
-  const [testing, setTesting] = useState(false);
-
-  async function submit() {
-    const value = url.trim();
-    if (value && !WEB_APP_URL.test(value)) {
-      setError('Pega la URL de la aplicación web: https://script.google.com/macros/s/…/exec');
-      return;
-    }
-    setError('');
-    try {
-      await save.mutateAsync(value || null);
-      toast(value ? 'Álbum conectado' : 'Álbum desconectado');
-    } catch (cause) {
-      toast(adminErrorMessage(cause));
-    }
-  }
-
-  async function test() {
-    setTesting(true);
-    try {
-      const reply = (await (await fetch(settings.albumUploadUrl!)).json()) as { ok?: boolean };
-      toast(reply.ok ? 'Conexión correcta: el script responde' : 'El script no respondió bien');
-    } catch {
-      toast('No se pudo conectar. ¿El acceso es «Cualquier usuario»?');
-    } finally {
-      setTesting(false);
-    }
-  }
-
-  return (
-    <>
-      <div className={ui.field}>
-        <label htmlFor={id} className={ui.label}>
-          URL de la aplicación web
-        </label>
-        <input
-          id={id}
-          className={ui.input}
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://script.google.com/macros/s/…/exec"
-          spellCheck={false}
-          aria-invalid={Boolean(error)}
-        />
-        {error && <span className={ui.error}>{error}</span>}
-      </div>
-      <div className={styles.valueActions}>
-        <Btn size="sm" onClick={submit} disabled={save.isPending}>
-          Guardar
-        </Btn>
-        {settings.albumUploadUrl && (
-          <Btn size="sm" variant="secondary" onClick={test} disabled={testing}>
-            {testing ? 'Probando…' : 'Probar conexión'}
-          </Btn>
-        )}
-      </div>
-    </>
-  );
-}
-
 export function SettingsPage() {
   const toast = useToast();
   const settings = useSheetSettings();
@@ -183,7 +114,7 @@ export function SettingsPage() {
   async function rotateSecret() {
     try {
       await rotate.mutateAsync();
-      toast('Secreto cambiado: actualiza SECRET en los scripts');
+      toast('Secreto cambiado: actualiza SECRET en el script de la hoja');
     } catch (error) {
       toast(adminErrorMessage(error));
     } finally {
@@ -198,9 +129,10 @@ export function SettingsPage() {
       <section className={ui.card}>
         <h2 className={ui.cardTitle}>Google: hoja y álbum de fotos</h2>
         <p className={ui.hint}>
-          Un solo script de Google hace dos cosas: copia invitaciones, asistentes y un resumen a una
-          hoja de Google cada 10 minutos (solo lectura: los cambios se hacen aquí), y recibe las
-          fotos de los invitados en una carpeta de tu Google Drive, en su calidad original.
+          El mismo código de Google sirve para dos cosas, que pueden estar en cuentas distintas:
+          copiar invitaciones, asistentes y un resumen a una hoja de Google cada 10 minutos (solo
+          lectura: los cambios se hacen aquí), y recibir las fotos de los invitados en una carpeta
+          de Google Drive, en su calidad original.
         </p>
 
         {settings.isPending && <p className={ui.muted}>Cargando…</p>}
@@ -212,7 +144,7 @@ export function SettingsPage() {
         {settings.data && (
           <>
             <SyncStatus lastSyncAt={settings.data.lastSyncAt} />
-            <AlbumStatus settings={settings.data} />
+            <AlbumStatus />
 
             <h3 className={styles.subtitle}>
               1. La hoja (en la cuenta de Google donde la quieres)
@@ -251,7 +183,7 @@ export function SettingsPage() {
             </ol>
 
             <h3 className={styles.subtitle}>
-              2. El álbum (en la cuenta de Google cuyo Drive guardará las fotos)
+              2. El álbum (en la cuenta de Google cuyo Drive guarda las fotos)
             </h3>
             <ol className={styles.steps} start={5}>
               <li>
@@ -269,26 +201,27 @@ export function SettingsPage() {
                 </Btn>
               </li>
               <li>
-                En sus <strong>Propiedades del script</strong> agrega las mismas{' '}
-                <code>SUPABASE_URL</code>, <code>SUPABASE_KEY</code> y <code>SECRET</code> del paso
-                3.
+                En sus <strong>Propiedades del script</strong> agrega solo una:{' '}
+                <code>FOLDER_ID</code>, con el enlace de tu carpeta de Drive (ábrela en Drive y
+                copia la dirección del navegador:{' '}
+                <code>https://drive.google.com/drive/folders/…</code>
+                ). No necesita los datos de la hoja.
               </li>
               <li>
                 Elige la función <code>setupAlbum</code> y pulsa <strong>Ejecutar</strong>. Acepta
-                los permisos: crea la carpeta «Fotos de la boda» en el Drive de esa cuenta.
+                los permisos de Drive. En el registro verás el nombre de tu carpeta.
               </li>
               <li>
                 <strong>Implementar → Nueva implementación</strong>, tipo{' '}
                 <strong>Aplicación web</strong>, «Ejecutar como»: <strong>Yo</strong>, «Quién tiene
-                acceso»: <strong>Cualquier usuario</strong>. Pulsa Implementar, copia la URL de la
-                aplicación web y pégala aquí:
-                <AlbumConnection settings={settings.data} />
+                acceso»: <strong>Cualquier usuario</strong>. Copia la URL de la aplicación web y
+                pégala en <Link to="/content">Contenido → Álbum y despedida</Link>, pulsa «Probar
+                conexión» y guarda.
               </li>
             </ol>
             <p className={ui.hint}>
               Listo: los dos estados de arriba pasan a verde. Si un script falla, Google le avisa
-              por correo a la cuenta dueña. ¿Todo en una sola cuenta? Haz los pasos 7 y 8 en el
-              mismo script de la hoja. Si más adelante cambias el código del álbum, usa{' '}
+              por correo a la cuenta dueña. Si más adelante cambias el código del álbum, usa{' '}
               <strong>Implementar → Gestionar implementaciones → Editar → Versión nueva</strong>:
               así la URL no cambia.
             </p>
@@ -296,7 +229,7 @@ export function SettingsPage() {
             <h3 className={styles.subtitle}>Secreto</h3>
             <p className={ui.hint}>
               Con el secreto, cualquiera puede leer la lista de invitados. Si crees que alguien lo
-              vio, cámbialo y actualiza <code>SECRET</code> en los dos scripts (hoja y álbum).
+              vio, cámbialo y actualiza <code>SECRET</code> en el script de la hoja.
             </p>
             <Btn variant="secondary" onClick={() => setConfirmRotate(true)}>
               Cambiar secreto
@@ -308,7 +241,7 @@ export function SettingsPage() {
       {confirmRotate && (
         <ConfirmDialog
           title="¿Cambiar el secreto?"
-          message="La hoja y el álbum dejan de funcionar hasta que pegues el nuevo SECRET en los dos scripts."
+          message="La hoja deja de actualizarse hasta que pegues el nuevo SECRET en su script."
           confirmLabel="Cambiar"
           danger
           busy={rotate.isPending}

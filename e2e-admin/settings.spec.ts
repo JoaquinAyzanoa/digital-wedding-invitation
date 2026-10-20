@@ -49,7 +49,9 @@ test('connects the Google Sheet: values to paste, status and a new secret', asyn
   // A new secret: the old one stops working.
   await page.getByRole('button', { name: 'Cambiar secreto' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Cambiar' }).click();
-  await expect(page.getByText('Secreto cambiado: actualiza SECRET en los scripts')).toBeVisible();
+  await expect(
+    page.getByText('Secreto cambiado: actualiza SECRET en el script de la hoja'),
+  ).toBeVisible();
   await secretBox.getByRole('button', { name: 'Mostrar' }).click();
   await expect(secretBox.locator('code')).not.toHaveText(secret);
   expect((await exportForSheet(secret)).status).not.toBe(200);

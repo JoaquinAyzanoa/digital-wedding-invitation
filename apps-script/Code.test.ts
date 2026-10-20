@@ -74,6 +74,9 @@ class FakeFolder {
   getUrl() {
     return `https://drive.google.com/drive/folders/${this.id}`;
   }
+  getName() {
+    return this.name;
+  }
   isTrashed() {
     return this.trashed;
   }
@@ -399,10 +402,13 @@ describe('Apps Script sync', () => {
   });
 });
 
-describe('Apps Script album (photos to Google Drive)', () => {
+describe('Apps Script album (photos to a Google Drive folder)', () => {
   let env: ReturnType<typeof load>;
+  let folder: { id: string; files: Array<{ name: string; type: string; bytes: number[] }> };
   beforeEach(() => {
     env = load();
+    folder = env.drive.folder('Photos');
+    env.props.set('FOLDER_ID', `https://drive.google.com/drive/folders/${folder.id}?usp=sharing`);
   });
 
   const photo = Buffer.from('original photo bytes, not recompressed');
@@ -412,94 +418,48 @@ describe('Apps Script album (photos to Google Drive)', () => {
         .text,
     );
   const upload = (extra: Record<string, unknown> = {}) =>
-    post({
-      code: 'ABC234',
-      name: 'IMG_2041.JPG',
-      type: 'image/jpeg',
-      data: photo.toString('base64'),
-      ...extra,
-    });
+    post({ name: 'IMG_2041.JPG', type: 'image/jpeg', data: photo.toString('base64'), ...extra });
 
-  it('setupAlbum creates the album folder once and registers its link', () => {
-    env.script.setupAlbum!();
-    env.script.setupAlbum!();
-    const albums = [...env.drive.all.values()].filter((f) => f.name === 'Fotos de la boda');
-    expect(albums).toHaveLength(1);
-    const registered = env.requests.filter((r) => r.url.endsWith('/google_register_folder'));
-    expect(registered.at(-1)!.payload).toEqual({
-      p_secret: 's3cret',
-      p_folder_url: `https://drive.google.com/drive/folders/${albums[0]!.id}`,
-    });
-  });
-
-  it('saves the original photo in the guest folder and records it', () => {
+  it('saves the original photo in the FOLDER_ID folder, without asking Supabase', () => {
     expect(upload()).toEqual({ ok: true });
-    expect(upload({ name: 'IMG_2042.JPG' })).toEqual({ ok: true });
-
-    const album = [...env.drive.all.values()].find((f) => f.name === 'Fotos de la boda')!;
-    expect(album.folders.map((f) => f.name)).toEqual(['Familia López (abc234)']);
-    const files = album.folders[0]!.files;
-    expect(files.map((f) => f.name)).toEqual(['IMG_2041.JPG', 'IMG_2042.JPG']);
-    expect(Buffer.from(files[0]!.bytes).equals(photo)).toBe(true);
-    expect(files[0]!.type).toBe('image/jpeg');
-
-    const calls = env.requests.map((r) => r.url.split('/rpc/')[1]);
-    expect(calls).toEqual([
-      'album_drive_check',
-      'register_drive_photo',
-      'album_drive_check',
-      'register_drive_photo',
+    expect(upload({ name: 'IMG_2042.HEIC', type: 'image/heic' })).toEqual({ ok: true });
+    expect(folder.files.map((f) => [f.name, f.type])).toEqual([
+      ['IMG_2041.JPG', 'image/jpeg'],
+      ['IMG_2042.HEIC', 'image/heic'],
     ]);
-    expect(env.requests[0]!.payload).toEqual({ p_secret: 's3cret', p_code: 'abc234' });
-    expect(env.requests[1]!.payload).toEqual({
-      p_secret: 's3cret',
-      p_code: 'abc234',
-      p_file_id: files[0]!.id,
-      p_name: 'IMG_2041.JPG',
-      p_bytes: photo.length,
-    });
+    expect(Buffer.from(folder.files[0]!.bytes).equals(photo)).toBe(true);
+    expect(env.requests).toHaveLength(0);
   });
 
-  it('a deleted guest folder is created again', () => {
-    upload();
-    const album = [...env.drive.all.values()].find((f) => f.name === 'Fotos de la boda')!;
-    album.folders[0]!.trashed = true;
-    upload();
-    expect(album.folders.filter((f) => !f.trashed)).toHaveLength(1);
+  it('accepts the folder id alone too', () => {
+    env.props.set('FOLDER_ID', folder.id);
+    expect(upload()).toEqual({ ok: true });
+    expect(folder.files).toHaveLength(1);
   });
 
-  it('passes on the reasons Supabase refuses a photo, and saves nothing', () => {
-    env.rpc.set('album_drive_check', () => ({
-      status: 400,
-      body: { code: 'P0001', message: 'album_closed' },
-    }));
-    expect(upload()).toEqual({ ok: false, error: 'album_closed' });
-    env.rpc.set('album_drive_check', () => ({
-      status: 400,
-      body: { code: 'P0001', message: 'album_full' },
-    }));
-    expect(upload()).toEqual({ ok: false, error: 'album_full' });
-    const files = [...env.drive.all.values()].flatMap((f) => f.files);
-    expect(files).toHaveLength(0);
-  });
-
-  it('rejects bad requests before calling Supabase', () => {
+  it('rejects files that are not photos or are too big', () => {
     expect(upload({ type: 'application/pdf' })).toEqual({ ok: false, error: 'invalid_payload' });
-    expect(upload({ code: '../x' })).toEqual({ ok: false, error: 'invalid_payload' });
     expect(upload({ data: 'A'.repeat(36 * 1024 * 1024) })).toEqual({
       ok: false,
       error: 'too_large',
     });
-    expect(env.requests).toHaveLength(0);
+    expect(folder.files).toHaveLength(0);
   });
 
-  it('answers the connection test and unexpected errors without details', () => {
+  it('answers the connection test with the folder', () => {
     expect(JSON.parse((env.script.doGet!() as { text: string }).text)).toEqual({
       ok: true,
       service: 'album',
+      folderName: 'Photos',
+      folderUrl: `https://drive.google.com/drive/folders/${folder.id}`,
     });
-    env.rpc.set('register_drive_photo', () => ({ status: 500, body: 'boom' }));
+  });
+
+  it('without FOLDER_ID: setupAlbum explains it and uploads fail without details', () => {
+    env.props.delete('FOLDER_ID');
+    expect(() => env.script.setupAlbum!()).toThrow('Falta la propiedad FOLDER_ID');
     expect(upload()).toEqual({ ok: false, error: 'unknown' });
+    expect(JSON.parse((env.script.doGet!() as { text: string }).text).ok).toBe(false);
   });
 
   it('keeps file names safe for Drive', () => {

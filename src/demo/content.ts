@@ -72,6 +72,8 @@ export const demoContent: PublicContent = {
     opensAt: '2026-01-01',
     closesAt: '2027-06-15',
     text: 'Los mejores recuerdos son los que se comparten. Sube aquí las fotos que hayas tomado.',
+    // The demo API never calls it: uploads only pretend.
+    uploadUrl: 'https://script.google.com/macros/s/demo/exec',
   },
   farewell: 'Esperamos contar con su presencia',
   sections: [
@@ -109,8 +111,6 @@ export const demoInvitation: InvitationView = {
   seats: 2,
   rsvpOpen: true,
   albumOpen: true,
-  // The demo API never calls it: uploads only pretend.
-  albumUploadUrl: 'https://script.google.com/macros/s/demo/exec',
   response: null,
   private: {
     gifts: [
