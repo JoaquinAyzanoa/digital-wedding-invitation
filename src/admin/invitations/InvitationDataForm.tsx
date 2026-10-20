@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { adminErrorMessage, useSaveInvitation } from '@/admin/data/queries';
 import ui from '@/admin/ui/ui.module.css';
@@ -23,6 +23,8 @@ interface InvitationDataFormProps {
   groups: string[];
   onSaved: (row: InvitationRow) => void;
   onBusyChange: (busy: boolean) => void;
+  /** Unsaved changes, so the panel can ask before discarding them. */
+  onDirtyChange: (dirty: boolean) => void;
 }
 
 export function InvitationDataForm({
@@ -32,6 +34,7 @@ export function InvitationDataForm({
   groups,
   onSaved,
   onBusyChange,
+  onDirtyChange,
 }: InvitationDataFormProps) {
   const id = useId();
   const toast = useToast();
@@ -40,11 +43,14 @@ export function InvitationDataForm({
     register,
     handleSubmit,
     setError,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<InvitationInput>({
     resolver: zodResolver(invitationInputSchema),
     defaultValues: invitation ? invitationInputFromRow(invitation) : emptyInvitationInput(),
   });
+
+  useEffect(() => onDirtyChange(isDirty), [isDirty, onDirtyChange]);
 
   const submit = handleSubmit(async (input) => {
     if (input.seats < confirmedPeople) {
@@ -57,6 +63,7 @@ export function InvitationDataForm({
     try {
       const row = await save.mutateAsync({ id: invitation?.id, input });
       toast(invitation ? 'Cambios guardados' : `Invitación creada: ${row.code}`);
+      reset(input);
       onSaved(row);
     } catch (error) {
       const message = adminErrorMessage(error);

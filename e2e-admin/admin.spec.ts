@@ -45,6 +45,9 @@ test('a non-admin account is turned away', async ({ page }) => {
 
   await login(page, user);
   await expect(page.getByRole('alert')).toHaveText('Esta cuenta no tiene acceso.');
+  // The notice stays (the sign-out that follows must not wipe it).
+  await page.waitForTimeout(1000);
+  await expect(page.getByRole('alert')).toHaveText('Esta cuenta no tiene acceso.');
   await expect(page.getByRole('heading', { name: 'Resumen' })).toHaveCount(0);
 });
 
@@ -154,6 +157,40 @@ test('passes cannot go below the people already confirmed', async ({ page }) => 
   await panel.getByLabel('Pases').fill('2');
   await panel.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(panel.getByText(/Hay 3 personas confirmadas/)).toBeVisible();
+});
+
+test('asks before discarding unsaved changes', async ({ page }) => {
+  await login(page);
+  await goToInvitations(page);
+  await page.getByRole('button', { name: 'Editar Familia Rojas' }).click();
+  const panel = page.getByRole('dialog', { name: 'Familia Rojas' });
+  await panel.getByLabel('Nombre en la invitación').fill('Familia Rojas Díaz');
+
+  await page.keyboard.press('Escape');
+  const confirm = page.getByRole('dialog', { name: '¿Descartar los cambios?' });
+  await confirm.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(panel.getByLabel('Nombre en la invitación')).toHaveValue('Familia Rojas Díaz');
+
+  await panel.getByRole('tab', { name: 'Respuesta' }).click();
+  await confirm.getByRole('button', { name: 'Descartar' }).click();
+  await expect(panel.getByRole('tab', { name: 'Respuesta' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  // Nothing was saved.
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Editar Familia Rojas' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Editar Familia Rojas Díaz' })).toHaveCount(0);
+});
+
+test('bulk actions only affect the rows on screen', async ({ page }) => {
+  await login(page);
+  await goToInvitations(page);
+  await page.getByLabel('Seleccionar todas las visibles').check();
+  const count = await page.getByRole('button', { name: /^Editar / }).count();
+  await expect(page.getByText(`${count} seleccionadas`)).toBeVisible();
+  await page.getByLabel('Buscar invitaciones').fill('Familia Rojas');
+  await expect(page.getByText('1 seleccionadas')).toBeVisible();
 });
 
 test('signing out returns to the login', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useId, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useState, type FormEvent } from 'react';
 import { useFieldArray, useForm, useWatch, type Resolver } from 'react-hook-form';
 import {
   adminErrorMessage,
@@ -46,10 +46,17 @@ interface RsvpEditorProps {
   invitation: InvitationWithAttendees;
   rules: AdminRsvpRules;
   onBusyChange: (busy: boolean) => void;
+  onDirtyChange: (dirty: boolean) => void;
 }
 
 /** Loads or edits the answer on the guest's behalf (e.g. they confirmed by phone). */
-export function RsvpEditor({ formId, invitation, rules, onBusyChange }: RsvpEditorProps) {
+export function RsvpEditor({
+  formId,
+  invitation,
+  rules,
+  onBusyChange,
+  onDirtyChange,
+}: RsvpEditorProps) {
   const id = useId();
   const toast = useToast();
   const saveRsvp = useSaveRsvp();
@@ -74,7 +81,7 @@ export function RsvpEditor({ formId, invitation, rules, onBusyChange }: RsvpEdit
     handleSubmit,
     setValue,
     getValues,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<RsvpFormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<RsvpFormValues>,
     defaultValues: adminDefaults(invitation, rules),
@@ -83,6 +90,10 @@ export function RsvpEditor({ formId, invitation, rules, onBusyChange }: RsvpEdit
   const kinds = useWatch({ control, name: 'attendees' });
   const needsTransport = useWatch({ control, name: 'needsTransport' });
   const needsLodging = useWatch({ control, name: 'needsLodging' });
+
+  // Changing the status alone is also a change worth keeping.
+  const dirty = isDirty || status !== initial;
+  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
 
   function chooseStatus(next: Status) {
     setStatus(next);

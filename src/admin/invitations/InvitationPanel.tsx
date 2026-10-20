@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useCallback, useId, useState } from 'react';
 import {
   adminErrorMessage,
   useDeleteInvitations,
@@ -33,11 +33,33 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
   const rules = useRsvpRules();
   const remove = useDeleteInvitations();
   // After creating, the panel switches to the new invitation (to copy its link, etc.).
-  const [currentId, setCurrentId] = useState(initial?.id);
-  const invitation = invitations.data?.find((i) => i.id === currentId) ?? initial;
+  const [created, setCreated] = useState<InvitationWithAttendees>();
+  const currentId = created?.id ?? initial?.id;
+  // Until the list refreshes, the row returned by the insert stands in for it: the panel
+  // never goes back to "new" (a second tap would create a duplicate).
+  const invitation = invitations.data?.find((i) => i.id === currentId) ?? created ?? initial;
   const [tab, setTab] = useState<Tab>('data');
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Unsaved changes in the open tab: closing or switching tabs asks first (a tap on the
+  // backdrop or Escape is easy to do by mistake on a phone).
+  const [dirty, setDirty] = useState(false);
+  const onDirtyChange = useCallback((value: boolean) => setDirty(value), []);
+  const [pending, setPending] = useState<{ kind: 'close' } | { kind: 'tab'; tab: Tab } | null>(
+    null,
+  );
+
+  function guarded(action: { kind: 'close' } | { kind: 'tab'; tab: Tab }) {
+    if (dirty) setPending(action);
+    else run(action);
+  }
+
+  function run(action: { kind: 'close' } | { kind: 'tab'; tab: Tab }) {
+    setPending(null);
+    setDirty(false);
+    if (action.kind === 'close') onClose();
+    else setTab(action.tab);
+  }
   const dataFormId = `${id}-data`;
   const rsvpFormId = `${id}-rsvp`;
 
@@ -74,7 +96,7 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
   return (
     <Drawer
       title={invitation ? invitation.display_name : 'Nueva invitación'}
-      onClose={onClose}
+      onClose={() => guarded({ kind: 'close' })}
       footer={footer}
     >
       {invitation && (
@@ -127,7 +149,7 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
                 aria-selected={tab === value}
                 aria-controls={`${id}-panel`}
                 className={styles.tab}
-                onClick={() => setTab(value)}
+                onClick={() => value !== tab && guarded({ kind: 'tab', tab: value })}
               >
                 {label}
               </button>
@@ -149,7 +171,10 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
             confirmedPeople={invitation?.attending ? invitation.attendees.length : 0}
             groups={groupsOf(invitations.data ?? [])}
             onBusyChange={setBusy}
-            onSaved={(row) => setCurrentId(row.id)}
+            onDirtyChange={onDirtyChange}
+            onSaved={(row) => {
+              if (!invitation) setCreated({ ...row, attendees: [] });
+            }}
           />
         )}
 
@@ -165,11 +190,23 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
                 invitation={invitation}
                 rules={rules.data}
                 onBusyChange={setBusy}
+                onDirtyChange={onDirtyChange}
               />
             )}
           </>
         )}
       </div>
+
+      {pending && (
+        <ConfirmDialog
+          title="¿Descartar los cambios?"
+          message="Tienes cambios sin guardar en esta invitación."
+          confirmLabel="Descartar"
+          danger
+          onConfirm={() => run(pending)}
+          onCancel={() => setPending(null)}
+        />
+      )}
 
       {confirmDelete && invitation && (
         <ConfirmDialog

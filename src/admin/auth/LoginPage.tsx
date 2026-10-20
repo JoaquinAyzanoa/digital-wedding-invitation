@@ -30,11 +30,9 @@ export function LoginPage({ notice }: { notice?: string }) {
       );
       return;
     }
-    // Only accounts with app_metadata.role = 'admin' get in (RLS enforces it too).
-    if (data.session && !isAdminSession(data.session)) {
-      await supabase.auth.signOut();
-      setError('Esta cuenta no tiene acceso.');
-    }
+    // Only accounts with app_metadata.role = 'admin' get in (RLS enforces it too);
+    // useSession signs the others out.
+    if (data.session && !isAdminSession(data.session)) setError('Esta cuenta no tiene acceso.');
   }
 
   return (
@@ -51,6 +49,7 @@ export function LoginPage({ notice }: { notice?: string }) {
             type="email"
             className={ui.input}
             autoComplete="username"
+            autoFocus
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

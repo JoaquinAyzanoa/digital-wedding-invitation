@@ -53,8 +53,9 @@ export function InvitationsPage() {
   const all = useMemo(() => invitations.data ?? [], [invitations.data]);
   const visible = useMemo(() => applyFilters(all, filters), [all, filters]);
   const groups = useMemo(() => groupsOf(all), [all]);
-  // Selection only counts what still exists (rows may be deleted elsewhere).
-  const selectedRows = all.filter((i) => selected.has(i.id));
+  // Bulk actions only touch selected rows that are on screen: rows hidden by a search or
+  // filter (or deleted elsewhere) are never deleted or exported by surprise.
+  const selectedRows = visible.filter((i) => selected.has(i.id));
 
   function setFilter<K extends keyof InvitationFilters>(key: K, value: InvitationFilters[K]) {
     // From the current URL, not this render's copy, so quick changes never undo each other.
