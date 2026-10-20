@@ -38,6 +38,18 @@ function parseRefKey(key: string): FontRef {
     : { source: 'google', family: value };
 }
 
+/** A family name the content schema accepts: letters, numbers and spaces only. */
+function fontDisplayName(raw: string): string {
+  return raw
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60)
+    .trim();
+}
+
 /** Lowercase slug for a custom font id ("Mi Caligrafía" → "mi-caligrafia-x7k2"). */
 function fontId(family: string): string {
   const slug = family
@@ -115,56 +127,61 @@ function ContrastWarnings() {
   );
 }
 
+/** Every option written in its own font (a native select cannot show them on phones). */
 function FontField({ role, sample }: { role: FontRole; sample: string }) {
-  const id = useId();
+  const name = useId();
   const { control } = useFormContext<ContentForm>();
   const customFonts = useWatch({ control, name: 'public.customFonts' }) ?? [];
   const [label, hint] = ROLE_LABELS[role];
+  const options: Array<{ ref: FontRef; label: string }> = [
+    ...customFonts.map((font) => ({
+      ref: { source: 'custom' as const, id: font.id },
+      label: `${font.family} (propia)`,
+    })),
+    ...CURATED_FONTS[role].map((font) => ({
+      ref: { source: 'google' as const, family: font.family },
+      label: font.family,
+    })),
+  ];
   return (
     <Controller
       control={control}
       name={`public.theme.fonts.${role}`}
-      render={({ field }) => (
-        <div className={styles.font}>
-          <div className={ui.field}>
-            <label htmlFor={id} className={ui.label}>
+      render={({ field }) => {
+        const selected = field.value ? refKey(field.value) : '';
+        return (
+          <fieldset className={styles.font}>
+            <legend className={ui.label}>
               {label} <span className={ui.muted}>· {hint}</span>
-            </label>
-            <select
-              id={id}
-              className={ui.select}
-              value={field.value ? refKey(field.value) : ''}
-              onChange={(e) => field.onChange(parseRefKey(e.target.value))}
-            >
-              <optgroup label="Google Fonts">
-                {CURATED_FONTS[role].map((font) => (
-                  <option key={font.family} value={`google:${font.family}`}>
-                    {font.family}
-                  </option>
-                ))}
-              </optgroup>
-              {customFonts.length > 0 && (
-                <optgroup label="Fuentes propias">
-                  {customFonts.map((font) => (
-                    <option key={font.id} value={`custom:${font.id}`}>
-                      {font.family}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-          {field.value && (
-            <p
-              className={styles.sample}
-              data-role={role}
-              style={{ fontFamily: fontStack(field.value, role) }}
-            >
-              {sample}
-            </p>
-          )}
-        </div>
-      )}
+            </legend>
+            <div className={styles.fontOptions} data-role={role}>
+              {options.map((option) => {
+                const key = refKey(option.ref);
+                return (
+                  <label key={key} className={styles.fontOption} data-selected={key === selected}>
+                    <input
+                      type="radio"
+                      name={name}
+                      value={key}
+                      checked={key === selected}
+                      onChange={() => field.onChange(parseRefKey(key))}
+                      className={styles.radio}
+                    />
+                    <span className={styles.fontName}>{option.label}</span>
+                    <span
+                      className={styles.sample}
+                      style={{ fontFamily: fontStack(option.ref, role) }}
+                      aria-hidden="true"
+                    >
+                      {sample}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        );
+      }}
     />
   );
 }
@@ -176,6 +193,7 @@ function CustomFonts() {
   const [family, setFamily] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [licensed, setLicensed] = useState(false);
 
   async function add(file: File | undefined) {
     if (!file) return;
@@ -184,11 +202,15 @@ function CustomFonts() {
       setError('Sube un archivo .ttf u .otf.');
       return;
     }
-    const name = family.trim() || file.name.replace(/\.(ttf|otf)$/i, '');
+    // "Mi Caligrafía", "MyFont-Regular.ttf" → "Mi Caligrafia", "MyFont Regular".
+    const name =
+      fontDisplayName(family) ||
+      fontDisplayName(file.name.replace(/\.(ttf|otf)$/i, '')) ||
+      'Fuente';
     setBusy(true);
     try {
       const url = await uploadFont(file);
-      const font: CustomFont = { id: fontId(name), family: name.slice(0, 60), url };
+      const font: CustomFont = { id: fontId(name), family: name, url };
       list.append(font);
       setFamily('');
     } catch (cause) {
@@ -208,8 +230,8 @@ function CustomFonts() {
     <div className={ui.card}>
       <h2 className={ui.cardTitle}>Fuentes propias</h2>
       <p className={ui.hint}>
-        Para usar una caligrafía que no está en Google Fonts (por ejemplo una comprada). Asegúrate
-        de que su licencia permita usarla en una web. TTF u OTF, hasta 2 MB.
+        Para usar una caligrafía que no está en Google Fonts (por ejemplo una comprada). TTF u OTF,
+        hasta 2 MB. Aparece primero en la lista de su tipografía.
       </p>
       {list.fields.length > 0 && (
         <ul className={styles.customList}>
@@ -255,7 +277,7 @@ function CustomFonts() {
             type="file"
             accept=".ttf,.otf,font/ttf,font/otf"
             className={ui.input}
-            disabled={busy}
+            disabled={busy || !licensed}
             onChange={(e) => {
               void add(e.target.files?.[0]);
               e.target.value = '';
@@ -263,6 +285,10 @@ function CustomFonts() {
           />
         </div>
       </div>
+      <label className={ui.checkbox}>
+        <input type="checkbox" checked={licensed} onChange={(e) => setLicensed(e.target.checked)} />
+        Tengo la licencia para usar esta fuente en una web (y en un PDF).
+      </label>
       {busy && <p className={ui.hint}>Subiendo…</p>}
       {error && (
         <p className={ui.error} role="alert">
@@ -311,8 +337,8 @@ function ThemeFields() {
         <h2 className={ui.cardTitle}>Tipografías</h2>
         <div className={styles.fonts}>
           <FontField role="script" sample={names} />
-          <FontField role="serif" sample="Tenemos el honor de invitarte a celebrar con nosotros" />
-          <FontField role="sans" sample="SALIR · 15 de mayo" />
+          <FontField role="serif" sample="Te invitamos a nuestra boda" />
+          <FontField role="sans" sample="CONFIRMAR · 15 de mayo" />
         </div>
       </div>
 

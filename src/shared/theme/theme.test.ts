@@ -7,7 +7,7 @@ import { DEFAULT_THEME, derivedColors, themeVariables } from './theme';
 describe('googleFontsUrl', () => {
   it('builds one CSS2 URL with the curated axes', () => {
     expect(googleFontsUrl(Object.values(DEFAULT_THEME.fonts))).toBe(
-      'https://fonts.googleapis.com/css2?family=Pinyon+Script' +
+      'https://fonts.googleapis.com/css2?family=Mea+Culpa' +
         '&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400' +
         '&family=Jost:wght@300;400;500&display=swap',
     );
@@ -50,7 +50,7 @@ describe('themeVariables', () => {
   it('maps colors and fonts to CSS custom properties', () => {
     const vars = themeVariables(DEFAULT_THEME);
     expect(vars['--color-primary']).toBe('#4F6496');
-    expect(vars['--font-script']).toBe('"Pinyon Script", cursive');
+    expect(vars['--font-script']).toBe('"Mea Culpa", cursive');
     expect(vars['--font-sans']).toMatch(/^"Jost", system-ui/);
   });
 });

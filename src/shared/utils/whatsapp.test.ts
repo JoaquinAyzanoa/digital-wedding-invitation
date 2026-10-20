@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, renderTemplate, whatsappUrl } from './whatsapp';
+import { normalizePhone, renderTemplate, whatsappShareUrl, whatsappUrl } from './whatsapp';
 
 describe('renderTemplate', () => {
   it('fills the placeholders', () => {
@@ -42,5 +42,9 @@ describe('whatsappUrl', () => {
       'https://wa.me/51987654321?text=%C2%A1Hola!%20%26%20ven',
     );
     expect(whatsappUrl(null, 'x')).toBeNull();
+  });
+
+  it('without a number, lets WhatsApp ask for the contact', () => {
+    expect(whatsappShareUrl('Hola y chau')).toBe('https://wa.me/?text=Hola%20y%20chau');
   });
 });

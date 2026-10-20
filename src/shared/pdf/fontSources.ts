@@ -1,30 +1,20 @@
-// Font files for the PDF. @react-pdf/renderer reads WOFF2, so the same Google Fonts files
-// the invitation uses work here (no TTFs in the repo). Variable families render at their
-// default weight. Uploaded fonts (TTF/OTF) are used directly.
+// Font files for the PDF. react-pdf cannot embed most Google Fonts WOFF2 files (its subsetter
+// crashes on them), so the curated fonts come as static TTFs from Fontsource's CDN (same
+// typefaces, open CORS). Uploaded fonts (TTF/OTF) are used directly.
 
 export interface FontFace {
-  family: string;
   src: string;
   fontWeight: number;
   fontStyle: 'normal' | 'italic';
 }
 
-/** The `latin` @font-face blocks of a Google Fonts CSS2 response (Spanish needs nothing else). */
-export function parseGoogleFontsCss(css: string): FontFace[] {
-  const faces: FontFace[] = [];
-  for (const match of css.matchAll(/\/\*\s*([\w-]+)\s*\*\/\s*@font-face\s*\{([^}]*)\}/g)) {
-    if (match[1] !== 'latin') continue;
-    const body = match[2]!;
-    const family = /font-family:\s*'([^']+)'/.exec(body)?.[1];
-    const src = /url\(([^)]+)\)/.exec(body)?.[1];
-    if (!family || !src) continue;
-    faces.push({
-      family,
-      src,
-      fontWeight: Number(/font-weight:\s*(\d+)/.exec(body)?.[1] ?? 400),
-      fontStyle: /font-style:\s*italic/.test(body) ? 'italic' : 'normal',
-    });
-  }
+/** Regular (and italic, when the family has one) latin TTFs of a Google font. */
+export function fontsourceFaces(family: string, hasItalic: boolean): FontFace[] {
+  const id = family.toLowerCase().replace(/ /g, '-');
+  const url = (style: string) =>
+    `https://cdn.jsdelivr.net/fontsource/fonts/${id}@latest/latin-400-${style}.ttf`;
+  const faces: FontFace[] = [{ src: url('normal'), fontWeight: 400, fontStyle: 'normal' }];
+  if (hasItalic) faces.push({ src: url('italic'), fontWeight: 400, fontStyle: 'italic' });
   return faces;
 }
 

@@ -15,6 +15,7 @@ import { sectionOfPath, type ContentForm, type ContentSectionKey } from '@/admin
 import { uploadDecoration, uploadMusic, uploadPhoto } from '@/admin/data/storage';
 import ui from '@/admin/ui/ui.module.css';
 import { ICON_KEYS, PHOTO_SLOTS, SECTION_IDS, type SectionId } from '@/shared/schemas/content';
+import { invitationLink } from '@/shared/utils/links';
 import { renderTemplate } from '@/shared/utils/whatsapp';
 import styles from './ContentPage.module.css';
 
@@ -157,7 +158,7 @@ function WhatsappPreview({ name }: { name: 'inviteTemplate' | 'reminderTemplate'
       {renderTemplate(template ?? '', {
         name: 'Familia Pérez',
         seats: 4,
-        link: `${window.location.origin}/?i=k7m2qp`,
+        link: invitationLink('k7m2qp'),
       })}
     </p>
   );

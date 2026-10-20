@@ -9,9 +9,13 @@ interface CuratedFont {
 }
 
 // Script fonts favour high-contrast calligraphy with long entry strokes, like the reference.
+// Mea Culpa is the closest free match to it (big entry loops on P, A, C, R).
 export const CURATED_FONTS: Record<FontRole, CuratedFont[]> = {
   script: [
+    { family: 'Mea Culpa' },
     { family: 'Pinyon Script' },
+    { family: 'Imperial Script' },
+    { family: 'Ballet' },
     { family: 'Great Vibes' },
     { family: 'Monsieur La Doulaise' },
     { family: 'Mrs Saint Delafield' },
@@ -29,6 +33,8 @@ export const CURATED_FONTS: Record<FontRole, CuratedFont[]> = {
     { family: 'Lora', axes: 'ital,wght@0,400;0,500;0,600;1,400' },
     { family: 'Libre Baskerville', axes: 'ital,wght@0,400;0,700;1,400' },
     { family: 'Cormorant', axes: 'ital,wght@0,400;0,500;0,600;1,400' },
+    // Capitals only (lowercase is drawn as small capitals), like engraved invitations.
+    { family: 'Cinzel', axes: 'wght@400;500;600' },
   ],
   sans: [
     { family: 'Jost', axes: 'wght@300;400;500' },
@@ -51,6 +57,11 @@ const curatedAxes = new Map(
     .flat()
     .map((font) => [font.family, font.axes]),
 );
+
+/** Whether a curated family has an italic face (its axes start with `ital`). */
+export function hasItalic(family: string): boolean {
+  return curatedAxes.get(family)?.startsWith('ital') ?? false;
+}
 
 export function customFontFamily(id: string): string {
   return `wi-custom-${id}`;

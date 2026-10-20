@@ -30,3 +30,8 @@ export function whatsappUrl(phone: string | null | undefined, message: string): 
   const digits = normalizePhone(phone);
   return digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : null;
 }
+
+/** wa.me link without a number: WhatsApp opens with the message and asks for the contact. */
+export function whatsappShareUrl(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}

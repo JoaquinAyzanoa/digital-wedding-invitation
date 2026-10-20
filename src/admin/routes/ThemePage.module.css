@@ -37,22 +37,61 @@
 }
 
 .font {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fontOptions {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 8px;
+  margin-top: 6px;
+}
+
+.fontOption {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.fontOption[data-selected='true'] {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.fontOption:has(:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* The card is the control; the radio stays for keyboard and screen readers. */
+.radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fontName {
+  font-size: 12px;
+  color: var(--color-muted);
 }
 
 .sample {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--color-bg);
   color: var(--color-primary);
   font-size: 20px;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
-.sample[data-role='script'] {
-  font-size: 40px;
-  line-height: 1.3;
+.fontOptions[data-role='script'] .sample {
+  font-size: 36px;
 }
 
 .customList {

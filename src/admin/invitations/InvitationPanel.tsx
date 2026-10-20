@@ -17,6 +17,7 @@ import { adminPreviewLink, invitationLink } from '@/shared/utils/links';
 import { groupsOf } from './filters';
 import { InvitationDataForm } from './InvitationDataForm';
 import styles from './InvitationPanel.module.css';
+import { PdfButton } from './PdfButton';
 import { RsvpEditor } from './RsvpEditor';
 import { WhatsappDialog } from './WhatsappDialog';
 import type { WhatsappMode } from './whatsappMode';
@@ -155,6 +156,7 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
                   Recordatorio
                 </Btn>
               )}
+              <PdfButton invitation={invitation} />
             </div>
             <p className={ui.hint}>
               {invitation.sent_at ? (

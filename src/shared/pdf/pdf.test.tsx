@@ -4,47 +4,22 @@ import { PNG } from 'pngjs';
 import { createElement, type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { demoContent } from '@/demo/content';
-import { parseGoogleFontsCss, pdfFileName } from './fontSources';
-import { qrDataUrl } from './generate';
+import { fontsourceFaces, pdfFileName } from './fontSources';
+import { qrDataUrl, withItalic } from './generate';
 import { InvitationPdf } from './InvitationPdf';
 
-const CSS = `/* cyrillic */
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/cg/cyr.woff2) format('woff2');
-}
-/* latin */
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/cg/italic.woff2) format('woff2');
-}
-/* latin */
-@font-face {
-  font-family: 'Pinyon Script';
-  font-style: normal;
-  font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/ps/regular.woff2) format('woff2');
-}`;
-
 describe('PDF fonts', () => {
-  it('keeps only the latin faces', () => {
-    expect(parseGoogleFontsCss(CSS)).toEqual([
+  it('uses Fontsource TTFs, with the italic only when the family has one', () => {
+    expect(fontsourceFaces('Mea Culpa', false)).toEqual([
       {
-        family: 'Cormorant Garamond',
-        src: 'https://fonts.gstatic.com/s/cg/italic.woff2',
-        fontWeight: 400,
-        fontStyle: 'italic',
-      },
-      {
-        family: 'Pinyon Script',
-        src: 'https://fonts.gstatic.com/s/ps/regular.woff2',
+        src: 'https://cdn.jsdelivr.net/fontsource/fonts/mea-culpa@latest/latin-400-normal.ttf',
         fontWeight: 400,
         fontStyle: 'normal',
       },
+    ]);
+    expect(fontsourceFaces('Cormorant Garamond', true).map((f) => f.src)).toEqual([
+      'https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-400-normal.ttf',
+      'https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-400-italic.ttf',
     ]);
   });
 });
@@ -85,4 +60,13 @@ describe('InvitationPdf', () => {
     expect(text.match(/\/Type \/Page\b/g)).toHaveLength(1);
     expect(text).toMatch(/\/MediaBox \[0 0 540 960\]/);
   }, 20_000);
+});
+
+describe('withItalic', () => {
+  it('reuses the upright faces when a family has no italic (react-pdf would throw)', () => {
+    const upright = { src: 'a.ttf', fontWeight: 400, fontStyle: 'normal' as const };
+    expect(withItalic([upright])).toEqual([upright, { ...upright, fontStyle: 'italic' }]);
+    const italic = { ...upright, fontStyle: 'italic' as const };
+    expect(withItalic([upright, italic])).toEqual([upright, italic]);
+  });
 });

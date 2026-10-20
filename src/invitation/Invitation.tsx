@@ -52,7 +52,10 @@ function InvitationPage({
   const [envelopeOpen, setEnvelopeOpen] = useState(!hasEnvelope);
   const [petals, setPetals] = useState(false);
   const hidePetals = useCallback(() => setPetals(false), []);
-  const [scriptFont, setScriptFont] = useState<FontRef>(content.theme.fonts.script);
+  // The ?design=1 panel's pick overrides the content's font; without a pick, content changes
+  // (the admin's live preview) always show.
+  const [scriptOverride, setScriptOverride] = useState<FontRef | null>(null);
+  const scriptFont = scriptOverride ?? content.theme.fonts.script;
   const [fontsReady, setFontsReady] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -129,7 +132,7 @@ function InvitationPage({
         <DesignPanel
           sample={`${content.couple.bride} & ${content.couple.groom}`}
           value={scriptFont}
-          onChange={setScriptFont}
+          onChange={setScriptOverride}
         />
       )}
     </>

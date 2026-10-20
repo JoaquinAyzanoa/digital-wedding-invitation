@@ -2,8 +2,8 @@ import { Font, pdf, type DocumentProps } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
 import { createElement, type ReactElement } from 'react';
 import type { CustomFont, FontRef, PublicContent } from '@/shared/schemas/content';
-import { customFontFamily, googleFontsUrl, type FontRole } from '@/shared/theme/fonts';
-import { parseGoogleFontsCss, pdfFileName } from './fontSources';
+import { customFontFamily, hasItalic, type FontRole } from '@/shared/theme/fonts';
+import { fontsourceFaces, pdfFileName } from './fontSources';
 import { InvitationPdf, type PdfFonts } from './InvitationPdf';
 
 // Loaded on demand only (dynamic import): @react-pdf is large and only needed when a PDF
@@ -19,45 +19,41 @@ const BUILT_IN: Record<FontRole, string> = {
 };
 const registered = new Set<string>();
 
-/** Registers the theme's fonts; falls back to the PDF's built-in fonts if they cannot load. */
-async function registerFonts(
-  theme: PublicContent['theme'],
-  customFonts: CustomFont[],
-): Promise<PdfFonts> {
+/**
+ * react-pdf throws (and the whole PDF fails) when text asks for italic and the family has
+ * none, as with most uploaded fonts. Families without italic reuse the upright faces.
+ */
+export function withItalic<T extends { fontStyle: 'normal' | 'italic' }>(faces: T[]): T[] {
+  return faces.some((f) => f.fontStyle === 'italic')
+    ? faces
+    : [...faces, ...faces.map((f) => ({ ...f, fontStyle: 'italic' as const }))];
+}
+
+/** Registers the theme's fonts (files are fetched by react-pdf while rendering). */
+function registerFonts(theme: PublicContent['theme'], customFonts: CustomFont[]): PdfFonts {
   const result = { ...BUILT_IN };
-  const roles = Object.entries(theme.fonts) as Array<[FontRole, FontRef]>;
-
-  const googleRefs = roles.map(([, ref]) => ref).filter((ref) => ref.source === 'google');
-  const url = googleFontsUrl(googleRefs);
-  let googleFamilies = new Set<string>();
-  if (url) {
-    try {
-      const faces = parseGoogleFontsCss(await (await fetch(url)).text());
-      for (const family of new Set(faces.map((f) => f.family))) {
-        if (!registered.has(family)) {
-          Font.register({ family, fonts: faces.filter((f) => f.family === family) });
-          registered.add(family);
-        }
+  for (const [role, ref] of Object.entries(theme.fonts) as Array<[FontRole, FontRef]>) {
+    if (ref.source === 'google') {
+      if (!registered.has(ref.family)) {
+        Font.register({
+          family: ref.family,
+          fonts: withItalic(fontsourceFaces(ref.family, hasItalic(ref.family))),
+        });
+        registered.add(ref.family);
       }
-      googleFamilies = new Set(faces.map((f) => f.family));
-    } catch {
-      // Offline or blocked: keep the built-in fonts.
-    }
-  }
-
-  for (const [role, ref] of roles) {
-    if (ref.source === 'google' && googleFamilies.has(ref.family)) {
       result[role] = ref.family;
-    } else if (ref.source === 'custom') {
+    } else {
       const font = customFonts.find((f) => f.id === ref.id);
-      if (font) {
-        const family = customFontFamily(font.id);
-        if (!registered.has(family)) {
-          Font.register({ family, src: font.url });
-          registered.add(family);
-        }
-        result[role] = family;
+      if (!font) continue;
+      const family = customFontFamily(font.id);
+      if (!registered.has(family)) {
+        Font.register({
+          family,
+          fonts: withItalic([{ src: font.url, fontWeight: 400, fontStyle: 'normal' }]),
+        });
+        registered.add(family);
       }
+      result[role] = family;
     }
   }
   return result;
@@ -98,22 +94,32 @@ export interface GeneratePdfInput {
 }
 
 export async function generateInvitationPdf({ content, guest, link }: GeneratePdfInput) {
-  const [fonts, qr, top, bottom] = await Promise.all([
-    registerFonts(content.theme, content.customFonts),
+  const [qr, top, bottom] = await Promise.all([
     qrDataUrl(link, content.theme.colors.ink),
     toPng(content.decorations.cornerTL),
     toPng(content.decorations.cornerBR),
   ]);
-  // pdf() is typed for a <Document> element; InvitationPdf renders one.
-  const document = createElement(InvitationPdf, {
-    content,
-    guest,
-    link,
-    qr,
-    fonts,
-    decorations: { top, bottom },
-  }) as unknown as ReactElement<DocumentProps>;
-  const blob = await pdf(document).toBlob();
+  const render = (fonts: PdfFonts) =>
+    pdf(
+      // pdf() is typed for a <Document> element; InvitationPdf renders one.
+      createElement(InvitationPdf, {
+        content,
+        guest,
+        link,
+        qr,
+        fonts,
+        decorations: { top, bottom },
+      }) as unknown as ReactElement<DocumentProps>,
+    ).toBlob();
+
+  let blob: Blob;
+  try {
+    blob = await render(registerFonts(content.theme, content.customFonts));
+  } catch {
+    // A font that cannot be downloaded or embedded (offline, a broken upload) must not cost
+    // the guest their PDF: the same page with the PDF's built-in fonts.
+    blob = await render(BUILT_IN);
+  }
   const fileName = pdfFileName(
     content.couple.bride,
     content.couple.groom,

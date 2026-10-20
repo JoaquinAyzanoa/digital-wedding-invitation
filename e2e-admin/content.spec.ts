@@ -97,6 +97,10 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
   await expect(page.getByRole('heading', { name: 'Diseño' })).toBeVisible();
 
   await page.getByLabel('Principal', { exact: true }).fill('#8A3B5C');
+  // Each calligraphy is a card written in its own font.
+  await expect(page.getByRole('radio', { name: 'Mea Culpa' })).toBeChecked();
+  await page.getByText('Great Vibes', { exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Great Vibes' })).toBeChecked();
   // On phones the preview opens in a panel.
   await page.getByRole('button', { name: 'Vista previa' }).click();
   const preview = page.frameLocator('iframe[title="Vista previa de la invitación"]').last();
@@ -107,6 +111,13 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
         .evaluate((el) => getComputedStyle(el).getPropertyValue('--color-primary')),
     )
     .toBe('#8A3B5C');
+  await expect
+    .poll(async () =>
+      preview
+        .locator('html')
+        .evaluate((el) => getComputedStyle(el).getPropertyValue('--font-script')),
+    )
+    .toContain('Great Vibes');
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await save(page);
 
@@ -123,6 +134,7 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
 
   await page.getByRole('button', { name: 'Restaurar valores por defecto' }).click();
   await expect(page.getByLabel('Principal', { exact: true })).toHaveValue('#4F6496');
+  await expect(page.getByRole('radio', { name: 'Mea Culpa' })).toBeChecked();
   await save(page);
 });
 

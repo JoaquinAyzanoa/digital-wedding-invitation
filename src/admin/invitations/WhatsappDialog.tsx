@@ -8,7 +8,7 @@ import type { InvitationRow } from '@/shared/schemas/invitationAdmin';
 import { useToast } from '@/shared/toast/toastContext';
 import { downloadBlob } from '@/shared/utils/download';
 import { invitationLink } from '@/shared/utils/links';
-import { renderTemplate, whatsappUrl } from '@/shared/utils/whatsapp';
+import { renderTemplate, whatsappShareUrl, whatsappUrl } from '@/shared/utils/whatsapp';
 import styles from './WhatsappDialog.module.css';
 import { invitationPdf } from './pdf';
 import type { WhatsappMode } from './whatsappMode';
@@ -65,7 +65,9 @@ export function WhatsappDialog({ mode, invitation, onClose }: WhatsappDialogProp
       link: invitationLink(invitation.code),
     },
   );
-  const url = whatsappUrl(invitation.phone, message);
+  const direct = whatsappUrl(invitation.phone, message);
+  // Without a valid number WhatsApp still opens with the message and asks for the contact.
+  const url = direct ?? whatsappShareUrl(message);
 
   async function downloadPdf() {
     setPdfState('working');
@@ -106,10 +108,10 @@ export function WhatsappDialog({ mode, invitation, onClose }: WhatsappDialogProp
         )
       }
     >
-      {!url && (
-        <p className={ui.errorBox}>
-          Esta invitación no tiene un teléfono válido. Agrégalo en «Datos» o copia el enlace y
-          envíalo por otro medio.
+      {!direct && (
+        <p className={ui.hint}>
+          Esta invitación no tiene un teléfono válido: WhatsApp te pedirá elegir el contacto. Puedes
+          agregar el número en «Datos».
         </p>
       )}
 
@@ -137,21 +139,9 @@ export function WhatsappDialog({ mode, invitation, onClose }: WhatsappDialogProp
           <span>
             {isInvite ? 'Abre WhatsApp y adjunta el PDF' : 'Abre WhatsApp y envía el mensaje'}
           </span>
-          {url ? (
-            <BtnLink
-              size="sm"
-              variant="primary"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Abrir WhatsApp
-            </BtnLink>
-          ) : (
-            <Btn size="sm" disabled>
-              Abrir WhatsApp
-            </Btn>
-          )}
+          <BtnLink size="sm" variant="primary" href={url} target="_blank" rel="noopener noreferrer">
+            Abrir WhatsApp
+          </BtnLink>
         </li>
         {isInvite && <li>Cuando lo hayas enviado, márcala como enviada.</li>}
       </ol>

@@ -109,7 +109,7 @@ set public_data = $json$
       "line": "#E6E1D8"
     },
     "fonts": {
-      "script": { "source": "google", "family": "Pinyon Script" },
+      "script": { "source": "google", "family": "Mea Culpa" },
       "serif": { "source": "google", "family": "Cormorant Garamond" },
       "sans": { "source": "google", "family": "Jost" }
     }

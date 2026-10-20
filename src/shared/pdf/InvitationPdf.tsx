@@ -31,10 +31,14 @@ export function InvitationPdf({
   const { colors } = content.theme;
   const { day, month, year } = datePartsInLima(content.date);
   const { bride, groom } = content.couple;
+  // Long names go on two lines, broken after the bride ("María Fernanda / & Juan Sebastián").
+  const twoLines = bride.length + groom.length > 18;
   const styles = StyleSheet.create({
     page: {
       position: 'relative',
-      paddingTop: 96,
+      // Centred vertically: short content does not leave the bottom of the page empty.
+      justifyContent: 'center',
+      paddingVertical: 64,
       paddingHorizontal: 48,
       backgroundColor: colors.bg,
       color: colors.ink,
@@ -47,11 +51,18 @@ export function InvitationPdf({
     names: {
       marginTop: 8,
       fontFamily: fonts.script,
-      fontSize: bride.length + groom.length > 18 ? 46 : 58,
+      fontSize: twoLines ? 50 : 58,
       color: colors.primary,
       lineHeight: 1.25,
     },
-    date: { marginTop: 6, fontSize: 17, letterSpacing: 3, textTransform: 'uppercase' },
+    // Numbers in the sans font: the serif ones may be old-style (a lone 1 reads as an I).
+    date: {
+      marginTop: 6,
+      fontFamily: fonts.sans,
+      fontSize: 15,
+      letterSpacing: 3,
+      textTransform: 'uppercase',
+    },
     rule: {
       width: 80,
       height: 1,
@@ -73,11 +84,19 @@ export function InvitationPdf({
       borderColor: colors.primary,
       borderRadius: 10,
     },
-    seats: { fontSize: 30, color: colors.primary },
-    events: { flexDirection: 'row', justifyContent: 'center', marginTop: 4 },
+    seats: { fontFamily: fonts.sans, fontSize: 28, color: colors.primary },
+    // Two events side by side; a third (or more) wraps to the next line.
+    events: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', rowGap: 14 },
     event: { width: 210, paddingHorizontal: 8 },
-    eventTitle: { fontFamily: fonts.script, fontSize: 30, color: colors.ink, lineHeight: 1.3 },
+    eventTitle: {
+      marginBottom: 4,
+      fontFamily: fonts.script,
+      fontSize: 30,
+      color: colors.ink,
+      lineHeight: 1.3,
+    },
     eventText: { fontSize: 12.5, lineHeight: 1.45 },
+    time: { fontFamily: fonts.sans, fontSize: 11.5, lineHeight: 1.5 },
     venue: { fontSize: 11.5, letterSpacing: 0.6, textTransform: 'uppercase', lineHeight: 1.45 },
     qrBlock: { marginTop: 26, alignItems: 'center' },
     qr: { width: 112, height: 112, padding: 6, backgroundColor: '#FFFFFF', borderRadius: 6 },
@@ -99,7 +118,10 @@ export function InvitationPdf({
 
         <Text style={styles.kicker}>¡Nos casamos!</Text>
         <Text style={styles.names}>
-          {bride} & {groom}
+          {twoLines
+            ? `${bride}
+& ${groom}`
+            : `${bride} & ${groom}`}
         </Text>
         <Text style={styles.date}>
           {day} · {month} · {year}
@@ -125,7 +147,7 @@ export function InvitationPdf({
           {content.events.map((event, i) => (
             <View key={i} style={styles.event}>
               <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventText}>{formatTime12(event.time)}</Text>
+              <Text style={styles.time}>{formatTime12(event.time)}</Text>
               <Text style={styles.venue}>{event.venue}</Text>
               {event.address && <Text style={styles.eventText}>{event.address}</Text>}
             </View>
