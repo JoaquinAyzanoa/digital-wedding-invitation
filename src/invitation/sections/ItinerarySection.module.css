@@ -1,0 +1,89 @@
+/*
+ * Zigzag timeline: a 3-column grid (left item | line | right item). Each item spans two
+ * half-height rows starting one row after the previous one, so the sides interleave.
+ */
+.wrap {
+  --row: 82px;
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 8px;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: 1fr 44px 1fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  position: absolute;
+  top: 12px;
+  bottom: calc(var(--row) - 12px);
+  left: 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  transform-origin: top;
+}
+
+.item {
+  display: contents;
+}
+
+.heart {
+  grid-column: 2;
+  z-index: 1;
+  align-self: start;
+  justify-self: center;
+  width: 24px;
+  height: 24px;
+  fill: var(--color-bg);
+  stroke: var(--color-accent);
+  stroke-width: 2.4;
+}
+
+.heart path {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.item[data-side='left'] .content {
+  grid-column: 1;
+}
+
+.item[data-side='right'] .content {
+  grid-column: 3;
+}
+
+/* `display: contents` drops the li's grid placement, so place the children directly. */
+.item .heart,
+.item .content {
+  grid-row: var(--item-row);
+}
+
+.icon {
+  margin-bottom: 4px;
+  color: var(--color-primary);
+}
+
+.time {
+  font-size: 19px;
+  font-variant-numeric: lining-nums;
+}
+
+.label {
+  font-size: 19px;
+  line-height: 1.3;
+}

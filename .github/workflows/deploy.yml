@@ -36,6 +36,8 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
           VITE_OG_IMAGE_URL: ${{ vars.VITE_OG_IMAGE_URL }}
+          VITE_OG_TITLE: ${{ vars.VITE_OG_TITLE }}
+          VITE_OG_DESCRIPTION: ${{ vars.VITE_OG_DESCRIPTION }}
 
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4

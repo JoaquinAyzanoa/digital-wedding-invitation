@@ -2,14 +2,22 @@ import { motion } from 'motion/react';
 import { useContext, type ReactNode } from 'react';
 import { RevealContext } from './revealContext';
 
+const OFFSETS = {
+  bottom: { x: 0, y: 24 },
+  left: { x: -32, y: 0 },
+  right: { x: 32, y: 0 },
+};
+
 interface RevealProps {
   children: ReactNode;
   delay?: number;
+  /** Where the content comes from. */
+  from?: keyof typeof OFFSETS;
   className?: string;
 }
 
-/** Fades and lifts its content in the first time it scrolls into view. */
-export function Reveal({ children, delay = 0, className }: RevealProps) {
+/** Fades and slides its content in the first time it scrolls into view. */
+export function Reveal({ children, delay = 0, from = 'bottom', className }: RevealProps) {
   const enabled = useContext(RevealContext);
 
   // Mounting the motion element only once enabled gives it a fresh in-view check.
@@ -24,8 +32,8 @@ export function Reveal({ children, delay = 0, className }: RevealProps) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, ...OFFSETS[from] }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
     >

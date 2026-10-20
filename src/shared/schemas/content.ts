@@ -109,6 +109,8 @@ export const publicContentSchema = z.object({
     .object({
       parents: z.object({ bride: z.array(requiredText(80)), groom: z.array(requiredText(80)) }),
       godparents: z.array(requiredText(80)),
+      intro: text(200).optional(),
+      godparentsIntro: text(200).optional(),
     })
     .optional(),
   events: z.array(
@@ -150,8 +152,12 @@ export const publicContentSchema = z.object({
       id: z.enum(SECTION_IDS),
       visible: z.boolean(),
       photo: z.enum(PHOTO_SLOTS).optional(),
+      /** Watercolor flowers (`decorations.side`) at the top of the section, on this side. */
+      decor: z.enum(['left', 'right']).optional(),
     }),
   ),
+  /** Script titles of the sections; missing ones use the defaults in the invitation. */
+  titles: z.partialRecord(z.enum(SECTION_IDS), text(60)).optional(),
   theme: themeSchema,
   customFonts: z.array(customFontSchema),
   whatsapp: z.object({ inviteTemplate: text(1000), reminderTemplate: text(1000) }),

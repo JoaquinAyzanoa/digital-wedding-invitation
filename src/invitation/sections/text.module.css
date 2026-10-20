@@ -1,0 +1,45 @@
+/* Text styles shared by the sections. */
+
+.body {
+  max-width: 32ch;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+.quote {
+  max-width: 32ch;
+  font-size: 20px;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.upper {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.names {
+  font-size: 21px;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.goldIcon {
+  color: var(--color-accent);
+}
+
+.inkIcon {
+  color: var(--color-ink);
+}
+
+.primaryIcon {
+  color: var(--color-primary);
+}
+
+.small {
+  font-size: 17px;
+  color: var(--color-muted);
+}

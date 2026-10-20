@@ -28,3 +28,21 @@ export interface RsvpResponse {
     dietary: string | null;
   }>;
 }
+
+/** Payload of `submit_rsvp` (validated again on the server). */
+export interface RsvpInput {
+  attending: boolean;
+  parts?: { ceremony: boolean; reception: boolean };
+  attendees: Array<{
+    fullName: string;
+    kind: 'adult' | 'child';
+    age: number | null;
+    menu: string | null;
+    dietary: string | null;
+  }>;
+  needsTransport?: boolean | null;
+  needsLodging?: boolean | null;
+  contactPhone?: string | null;
+  songRequest?: string | null;
+  message?: string | null;
+}

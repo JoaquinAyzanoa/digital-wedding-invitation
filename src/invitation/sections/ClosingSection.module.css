@@ -1,0 +1,16 @@
+.infinity {
+  width: 120px;
+  height: 120px;
+  margin: -24px 0;
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.phrase {
+  max-width: 16ch;
+  font-size: 23px;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}

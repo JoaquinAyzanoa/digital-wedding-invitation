@@ -20,7 +20,9 @@ set public_data = $json$
       "bride": ["Rosa Díaz Campos", "Jorge Vega Ruiz"],
       "groom": ["Elena Soto Prado", "Raúl Castro Mena"]
     },
-    "godparents": ["Lucía Herrera Paz", "Andrés Molina Ríos"]
+    "godparents": ["Lucía Herrera Paz", "Andrés Molina Ríos"],
+    "intro": "Con nuestro amor, la bendición de Dios y la de nuestros padres:",
+    "godparentsIntro": "Y en compañía de nuestros padrinos:"
   },
   "events": [
     {
@@ -73,22 +75,29 @@ set public_data = $json$
   "farewell": "Esperamos contar con su presencia",
   "sections": [
     { "id": "envelope", "visible": true },
-    { "id": "welcome", "visible": true },
+    { "id": "welcome", "visible": true, "decor": "left" },
     { "id": "photo", "visible": true, "photo": "hero" },
     { "id": "family", "visible": true },
     { "id": "date", "visible": true },
     { "id": "photo", "visible": true, "photo": "divider1" },
-    { "id": "events", "visible": true },
+    { "id": "events", "visible": true, "decor": "right" },
     { "id": "photo", "visible": true, "photo": "divider2" },
-    { "id": "itinerary", "visible": true },
+    { "id": "itinerary", "visible": true, "decor": "left" },
     { "id": "closing", "visible": true },
     { "id": "gifts", "visible": true },
     { "id": "dressCode", "visible": true },
     { "id": "photo", "visible": true, "photo": "divider3" },
-    { "id": "album", "visible": true },
+    { "id": "album", "visible": true, "decor": "left" },
     { "id": "rsvp", "visible": true },
     { "id": "farewell", "visible": true }
   ],
+  "titles": {
+    "itinerary": "Itinerario de actividades",
+    "gifts": "Gracias",
+    "dressCode": "Dress code",
+    "album": "Álbum de recuerdos",
+    "rsvp": "Confirmar asistencia"
+  },
   "theme": {
     "colors": {
       "bg": "#FBFAF7",

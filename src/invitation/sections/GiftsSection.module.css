@@ -1,0 +1,60 @@
+/* Card with an arched top and a thin inner border, like the reference. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 380px;
+  padding: 72px 28px 40px;
+  border-radius: 999px 999px 6px 6px / 190px 190px 6px 6px;
+  background: var(--color-surface);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid var(--color-muted);
+  border-radius: inherit;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.method {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.label {
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.line {
+  font-size: 19px;
+  font-variant-numeric: lining-nums;
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

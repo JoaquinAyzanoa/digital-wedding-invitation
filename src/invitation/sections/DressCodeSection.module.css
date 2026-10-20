@@ -1,0 +1,12 @@
+.icons {
+  display: flex;
+  gap: 4px;
+  margin-bottom: -12px;
+}
+
+.code {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from 'react';
 import type { PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 import { datePartsInLima } from '@/shared/utils/date';
+import { CodeEntry } from '../CodeEntry/CodeEntry';
 import styles from './Envelope.module.css';
 import { WaxSeal } from './WaxSeal';
 
@@ -27,6 +28,8 @@ function rememberOpened() {
 interface EnvelopeProps {
   content: Pick<PublicContent, 'couple' | 'date' | 'decorations'>;
   invitation: Pick<InvitationView, 'displayName' | 'seats'> | null;
+  /** The link had a code that does not exist: offer to type it again. */
+  codeNotFound?: boolean;
   /** Fonts are loaded: fade the content in. */
   ready: boolean;
   /** Called synchronously on the tap, so audio can start inside the user gesture. */
@@ -35,7 +38,14 @@ interface EnvelopeProps {
   onOpened: () => void;
 }
 
-export function Envelope({ content, invitation, ready, onOpen, onOpened }: EnvelopeProps) {
+export function Envelope({
+  content,
+  invitation,
+  codeNotFound = false,
+  ready,
+  onOpen,
+  onOpened,
+}: EnvelopeProps) {
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const reducedMotion = useReducedMotion();
   const [opening, setOpening] = useState(false);
@@ -198,6 +208,13 @@ export function Envelope({ content, invitation, ready, onOpen, onOpened }: Envel
             <p className={styles.reservedText}>
               {seats === 1 ? 'lugar en su honor' : 'lugares en su honor'}
             </p>
+          </div>
+        )}
+
+        {codeNotFound && (
+          <div className={styles.notFound} data-fade-on-open>
+            <p>No encontramos tu invitación.</p>
+            <CodeEntry message="Revisa el código al final de tu enlace e ingrésalo aquí:" />
           </div>
         )}
       </div>
