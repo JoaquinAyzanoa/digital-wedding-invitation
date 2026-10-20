@@ -333,7 +333,7 @@ export function InvitationsPage() {
       {confirmDelete && (
         <ConfirmDialog
           title={`¿Eliminar ${selectedRows.length} invitaciones?`}
-          message="Se borran también sus respuestas, asistentes y fotos del álbum. No se puede deshacer."
+          message="Se borran también sus respuestas y asistentes. No se puede deshacer."
           confirmLabel="Eliminar"
           danger
           busy={remove.isPending}

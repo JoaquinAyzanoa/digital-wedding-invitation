@@ -1,5 +1,11 @@
-import { useState } from 'react';
-import { adminErrorMessage, useRotateSheetSecret, useSheetSettings } from '@/admin/data/queries';
+import { useId, useState } from 'react';
+import {
+  adminErrorMessage,
+  useRotateSheetSecret,
+  useSetAlbumUploadUrl,
+  useSheetSettings,
+  type SheetSettings,
+} from '@/admin/data/queries';
 import { Btn } from '@/admin/ui/Btn';
 import { ConfirmDialog } from '@/admin/ui/ConfirmDialog';
 import ui from '@/admin/ui/ui.module.css';
@@ -19,7 +25,7 @@ function SyncStatus({ lastSyncAt }: { lastSyncAt: string | null }) {
   if (!lastSyncAt) {
     return (
       <p className={styles.status} data-tone="off">
-        Aún no se sincroniza. Sigue los pasos de abajo.
+        Hoja: aún no se sincroniza. Sigue los pasos de abajo.
       </p>
     );
   }
@@ -33,11 +39,36 @@ function SyncStatus({ lastSyncAt }: { lastSyncAt: string | null }) {
   });
   return minutes <= STALE_MINUTES ? (
     <p className={styles.status} data-tone="ok">
-      Funcionando · última sincronización hace {minutes <= 1 ? '1 minuto' : `${minutes} minutos`}
+      Hoja funcionando · última sincronización hace{' '}
+      {minutes <= 1 ? '1 minuto' : `${minutes} minutos`}
     </p>
   ) : (
     <p className={styles.status} data-tone="warn">
-      Sin sincronizar desde el {date}. Revisa el activador del script (o si cambiaste el secreto).
+      Hoja sin sincronizar desde el {date}. Revisa el activador del script (o si cambiaste el
+      secreto).
+    </p>
+  );
+}
+
+function AlbumStatus({ settings }: { settings: SheetSettings }) {
+  if (!settings.albumUploadUrl) {
+    return (
+      <p className={styles.status} data-tone="off">
+        Álbum sin conectar: los invitados todavía no ven el botón para subir fotos (paso 5).
+      </p>
+    );
+  }
+  return (
+    <p className={styles.status} data-tone="ok">
+      Álbum conectado: las fotos van a tu Google Drive.
+      {settings.albumFolderUrl && (
+        <>
+          {' '}
+          <a href={settings.albumFolderUrl} target="_blank" rel="noopener noreferrer">
+            Abrir carpeta
+          </a>
+        </>
+      )}
     </p>
   );
 }
@@ -65,6 +96,75 @@ function CopyValue({ label, value, secret }: { label: string; value: string; sec
         </Btn>
       </span>
     </div>
+  );
+}
+
+const WEB_APP_URL = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+
+/** Step 5: the web app that receives the album photos, and a quick check that it answers. */
+function AlbumConnection({ settings }: { settings: SheetSettings }) {
+  const id = useId();
+  const toast = useToast();
+  const save = useSetAlbumUploadUrl();
+  const [url, setUrl] = useState(settings.albumUploadUrl ?? '');
+  const [error, setError] = useState('');
+  const [testing, setTesting] = useState(false);
+
+  async function submit() {
+    const value = url.trim();
+    if (value && !WEB_APP_URL.test(value)) {
+      setError('Pega la URL de la aplicación web: https://script.google.com/macros/s/…/exec');
+      return;
+    }
+    setError('');
+    try {
+      await save.mutateAsync(value || null);
+      toast(value ? 'Álbum conectado' : 'Álbum desconectado');
+    } catch (cause) {
+      toast(adminErrorMessage(cause));
+    }
+  }
+
+  async function test() {
+    setTesting(true);
+    try {
+      const reply = (await (await fetch(settings.albumUploadUrl!)).json()) as { ok?: boolean };
+      toast(reply.ok ? 'Conexión correcta: el script responde' : 'El script no respondió bien');
+    } catch {
+      toast('No se pudo conectar. ¿El acceso es «Cualquier usuario»?');
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <>
+      <div className={ui.field}>
+        <label htmlFor={id} className={ui.label}>
+          URL de la aplicación web
+        </label>
+        <input
+          id={id}
+          className={ui.input}
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://script.google.com/macros/s/…/exec"
+          spellCheck={false}
+          aria-invalid={Boolean(error)}
+        />
+        {error && <span className={ui.error}>{error}</span>}
+      </div>
+      <div className={styles.valueActions}>
+        <Btn size="sm" onClick={submit} disabled={save.isPending}>
+          Guardar
+        </Btn>
+        {settings.albumUploadUrl && (
+          <Btn size="sm" variant="secondary" onClick={test} disabled={testing}>
+            {testing ? 'Probando…' : 'Probar conexión'}
+          </Btn>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -96,10 +196,11 @@ export function SettingsPage() {
       <h1 className={styles.title}>Ajustes</h1>
 
       <section className={ui.card}>
-        <h2 className={ui.cardTitle}>Google Sheet</h2>
+        <h2 className={ui.cardTitle}>Google: hoja y álbum de fotos</h2>
         <p className={ui.hint}>
-          Una copia de solo lectura de invitaciones, asistentes y un resumen, en una hoja de Google
-          que se actualiza cada 5 minutos. Los cambios se hacen aquí, no en la hoja.
+          Un solo script de Google hace dos cosas: copia invitaciones, asistentes y un resumen a una
+          hoja de Google cada 5 minutos (solo lectura: los cambios se hacen aquí), y recibe las
+          fotos de los invitados en una carpeta de tu Google Drive, en su calidad original.
         </p>
 
         {settings.isPending && <p className={ui.muted}>Cargando…</p>}
@@ -111,8 +212,9 @@ export function SettingsPage() {
         {settings.data && (
           <>
             <SyncStatus lastSyncAt={settings.data.lastSyncAt} />
+            <AlbumStatus settings={settings.data} />
 
-            <h3 className={styles.subtitle}>Cómo conectarla (una sola vez)</h3>
+            <h3 className={styles.subtitle}>Cómo conectarlo (una sola vez)</h3>
             <ol className={styles.steps}>
               <li>
                 Crea una hoja nueva en{' '}
@@ -142,14 +244,27 @@ export function SettingsPage() {
               </li>
               <li>
                 En el editor, elige la función <code>setup</code> y pulsa <strong>Ejecutar</strong>.
-                Acepta los permisos que pide Google (es tu propio script). Crea las hojas y un
-                activador cada 5 minutos.
+                Acepta los permisos que pide Google (es tu propio script: hoja y Drive). Crea las
+                hojas, un activador cada 5 minutos y la carpeta «Fotos de la boda» en tu Drive.
               </li>
               <li>
-                Listo: este estado pasa a «Funcionando». Si el script falla, Google te avisa por
+                Para el álbum: <strong>Implementar → Nueva implementación</strong>, tipo{' '}
+                <strong>Aplicación web</strong>, «Ejecutar como»: <strong>Yo</strong>, «Quién tiene
+                acceso»: <strong>Cualquier usuario</strong>. Pulsa Implementar, copia la URL de la
+                aplicación web y pégala aquí:
+                <AlbumConnection settings={settings.data} />
+              </li>
+              <li>
+                Listo: los estados de arriba pasan a verde. Si el script falla, Google te avisa por
                 correo.
               </li>
             </ol>
+            <p className={ui.hint}>
+              ¿Ya habías conectado la hoja antes? Pega el código nuevo, ejecuta <code>setup</code>{' '}
+              otra vez y sigue desde el paso 5. Si más adelante cambias el código, usa{' '}
+              <strong>Implementar → Gestionar implementaciones → Editar → Versión nueva</strong>:
+              así la URL no cambia.
+            </p>
 
             <h3 className={styles.subtitle}>Secreto</h3>
             <p className={ui.hint}>

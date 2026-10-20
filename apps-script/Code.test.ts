@@ -52,6 +52,61 @@ class FakeSheet {
   }
 }
 
+interface FakeFile {
+  id: string;
+  bytes: number[];
+  type: string;
+  name: string;
+}
+
+class FakeFolder {
+  folders: FakeFolder[] = [];
+  files: FakeFile[] = [];
+  trashed = false;
+  constructor(
+    private drive: FakeDrive,
+    readonly id: string,
+    readonly name: string,
+  ) {}
+  getId() {
+    return this.id;
+  }
+  getUrl() {
+    return `https://drive.google.com/drive/folders/${this.id}`;
+  }
+  isTrashed() {
+    return this.trashed;
+  }
+  createFolder(name: string) {
+    const folder = this.drive.folder(name);
+    this.folders.push(folder);
+    return folder;
+  }
+  createFile(blob: { bytes: number[]; type: string; name: string }) {
+    const file = { id: `file${this.drive.next++}xxxxxxxx`, ...blob };
+    this.files.push(file);
+    return { getId: () => file.id };
+  }
+}
+
+class FakeDrive {
+  next = 1;
+  all = new Map<string, FakeFolder>();
+  folder(name: string) {
+    const folder = new FakeFolder(this, `folder${this.next++}xxxxxx`, name);
+    this.all.set(folder.id, folder);
+    return folder;
+  }
+  createFolder(name: string) {
+    return this.folder(name);
+  }
+  getFolderById(id: string) {
+    const folder = this.all.get(id);
+    if (!folder) throw new Error('No item with the given ID could be found');
+    return folder;
+  }
+}
+
 class FakeSpreadsheet {
   sheets = new Map<string, FakeSheet>();
   getSheetByName(name: string) {
@@ -151,7 +206,20 @@ function load() {
     ['SECRET', 's3cret'],
     ['SITE_URL', 'https://example.com/'],
   ]);
-  const requests: Array<{ url: string; payload: { p_secret: string; p_hash: string | null } }> = [];
+  const requests: Array<{ url: string; payload: Record<string, unknown> }> = [];
+  /** Answers of the other RPCs (album check, register, folder), by name. */
+  const rpc = new Map<
+    string,
+    (payload: Record<string, unknown>) => { status: number; body: unknown }
+  >([
+    [
+      'album_drive_check',
+      () => ({ status: 200, body: { code: 'abc234', displayName: 'Familia López', count: 0 } }),
+    ],
+    ['register_drive_photo', () => ({ status: 200, body: '' })],
+    ['google_register_folder', () => ({ status: 200, body: '' })],
+  ]);
+  const drive = new FakeDrive();
   const responses: Array<{ status: number; body: unknown }> = [];
   const triggers: string[] = [];
   const conditionalRule = () => {
@@ -177,11 +245,28 @@ function load() {
         deleteProperty: (key: string) => props.delete(key),
       }),
     },
-    LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
+    LockService: {
+      getScriptLock: () => ({ tryLock: () => true, waitLock: () => {}, releaseLock: () => {} }),
+    },
+    DriveApp: drive,
+    Utilities: {
+      base64Decode: (data: string) => [...Buffer.from(data, 'base64')],
+      newBlob: (bytes: number[], type: string, name: string) => ({ bytes, type, name }),
+    },
+    ContentService: {
+      MimeType: { JSON: 'json' },
+      createTextOutput: (text: string) => ({ text, setMimeType: () => ({ text }) }),
+    },
+    console: { error: () => {} },
     UrlFetchApp: {
       fetch: (url: string, options: { payload: string }) => {
-        requests.push({ url, payload: JSON.parse(options.payload) });
-        const next = responses.shift() ?? { status: 200, body: EXPORT };
+        const payload = JSON.parse(options.payload);
+        requests.push({ url, payload });
+        const name = url.split('/rpc/')[1]!;
+        const next =
+          name === 'export_for_sheet'
+            ? (responses.shift() ?? { status: 200, body: EXPORT })
+            : rpc.get(name)!(payload);
         return {
           getResponseCode: () => next.status,
           getContentText: () =>
@@ -202,7 +287,7 @@ function load() {
   runInNewContext(readFileSync('apps-script/Code.js', 'utf8'), context);
   const script = (context.module as { exports: Record<string, (...args: unknown[]) => unknown> })
     .exports;
-  return { script, spreadsheet, props, requests, responses, triggers };
+  return { script, spreadsheet, props, requests, responses, triggers, rpc, drive };
 }
 
 describe('Apps Script sync', () => {
@@ -281,7 +366,8 @@ describe('Apps Script sync', () => {
     env.script.setup!();
     env.script.setup!();
     expect(env.triggers).toEqual(['sync']);
-    expect(env.requests[0]!.payload.p_hash).toBeNull();
+    const exports = env.requests.filter((r) => r.url.endsWith('/export_for_sheet'));
+    expect(exports[0]!.payload.p_hash).toBeNull();
   });
 
   it('summary formulas point at the right columns', () => {
@@ -294,5 +380,115 @@ describe('Apps Script sync', () => {
     expect(formula('Transporte (personas)')).toBe(
       '=SUMIF(Invitaciones!J2:J,"Sí",Invitaciones!G2:G)',
     );
+  });
+});
+
+describe('Apps Script album (photos to Google Drive)', () => {
+  let env: ReturnType<typeof load>;
+  beforeEach(() => {
+    env = load();
+  });
+
+  const photo = Buffer.from('original photo bytes, not recompressed');
+  const post = (body: Record<string, unknown>) =>
+    JSON.parse(
+      (env.script.doPost!({ postData: { contents: JSON.stringify(body) } }) as { text: string })
+        .text,
+    );
+  const upload = (extra: Record<string, unknown> = {}) =>
+    post({
+      code: 'ABC234',
+      name: 'IMG_2041.JPG',
+      type: 'image/jpeg',
+      data: photo.toString('base64'),
+      ...extra,
+    });
+
+  it('setup creates the album folder once and registers its link', () => {
+    env.script.setup!();
+    env.script.setup!();
+    const albums = [...env.drive.all.values()].filter((f) => f.name === 'Fotos de la boda');
+    expect(albums).toHaveLength(1);
+    const registered = env.requests.filter((r) => r.url.endsWith('/google_register_folder'));
+    expect(registered.at(-1)!.payload).toEqual({
+      p_secret: 's3cret',
+      p_folder_url: `https://drive.google.com/drive/folders/${albums[0]!.id}`,
+    });
+  });
+
+  it('saves the original photo in the guest folder and records it', () => {
+    expect(upload()).toEqual({ ok: true });
+    expect(upload({ name: 'IMG_2042.JPG' })).toEqual({ ok: true });
+
+    const album = [...env.drive.all.values()].find((f) => f.name === 'Fotos de la boda')!;
+    expect(album.folders.map((f) => f.name)).toEqual(['Familia López (abc234)']);
+    const files = album.folders[0]!.files;
+    expect(files.map((f) => f.name)).toEqual(['IMG_2041.JPG', 'IMG_2042.JPG']);
+    expect(Buffer.from(files[0]!.bytes).equals(photo)).toBe(true);
+    expect(files[0]!.type).toBe('image/jpeg');
+
+    const calls = env.requests.map((r) => r.url.split('/rpc/')[1]);
+    expect(calls).toEqual([
+      'album_drive_check',
+      'register_drive_photo',
+      'album_drive_check',
+      'register_drive_photo',
+    ]);
+    expect(env.requests[0]!.payload).toEqual({ p_secret: 's3cret', p_code: 'abc234' });
+    expect(env.requests[1]!.payload).toEqual({
+      p_secret: 's3cret',
+      p_code: 'abc234',
+      p_file_id: files[0]!.id,
+      p_name: 'IMG_2041.JPG',
+      p_bytes: photo.length,
+    });
+  });
+
+  it('a deleted guest folder is created again', () => {
+    upload();
+    const album = [...env.drive.all.values()].find((f) => f.name === 'Fotos de la boda')!;
+    album.folders[0]!.trashed = true;
+    upload();
+    expect(album.folders.filter((f) => !f.trashed)).toHaveLength(1);
+  });
+
+  it('passes on the reasons Supabase refuses a photo, and saves nothing', () => {
+    env.rpc.set('album_drive_check', () => ({
+      status: 400,
+      body: { code: 'P0001', message: 'album_closed' },
+    }));
+    expect(upload()).toEqual({ ok: false, error: 'album_closed' });
+    env.rpc.set('album_drive_check', () => ({
+      status: 400,
+      body: { code: 'P0001', message: 'album_full' },
+    }));
+    expect(upload()).toEqual({ ok: false, error: 'album_full' });
+    const files = [...env.drive.all.values()].flatMap((f) => f.files);
+    expect(files).toHaveLength(0);
+  });
+
+  it('rejects bad requests before calling Supabase', () => {
+    expect(upload({ type: 'application/pdf' })).toEqual({ ok: false, error: 'invalid_payload' });
+    expect(upload({ code: '../x' })).toEqual({ ok: false, error: 'invalid_payload' });
+    expect(upload({ data: 'A'.repeat(36 * 1024 * 1024) })).toEqual({
+      ok: false,
+      error: 'too_large',
+    });
+    expect(env.requests).toHaveLength(0);
+  });
+
+  it('answers the connection test and unexpected errors without details', () => {
+    expect(JSON.parse((env.script.doGet!() as { text: string }).text)).toEqual({
+      ok: true,
+      service: 'album',
+    });
+    env.rpc.set('register_drive_photo', () => ({ status: 500, body: 'boom' }));
+    expect(upload()).toEqual({ ok: false, error: 'unknown' });
+  });
+
+  it('keeps file names safe for Drive', () => {
+    expect(env.script.photoName!('IMG_1.HEIC', 'image/heic')).toBe('IMG_1.HEIC');
+    expect(env.script.photoName!('a/b:c?.jpg', 'image/jpeg')).toBe('a_b_c_.jpg');
+    expect(env.script.photoName!('', 'image/jpeg')).toMatch(/^foto-.+\.jpg$/);
   });
 });

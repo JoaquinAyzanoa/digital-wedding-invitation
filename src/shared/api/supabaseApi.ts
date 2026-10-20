@@ -2,14 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { publicContentSchema } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 import type { Database, Json } from '@/shared/types/database.types';
-import { uuid } from '@/shared/utils/uuid';
-import {
-  API_ERROR_CODES,
-  ApiError,
-  type ApiErrorCode,
-  type PublicApi,
-  type UploadOptions,
-} from './types';
+import { uploadToDrive } from './driveUpload';
+import { API_ERROR_CODES, ApiError, type ApiErrorCode, type PublicApi } from './types';
 
 type Client = SupabaseClient<Database>;
 
@@ -37,40 +31,6 @@ export function toApiError(error: { message?: string; code?: string }): ApiError
     return new ApiError('network', message);
   }
   return new ApiError('unknown', message);
-}
-
-/**
- * Uploads one file to the album bucket. XHR rather than supabase-js: it reports upload
- * progress. Storage answers 400 with the real status in the body: 403 when the policy
- * refuses (unknown code, album closed or full), 409 when the file is already there (a retry
- * after a lost answer), which counts as done.
- */
-function putAlbumObject(path: string, file: Blob, { onProgress, signal }: UploadOptions = {}) {
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/album/${path}`);
-    xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-    xhr.setRequestHeader('Content-Type', file.type);
-    xhr.setRequestHeader('x-upsert', 'false');
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) return resolve();
-      let status = String(xhr.status);
-      try {
-        status = String((JSON.parse(xhr.responseText) as { statusCode?: string }).statusCode);
-      } catch {
-        // not JSON: keep the HTTP status
-      }
-      if (status === '409') return resolve();
-      reject(new ApiError(status === '403' ? 'album_closed' : 'unknown', xhr.responseText));
-    };
-    xhr.onerror = () => reject(new ApiError('network'));
-    xhr.onabort = () => reject(new DOMException('Aborted', 'AbortError'));
-    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
-    xhr.send(file);
-  });
 }
 
 export function createSupabaseApi(): PublicApi {
@@ -105,26 +65,6 @@ export function createSupabaseApi(): PublicApi {
       return data as unknown as InvitationView;
     },
 
-    async uploadAlbumPhoto(code, upload, { onProgress, signal } = {}) {
-      const name = uuid();
-      const path = `${code}/${name}.${upload.ext}`;
-      // The thumbnail is small: it goes first and counts little in the progress.
-      const total = upload.photo.size + upload.thumb.size;
-      await putAlbumObject(`${code}/${name}.thumb.${upload.ext}`, upload.thumb, {
-        signal,
-        onProgress: (f) => onProgress?.((f * upload.thumb.size) / total),
-      });
-      await putAlbumObject(path, upload.photo, {
-        signal,
-        onProgress: (f) => onProgress?.((upload.thumb.size + f * upload.photo.size) / total),
-      });
-      const client = await getPublicClient();
-      const { error } = await client.rpc('register_album_photo', {
-        p_code: code,
-        p_path: path,
-        p_meta: { width: upload.width, height: upload.height, bytes: upload.photo.size },
-      });
-      if (error) throw toApiError(error);
-    },
+    uploadAlbumPhoto: uploadToDrive,
   };
 }

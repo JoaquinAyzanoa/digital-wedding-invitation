@@ -1,11 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import { expect, test, type Page } from '@playwright/test';
-import JSZip from 'jszip';
+import { expect, test, type Page, type Route } from '@playwright/test';
 import { PNG } from 'pngjs';
 
 const ADMIN = { email: 'admin@example.com', password: 'admin123456' };
 // Seeded invitation not used by the other specs.
-const GUEST = { code: 'pqr678', name: 'Diego Salas', folder: 'Diego-Salas' };
+const GUEST = { code: 'pqr678', name: 'Diego Salas' };
+const WEB_APP = 'https://script.google.com/macros/s/TEST_album-1/exec';
+const FOLDER = 'https://drive.google.com/drive/folders/1TestFolder_abc';
 
 /** A 1600×1200 photo-like PNG (a gradient that differs per photo). */
 function photo(index: number) {
@@ -19,7 +19,7 @@ function photo(index: number) {
       png.data[i + 3] = 255;
     }
   }
-  return { name: `IMG_${1000 + index}.png`, mimeType: 'image/png', buffer: PNG.sync.write(png) };
+  return { name: `IMG_${1000 + index}.PNG`, mimeType: 'image/png', buffer: PNG.sync.write(png) };
 }
 
 async function login(page: Page) {
@@ -30,125 +30,121 @@ async function login(page: Page) {
   await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
 }
 
-/** Files left in the guest's album folder (with the service key, like the admin can). */
-async function storageFiles(prefix: string) {
-  const response = await fetch(`${process.env.E2E_SUPABASE_URL}/storage/v1/object/list/album`, {
+/** What the Apps Script calls in Supabase (with the secret from Ajustes). */
+async function rpc(name: string, params: Record<string, unknown>) {
+  const response = await fetch(`${process.env.E2E_SUPABASE_URL}/rest/v1/rpc/${name}`, {
     method: 'POST',
-    headers: {
-      apikey: process.env.E2E_SUPABASE_SECRET!,
-      Authorization: `Bearer ${process.env.E2E_SUPABASE_SECRET}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ prefix, limit: 1000 }),
+    headers: { apikey: process.env.E2E_SUPABASE_KEY!, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_secret: secret, ...params }),
   });
-  return ((await response.json()) as Array<{ name: string }>).map((f) => f.name);
+  const text = await response.text();
+  if (!response.ok) throw new Error((JSON.parse(text) as { message: string }).message);
+  return text ? JSON.parse(text) : null;
 }
+
+const cors = { 'Access-Control-Allow-Origin': '*' };
+
+/** Stands in for the Apps Script web app: checks, "saves" and records each photo. */
+function fakeWebApp(received: Array<{ name: string; type: string; bytes: Buffer }>) {
+  return async (route: Route) => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      return route.fulfill({ headers: cors, json: { ok: true, service: 'album' } });
+    }
+    const body = JSON.parse(request.postData()!) as Record<string, string>;
+    expect(request.headers()['content-type']).toContain('text/plain');
+    try {
+      await rpc('album_drive_check', { p_code: body.code });
+      const id = `drive_${received.length}_${body.name.replace(/\W/g, '')}`;
+      received.push({ name: body.name, type: body.type, bytes: Buffer.from(body.data!, 'base64') });
+      await rpc('register_drive_photo', {
+        p_code: body.code,
+        p_file_id: id,
+        p_name: body.name,
+        p_bytes: Buffer.from(body.data!, 'base64').length,
+      });
+      return route.fulfill({ headers: cors, json: { ok: true } });
+    } catch (error) {
+      return route.fulfill({ headers: cors, json: { ok: false, error: (error as Error).message } });
+    }
+  };
+}
+
+let secret = '';
 
 test.describe.configure({ mode: 'serial' });
 
-test('a guest uploads 20 photos from the phone', async ({ page }) => {
+test('the admin connects the album web app', async ({ page }) => {
+  await login(page);
+  await page.getByRole('link', { name: 'Álbum' }).click();
+  await expect(page.getByText(/El álbum aún no está conectado/)).toBeVisible();
+
+  await page.getByRole('link', { name: 'Ajustes', exact: true }).click();
+  await expect(page.getByText(/^Álbum sin conectar/)).toBeVisible();
+  const secretBox = page.locator('div', { has: page.getByText('SECRET', { exact: true }) }).last();
+  await secretBox.getByRole('button', { name: 'Mostrar' }).click();
+  secret = (await secretBox.locator('code').textContent())!;
+
+  const url = page.getByLabel('URL de la aplicación web');
+  await url.fill('https://example.com/exec');
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText(/Pega la URL de la aplicación web/)).toBeVisible();
+  await url.fill(WEB_APP);
+  await page.getByRole('button', { name: 'Guardar' }).click();
+  await expect(page.getByText('Álbum conectado', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Álbum conectado: las fotos van a tu Google Drive/)).toBeVisible();
+
+  await page.route(WEB_APP, fakeWebApp([]));
+  await page.getByRole('button', { name: 'Probar conexión' }).click();
+  await expect(page.getByText('Conexión correcta: el script responde')).toBeVisible();
+});
+
+test('a guest uploads 20 photos at their original quality', async ({ page }) => {
   test.setTimeout(120_000);
+  const received: Array<{ name: string; type: string; bytes: Buffer }> = [];
+  await page.route(WEB_APP, fakeWebApp(received));
   await page.goto(`/?i=${GUEST.code}`);
   await page.getByRole('button', { name: 'Abrir la invitación' }).click();
   await expect(page.getByRole('dialog')).toBeHidden({ timeout: 8000 });
 
-  const button = page.getByRole('button', { name: 'Clic para subir fotos' });
-  await button.scrollIntoViewIfNeeded();
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles(Array.from({ length: 20 }, (_, i) => photo(i)));
+  await page.getByRole('button', { name: 'Clic para subir fotos' }).scrollIntoViewIfNeeded();
+  const photos = Array.from({ length: 20 }, (_, i) => photo(i));
+  await page.locator('input[type="file"]').setInputFiles(photos);
   await expect(page.getByText(/Subiendo fotos: \d+ de 20 listas/)).toBeVisible();
   await expect(page.getByText('¡Gracias! Subiste 20 fotos.')).toBeVisible({ timeout: 90_000 });
-  await expect(page.getByRole('button', { name: 'Subir más fotos' })).toBeVisible();
 
-  // Photo and thumbnail, compressed in the browser.
-  const files = await storageFiles(`${GUEST.code}/`);
-  expect(files).toHaveLength(40);
-  expect(files.filter((f) => f.includes('.thumb.'))).toHaveLength(20);
+  // Byte for byte what the guest picked: nothing recompressed.
+  expect(received).toHaveLength(20);
+  for (const original of photos) {
+    const got = received.find((r) => r.name === original.name)!;
+    expect(got.type).toBe('image/png');
+    expect(got.bytes.equals(original.buffer)).toBe(true);
+  }
 });
 
-test('the admin reviews, hides, deletes and downloads the photos', async ({ page }) => {
-  test.setTimeout(90_000);
+test('the admin sees what arrived and opens the Drive folder', async ({ page }) => {
+  await rpc('google_register_folder', { p_folder_url: FOLDER });
   await login(page);
   await page.getByRole('link', { name: 'Álbum' }).click();
   await expect(page.getByRole('heading', { name: 'Álbum (20)' })).toBeVisible();
-  await expect(page.getByText('20 fotos de 1 invitado')).toBeVisible();
-  await expect(page.getByText(/^Espacio usado/)).toBeVisible();
-
-  const thumbs = page.getByRole('button', { name: `Ver foto de ${GUEST.name}` });
-  await expect(thumbs).toHaveCount(20);
-  // Thumbnails load from signed URLs of the private bucket.
-  await expect
-    .poll(() =>
-      page
-        .getByRole('list', { name: 'Fotos del álbum' })
-        .locator('img')
-        .evaluateAll(
-          (imgs) => imgs.filter((img) => (img as HTMLImageElement).naturalWidth > 0).length,
-        ),
-    )
-    .toBe(20);
-
-  // Hide the first photo: it stays, out of the downloads.
-  await thumbs.first().click();
-  const viewer = page.getByRole('dialog', { name: new RegExp(GUEST.name) });
-  await expect(viewer.getByRole('img')).toBeVisible();
-  await expect
-    .poll(() => viewer.getByRole('img').evaluate((img) => (img as HTMLImageElement).naturalWidth))
-    .toBeGreaterThan(1000);
-  await viewer.getByRole('button', { name: 'Ocultar' }).click();
-  await expect(page.getByText('Foto oculta')).toBeVisible();
-
-  // Delete the second one.
-  await viewer.getByRole('button', { name: 'Siguiente ›' }).click();
-  await expect(viewer.getByText('2 de 20')).toBeVisible();
-  await viewer.getByRole('button', { name: 'Eliminar' }).click();
-  await page
-    .getByRole('dialog', { name: '¿Eliminar esta foto?' })
-    .getByRole('button', { name: 'Eliminar' })
-    .click();
-  await expect(page.getByText('Foto eliminada')).toBeVisible();
-  await viewer.getByRole('button', { name: 'Cerrar' }).click();
-
-  await expect(page.getByRole('heading', { name: 'Álbum (19)' })).toBeVisible();
-  await page.getByLabel('Mostrar').selectOption('hidden');
-  await expect(
-    page.getByRole('button', { name: `Ver foto de ${GUEST.name} (oculta)` }),
-  ).toHaveCount(1);
-  await page.getByLabel('Mostrar').selectOption('all');
-
-  // The ZIP has every photo except the hidden one, in a folder per guest.
-  const downloading = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Descargar 18 (ZIP)' }).click();
-  const download = await downloading;
-  expect(download.suggestedFilename()).toMatch(/^album-\d{4}-\d{2}-\d{2}\.zip$/);
-  await expect(page.getByText('Listo: 18 fotos en el ZIP.')).toBeVisible();
-  const zip = await JSZip.loadAsync(await readFile((await download.path())!));
-  const names = Object.keys(zip.files).filter((n) => !zip.files[n]!.dir);
-  expect(names).toHaveLength(18);
-  expect(
-    names.every((n) =>
-      new RegExp(`^${GUEST.folder}/\\d{4}-\\d{2}-\\d{2}_\\d{4}_[0-9a-f]{6}\\.(webp|jpg)$`).test(n),
-    ),
-  ).toBe(true);
-  expect(await storageFiles(`${GUEST.code}/`)).toHaveLength(38);
+  await expect(page.getByRole('heading', { name: /20 fotos de 1 invitado/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: new RegExp(`${GUEST.name} 20`) })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Abrir en Google Drive' })).toHaveAttribute(
+    'href',
+    FOLDER,
+  );
+  await expect(page.getByText(/El álbum aún no está conectado/)).toHaveCount(0);
 });
 
-test('deleting the invitation deletes its photos too', async ({ page }) => {
-  await login(page);
-  await page.getByRole('link', { name: 'Invitados' }).click();
-  await page.getByRole('button', { name: `Editar ${GUEST.name}` }).click();
-  await page
-    .getByRole('dialog', { name: GUEST.name })
-    .getByRole('button', { name: 'Eliminar' })
-    .click();
-  await page
-    .getByRole('dialog', { name: /¿Eliminar/ })
-    .getByRole('button', { name: 'Eliminar' })
-    .click();
-  await expect(page.getByText('Invitación eliminada')).toBeVisible();
-
-  await page.getByRole('link', { name: 'Álbum' }).click();
-  await expect(page.getByText('Todavía no hay fotos.', { exact: false })).toBeVisible();
-  expect(await storageFiles(`${GUEST.code}/`)).toHaveLength(0);
+test('a closed album tells the guest and does not retry', async ({ page }) => {
+  await page.route(WEB_APP, (route) =>
+    route.fulfill({ headers: cors, json: { ok: false, error: 'album_closed' } }),
+  );
+  await page.goto('/?i=abc234');
+  await page.getByRole('button', { name: 'Abrir la invitación' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden({ timeout: 8000 });
+  await page.getByRole('button', { name: 'Clic para subir fotos' }).scrollIntoViewIfNeeded();
+  await page.locator('input[type="file"]').setInputFiles([photo(99)]);
+  await expect(page.getByText('El álbum ya no recibe fotos.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toHaveCount(0);
 });

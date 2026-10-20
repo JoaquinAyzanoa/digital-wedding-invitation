@@ -35,7 +35,7 @@ test.describe('invitation (demo)', () => {
     await openEnvelope(page);
     const button = page.getByRole('button', { name: 'Clic para subir fotos' });
     await button.scrollIntoViewIfNeeded();
-    // A tiny real PNG: it goes through the same compression as a phone photo.
+    // Sent as they are (original quality); the demo only pretends to upload.
     const png = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4AWM8AQQMQMDEAAUAMKYDJOk+9mYAAAAASUVORK5CYII=',
       'base64',
@@ -43,14 +43,12 @@ test.describe('invitation (demo)', () => {
     await page.locator('input[type="file"]').setInputFiles([
       { name: 'uno.png', mimeType: 'image/png', buffer: png },
       { name: 'dos.png', mimeType: 'image/png', buffer: png },
-      { name: 'nota.txt', mimeType: 'image/png', buffer: Buffer.from('no es una foto') },
+      { name: 'nota.txt', mimeType: 'text/plain', buffer: Buffer.from('no es una foto') },
     ]);
     await expect(page.getByText('2 de 3 fotos subidas. 1 con problemas.')).toBeVisible({
       timeout: 20_000,
     });
-    await expect(
-      page.getByText('No pudimos leer esta foto (¿formato no compatible?).'),
-    ).toBeVisible();
+    await expect(page.getByText('Este archivo no es una foto.')).toBeVisible();
   });
 
   test('copies a payment method', async ({ page }) => {

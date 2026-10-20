@@ -1,8 +1,13 @@
-# Google Sheet (espejo de solo lectura)
+# Google: hoja y álbum de fotos
 
-`Code.js` copia las invitaciones y los asistentes de Supabase a una hoja de Google cada
-5 minutos. Supabase sigue siendo la fuente de verdad: los cambios se hacen en el panel
-(`/login/`), no en la hoja (la próxima sincronización los sobrescribe).
+`Code.js` hace dos cosas:
+
+1. Copia las invitaciones y los asistentes de Supabase a una hoja de Google cada 5 minutos.
+   Supabase sigue siendo la fuente de verdad: los cambios se hacen en el panel (`/login/`),
+   no en la hoja (la próxima sincronización los sobrescribe).
+2. Publicado como **aplicación web**, recibe las fotos que suben los invitados y las guarda,
+   en su calidad original (sin comprimir), en la carpeta **«Fotos de la boda»** de tu Google
+   Drive, con una subcarpeta por invitación («Familia López (abc234)»).
 
 La hoja tiene tres pestañas:
 
@@ -29,13 +34,34 @@ Google Sheet**.
    | `SITE_URL`     | el dominio de la invitación, para los links personales |
 
 4. Elige la función `setup` y pulsa **Ejecutar**. Acepta los permisos (es tu propio
-   script). `setup` pone la zona horaria de Lima, crea el activador cada 5 minutos y hace
-   la primera sincronización.
+   script: hoja y Drive). `setup` pone la zona horaria de Lima, crea el activador cada
+   5 minutos, crea la carpeta «Fotos de la boda» (su enlace aparece en el panel) y hace la
+   primera sincronización.
+5. Para el álbum: **Implementar → Nueva implementación**, tipo **Aplicación web**,
+   «Ejecutar como»: **Yo**, «Quién tiene acceso»: **Cualquier usuario**. Copia la URL
+   (`https://script.google.com/macros/s/…/exec`) y pégala en el panel, Ajustes, paso 5.
+   «Probar conexión» confirma que responde.
+
+Si cambias el código más adelante: **Implementar → Gestionar implementaciones → Editar →
+Versión nueva**. Así la URL de la aplicación web no cambia.
 
 Si el script falla (por ejemplo, porque se cambió el secreto), Google envía un correo con
 el error. Para forzar una copia completa, vuelve a ejecutar `setup`.
 
 ## Cómo funciona
+
+### Álbum
+
+- El invitado elige fotos en su invitación; cada una se envía tal cual (base64 en un
+  `text/plain`, sin preflight de CORS) a `doPost`, con su código.
+- `doPost` pregunta a Supabase (`album_drive_check`, con el secreto) si el código existe,
+  si el álbum está abierto y si no pasó de 300 fotos; guarda el archivo en Drive y lo
+  registra (`register_drive_photo`) para que el panel muestre cuántas llegaron.
+- Hasta 25 MB por foto. La URL de la aplicación web solo se entrega a quien tiene un código
+  válido, mientras el álbum está abierto.
+- Espacio: el de tu cuenta de Google (15 GB gratis, compartidos con Gmail y Fotos).
+
+### Hoja
 
 - `sync` llama `rpc/export_for_sheet` con el secreto y el `hash` de lo último que escribió.
   Si nada cambió, Supabase responde unos pocos bytes y la hoja no se toca; si cambió,
@@ -48,5 +74,5 @@ el error. Para forzar una copia completa, vuelve a ejecutar `setup`.
 
 ## Pruebas
 
-`Code.test.ts` ejecuta el script en Node con imitaciones de los servicios de Google
-(`npm test`).
+`Code.test.ts` ejecuta el script en Node con imitaciones de los servicios de Google (hoja,
+Drive, red) (`npm test`).

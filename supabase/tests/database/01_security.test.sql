@@ -45,17 +45,17 @@ select is(
       and has_function_privilege('anon', p.oid, 'execute')
       and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
     order by p.proname::text collate "C"),
-  array['can_upload_album', 'export_for_sheet', 'get_content', 'get_invitation',
-        'ping', 'register_album_photo', 'submit_rsvp'],
-  'anon can execute only the guest RPCs and the album upload check');
+  array['album_drive_check', 'export_for_sheet', 'get_content', 'get_invitation',
+        'google_register_folder', 'ping', 'register_drive_photo', 'submit_rsvp'],
+  'anon can execute only the guest RPCs and the Google script ones (behind the secret)');
 select is(
   array(select p.proname::text from pg_proc p
     where p.pronamespace = 'private'::regnamespace
       and has_function_privilege('authenticated', p.oid, 'execute')
       and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
     order by p.proname::text collate "C"),
-  array['can_upload_album', 'is_admin'],
-  'authenticated can execute only the private helpers used by policies');
+  array['is_admin'],
+  'authenticated can execute only the private helper used by policies');
 
 -- anon cannot read tables directly
 set local role anon;

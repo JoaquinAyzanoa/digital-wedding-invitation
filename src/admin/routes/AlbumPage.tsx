@@ -1,224 +1,106 @@
-import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { AlbumZipDialog } from '@/admin/album/AlbumZipDialog';
-import { PhotoViewer } from '@/admin/album/PhotoViewer';
-import {
-  useAlbumPhotos,
-  useAlbumStats,
-  useThumbnails,
-  type AlbumPhoto,
-  type AlbumStats,
-} from '@/admin/data/album';
-import { adminErrorMessage } from '@/admin/data/queries';
-import { Btn } from '@/admin/ui/Btn';
+import { useAlbumSummary } from '@/admin/data/album';
+import { adminErrorMessage, useSheetSettings } from '@/admin/data/queries';
+import { Btn, BtnLink } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import styles from './AlbumPage.module.css';
 
-/** Supabase free plan: 1 GB of Storage for photos, music, fonts… */
-const STORAGE_LIMIT = 1024 ** 3;
-const PAGE = 60;
-
-type Show = 'all' | 'visible' | 'hidden';
-
-function megabytes(bytes: number) {
+function size(bytes: number) {
   if (bytes < 1024 ** 2) return `${Math.round(bytes / 1024)} KB`;
-  return bytes < 1024 ** 3
-    ? `${(bytes / 1024 ** 2).toFixed(bytes < 10 * 1024 ** 2 ? 1 : 0)} MB`
-    : `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(0)} MB`;
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
 }
 
-function Usage({ stats }: { stats: AlbumStats }) {
-  const used = stats.albumBytes + stats.siteBytes;
-  const percent = Math.min(100, Math.round((used / STORAGE_LIMIT) * 100));
-  return (
-    <div className={styles.usage}>
-      <div className={styles.usageText}>
-        <span>Espacio usado</span>
-        <strong>
-          {megabytes(used)} de 1 GB ({percent} %)
-        </strong>
-      </div>
-      <span className={styles.bar} data-warn={percent >= 80} aria-hidden="true">
-        <span style={{ width: `${percent}%` }} />
-      </span>
-      <span className={ui.hint}>
-        Fotos del álbum {megabytes(stats.albumBytes)} · fotos, música y fuentes de la invitación{' '}
-        {megabytes(stats.siteBytes)}. Caben unas{' '}
-        {Math.max(0, Math.floor((STORAGE_LIMIT - used) / (550 * 1024))).toLocaleString('es-PE')}{' '}
-        fotos más.
-      </span>
-    </div>
-  );
+function when(iso: string) {
+  return new Date(iso).toLocaleString('es-PE', {
+    timeZone: 'America/Lima',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
-function Thumbnail({
-  photo,
-  url,
-  onOpen,
-}: {
-  photo: AlbumPhoto;
-  url: string | null | undefined;
-  onOpen: () => void;
-}) {
-  return (
-    <li className={styles.thumb} data-hidden={photo.hidden}>
-      <button
-        type="button"
-        className={styles.thumbButton}
-        onClick={onOpen}
-        aria-label={`Ver foto de ${photo.invitation.display_name}${photo.hidden ? ' (oculta)' : ''}`}
-      >
-        {url ? <img src={url} alt="" loading="lazy" /> : <span className={styles.placeholder} />}
-        {photo.hidden && <span className={styles.hiddenBadge}>Oculta</span>}
-      </button>
-    </li>
-  );
-}
-
+/** The album lives in Google Drive: here, what arrived and the way to the folder. */
 export function AlbumPage() {
-  const photos = useAlbumPhotos();
-  const stats = useAlbumStats();
-  const [guest, setGuest] = useState('all');
-  const [show, setShow] = useState<Show>('all');
-  const [limit, setLimit] = useState(PAGE);
-  const [viewing, setViewing] = useState<number | null>(null);
-  const [zip, setZip] = useState<AlbumPhoto[] | null>(null);
-
-  const all = useMemo(() => photos.data ?? [], [photos.data]);
-  const guests = useMemo(() => {
-    const counts = new Map<string, { name: string; count: number }>();
-    for (const p of all) {
-      const entry = counts.get(p.invitation.code) ?? { name: p.invitation.display_name, count: 0 };
-      entry.count++;
-      counts.set(p.invitation.code, entry);
-    }
-    return [...counts].sort(([, a], [, b]) => a.name.localeCompare(b.name, 'es'));
-  }, [all]);
-  const filtered = useMemo(
-    () =>
-      all.filter(
-        (p) =>
-          (guest === 'all' || p.invitation.code === guest) &&
-          (show === 'all' || (show === 'hidden') === p.hidden),
-      ),
-    [all, guest, show],
-  );
-  const onScreen = filtered.slice(0, limit);
-  const thumbs = useThumbnails(onScreen);
-  const downloadable = filtered.filter((p) => !p.hidden);
-
-  if (photos.isPending) return <p className={ui.empty}>Cargando…</p>;
-  if (photos.isError) {
-    return (
-      <div className={ui.empty} role="alert">
-        <p>{adminErrorMessage(photos.error)}</p>
-        <Btn variant="secondary" onClick={() => photos.refetch()}>
-          Reintentar
-        </Btn>
-      </div>
-    );
-  }
+  const summary = useAlbumSummary();
+  const google = useSheetSettings();
+  const folderUrl = google.data?.albumFolderUrl;
+  const connected = Boolean(google.data?.albumUploadUrl);
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>
-          Álbum <span className={ui.muted}>({all.length})</span>
+          Álbum {summary.data && <span className={ui.muted}>({summary.data.photos})</span>}
         </h1>
-        <Btn disabled={downloadable.length === 0} onClick={() => setZip(downloadable)}>
-          Descargar {downloadable.length === all.length ? 'todo' : downloadable.length} (ZIP)
-        </Btn>
+        {folderUrl && (
+          <BtnLink href={folderUrl} target="_blank" rel="noopener noreferrer">
+            Abrir en Google Drive
+          </BtnLink>
+        )}
       </div>
 
       <section className={ui.card}>
         <p>
-          {stats.data
-            ? `${stats.data.photos} ${stats.data.photos === 1 ? 'foto' : 'fotos'} de ${stats.data.guests} ${
-                stats.data.guests === 1 ? 'invitado' : 'invitados'
-              }${stats.data.hidden ? ` · ${stats.data.hidden} ocultas` : ''}`
-            : '…'}
+          Las fotos llegan en su calidad original a la carpeta «Fotos de la boda» de tu Google
+          Drive, en una subcarpeta por invitado. Allí puedes verlas, borrarlas o descargar todo.
         </p>
-        {stats.data && <Usage stats={stats.data} />}
+        {google.data && !connected && (
+          <p className={styles.notice}>
+            El álbum aún no está conectado: los invitados no ven el botón para subir fotos.{' '}
+            <Link to="/settings">Conéctalo en Ajustes</Link>.
+          </p>
+        )}
         <p className={ui.hint}>
           Abrir o cerrar el álbum, sus fechas y el texto: en{' '}
-          <Link to="/content">Contenido → Álbum y despedida</Link>. Las fotos ocultas no entran en
-          las descargas.
+          <Link to="/content">Contenido → Álbum y despedida</Link>.
         </p>
       </section>
 
-      {all.length === 0 ? (
-        <p className={ui.empty}>
-          Todavía no hay fotos. Aparecerán aquí cuando los invitados las suban.
-        </p>
-      ) : (
-        <>
-          <div className={styles.filters}>
-            <label className={ui.field}>
-              <span className={ui.label}>Invitado</span>
-              <select
-                className={ui.select}
-                value={guest}
-                onChange={(e) => {
-                  setGuest(e.target.value);
-                  setLimit(PAGE);
-                }}
-              >
-                <option value="all">Todos</option>
-                {guests.map(([code, { name, count }]) => (
-                  <option key={code} value={code}>
-                    {name} ({count})
-                  </option>
+      {summary.isPending && <p className={ui.empty}>Cargando…</p>}
+      {summary.isError && (
+        <div className={ui.empty} role="alert">
+          <p>{adminErrorMessage(summary.error)}</p>
+          <Btn variant="secondary" onClick={() => summary.refetch()}>
+            Reintentar
+          </Btn>
+        </div>
+      )}
+      {summary.data &&
+        (summary.data.photos === 0 ? (
+          <p className={ui.empty}>Todavía no hay fotos. Aquí verás cuántas sube cada invitado.</p>
+        ) : (
+          <section className={ui.card}>
+            <h2 className={ui.cardTitle}>
+              {summary.data.photos} {summary.data.photos === 1 ? 'foto' : 'fotos'} de{' '}
+              {summary.data.guests.length}{' '}
+              {summary.data.guests.length === 1 ? 'invitado' : 'invitados'} ·{' '}
+              {size(summary.data.bytes)}
+            </h2>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Invitado</th>
+                  <th scope="col">Fotos</th>
+                  <th scope="col">Última</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.data.guests.map((guest) => (
+                  <tr key={guest.code}>
+                    <th scope="row">{guest.name}</th>
+                    <td>{guest.photos}</td>
+                    <td>{when(guest.lastAt)}</td>
+                  </tr>
                 ))}
-              </select>
-            </label>
-            <label className={ui.field}>
-              <span className={ui.label}>Mostrar</span>
-              <select
-                className={ui.select}
-                value={show}
-                onChange={(e) => {
-                  setShow(e.target.value as Show);
-                  setLimit(PAGE);
-                }}
-              >
-                <option value="all">Todas</option>
-                <option value="visible">Visibles</option>
-                <option value="hidden">Ocultas</option>
-              </select>
-            </label>
-          </div>
-
-          {filtered.length === 0 ? (
-            <p className={ui.empty}>Ninguna foto con estos filtros.</p>
-          ) : (
-            <ul className={styles.grid} aria-label="Fotos del álbum">
-              {onScreen.map((photo, index) => (
-                <Thumbnail
-                  key={photo.id}
-                  photo={photo}
-                  url={thumbs.data?.get(photo.path)}
-                  onOpen={() => setViewing(index)}
-                />
-              ))}
-            </ul>
-          )}
-          {filtered.length > limit && (
-            <Btn variant="secondary" className={styles.more} onClick={() => setLimit(limit + PAGE)}>
-              Ver más ({filtered.length - limit})
-            </Btn>
-          )}
-        </>
-      )}
-
-      {viewing !== null && filtered[viewing] && (
-        <PhotoViewer
-          photos={filtered}
-          index={viewing}
-          onIndexChange={setViewing}
-          onClose={() => setViewing(null)}
-        />
-      )}
-      {zip && <AlbumZipDialog photos={zip} onClose={() => setZip(null)} />}
+              </tbody>
+            </table>
+            <p className={ui.hint}>
+              Cuenta las fotos recibidas; si borras alguna en Drive, aquí no se descuenta.
+            </p>
+          </section>
+        ))}
     </div>
   );
 }

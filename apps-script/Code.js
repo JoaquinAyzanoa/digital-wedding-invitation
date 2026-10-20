@@ -6,8 +6,13 @@
  * changed since the last run, Supabase answers with a few bytes and nothing is rewritten.
  * These calls also keep the free Supabase project from pausing for inactivity.
  *
+ * Deployed as a web app, the same script receives the guests' album photos (`doPost`) and
+ * saves them, at their original quality, in the "Fotos de la boda" folder of this Google
+ * Drive, in a subfolder per invitation. Supabase says whether the code exists and the album
+ * is open, and keeps the count.
+ *
  * Setup (see README.md in this folder): paste this file into Extensions → Apps Script of a
- * new Google Sheet, fill the script properties and run `setup` once.
+ * new Google Sheet, fill the script properties, run `setup` once and deploy it as a web app.
  *
  * Script properties:
  *   SUPABASE_URL  https://<project>.supabase.co
@@ -100,8 +105,15 @@ function sync() {
   }
 }
 
-/** Run once by hand: Lima time zone, the 5-minute trigger and a first sync. */
+/**
+ * Run once by hand: Lima time zone, the 5-minute trigger, the album folder (its link goes to
+ * the admin) and a first sync.
+ */
 function setup() {
+  const props = PropertiesService.getScriptProperties();
+  const config = readConfig_(props);
+  rpc_(config, 'google_register_folder', { p_folder_url: albumFolder_(props).getUrl() });
+
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   spreadsheet.setSpreadsheetTimeZone('America/Lima');
   for (const trigger of ScriptApp.getProjectTriggers()) {
@@ -109,7 +121,7 @@ function setup() {
   }
   ScriptApp.newTrigger('sync').timeBased().everyMinutes(5).create();
   // Forget the last hash so everything is written again (e.g. after deleting a sheet).
-  PropertiesService.getScriptProperties().deleteProperty('LAST_HASH');
+  props.deleteProperty('LAST_HASH');
   sync();
 }
 
@@ -146,6 +158,154 @@ function fetchExport_(config, lastHash) {
     throw new Error(message);
   }
   return JSON.parse(body);
+}
+
+// ---------------------------------------------------------------------------------------
+// Album: the guests' photos, to Google Drive
+// ---------------------------------------------------------------------------------------
+
+const ALBUM_FOLDER_NAME = 'Fotos de la boda';
+/** Original photos from phones weigh 2–10 MB; this leaves room and stays within the limits. */
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+const UPLOAD_ERRORS = [
+  'invitation_not_found',
+  'album_closed',
+  'album_full',
+  'invalid_payload',
+  'too_large',
+  'forbidden',
+];
+
+/** The admin's "Probar conexión": the web app answers. */
+function doGet() {
+  return reply_({ ok: true, service: 'album' });
+}
+
+/**
+ * A guest's photo: { code, name, type, data (base64) }, sent as text/plain (no CORS
+ * preflight). Answers { ok: true } or { ok: false, error }.
+ */
+function doPost(e) {
+  try {
+    const request = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const code = String(request.code || '')
+      .trim()
+      .toLowerCase();
+    const type = String(request.type || '');
+    if (
+      !/^[a-z2-9]{4,8}$/.test(code) ||
+      !/^image\/[\w.+-]+$/.test(type) ||
+      typeof request.data !== 'string'
+    ) {
+      return reply_({ ok: false, error: 'invalid_payload' });
+    }
+    if (request.data.length > Math.ceil(MAX_PHOTO_BYTES / 3) * 4) {
+      return reply_({ ok: false, error: 'too_large' });
+    }
+
+    const props = PropertiesService.getScriptProperties();
+    const config = readConfig_(props);
+    const guest = rpc_(config, 'album_drive_check', { p_code: code });
+    const bytes = Utilities.base64Decode(request.data);
+    const name = photoName(request.name, type);
+    const file = guestFolder_(props, guest).createFile(Utilities.newBlob(bytes, type, name));
+    rpc_(config, 'register_drive_photo', {
+      p_code: code,
+      p_file_id: file.getId(),
+      p_name: name,
+      p_bytes: bytes.length,
+    });
+    return reply_({ ok: true });
+  } catch (error) {
+    const message = String((error && error.message) || error);
+    if (!UPLOAD_ERRORS.includes(message)) console.error(`Subida de foto: ${message}`);
+    return reply_({ ok: false, error: UPLOAD_ERRORS.includes(message) ? message : 'unknown' });
+  }
+}
+
+/** The guest's file name, made safe for Drive ("IMG_2041.HEIC" stays as it is). */
+function photoName(name, type) {
+  const clean = String(name || '')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '_')
+    .trim()
+    .slice(0, 120);
+  if (clean) return clean;
+  const ext = (type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+  return `foto-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+}
+
+/** Calls a Supabase RPC with the secret; the database's error code becomes the message. */
+function rpc_(config, name, params) {
+  const response = UrlFetchApp.fetch(`${config.url}/rest/v1/rpc/${name}`, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { apikey: config.key },
+    payload: JSON.stringify(Object.assign({ p_secret: config.secret }, params)),
+    muteHttpExceptions: true,
+  });
+  const body = response.getContentText();
+  if (response.getResponseCode() !== 200) {
+    let message = body.slice(0, 300);
+    try {
+      message = JSON.parse(body).message || message;
+    } catch {
+      // not JSON: keep the text
+    }
+    throw new Error(message);
+  }
+  return body ? JSON.parse(body) : null;
+}
+
+/** "Fotos de la boda" in My Drive, created once (its id is kept in the properties). */
+function albumFolder_(props) {
+  const id = props.getProperty('ALBUM_FOLDER_ID');
+  if (id) {
+    try {
+      const folder = DriveApp.getFolderById(id);
+      if (!folder.isTrashed()) return folder;
+    } catch {
+      // deleted: create it again
+    }
+  }
+  const folder = DriveApp.createFolder(ALBUM_FOLDER_NAME);
+  props.setProperty('ALBUM_FOLDER_ID', folder.getId());
+  return folder;
+}
+
+/** "Familia López (abc234)" inside the album folder. Locked: two photos at once, one folder. */
+function guestFolder_(props, guest) {
+  const key = `FOLDER_${guest.code}`;
+  const find = () => {
+    const id = props.getProperty(key);
+    if (!id) return null;
+    try {
+      const folder = DriveApp.getFolderById(id);
+      return folder.isTrashed() ? null : folder;
+    } catch {
+      return null;
+    }
+  };
+  const existing = find();
+  if (existing) return existing;
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const again = find();
+    if (again) return again;
+    const folder = albumFolder_(props).createFolder(`${guest.displayName} (${guest.code})`);
+    props.setProperty(key, folder.getId());
+    return folder;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function reply_(body) {
+  return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(
+    ContentService.MimeType.JSON,
+  );
 }
 
 /** One row per invitation, in INVITATION_HEADERS order. */
@@ -300,5 +460,16 @@ function writeSummary_(spreadsheet) {
 
 // For the unit tests (Node). Apps Script ignores it: `module` does not exist there.
 if (typeof module !== 'undefined') {
-  module.exports = { sync, setup, invitationRows, attendeeRows, summaryRows, column, SHEET_NAMES };
+  module.exports = {
+    sync,
+    setup,
+    doGet,
+    doPost,
+    photoName,
+    invitationRows,
+    attendeeRows,
+    summaryRows,
+    column,
+    SHEET_NAMES,
+  };
 }

@@ -1,6 +1,7 @@
-import { ApiError, type AlbumPhotoUpload, type PublicApi } from '@/shared/api';
+import { ApiError, type ApiErrorCode, type PublicApi } from '@/shared/api';
+import { photoType } from '@/shared/api/driveUpload';
 
-export type UploadStatus = 'waiting' | 'preparing' | 'uploading' | 'done' | 'error';
+export type UploadStatus = 'waiting' | 'uploading' | 'done' | 'error';
 
 export interface UploadItem {
   id: string;
@@ -9,35 +10,46 @@ export interface UploadItem {
   /** 0–1 while uploading. */
   progress: number;
   error?: string;
-  /** The guest can try again (not for a file that cannot be read). */
+  /** The guest can try again (not for a file that is not a photo or is too big). */
   retryable?: boolean;
 }
 
-export const CONCURRENCY = 3;
+/** Original photos go up as they are; the web app accepts up to 25 MB. */
+export const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+export const CONCURRENCY = 2;
 /** Automatic retries after the first try (network hiccups on a phone). */
 export const RETRIES = 2;
 
 const MESSAGES = {
-  unreadable: 'No pudimos leer esta foto (¿formato no compatible?).',
+  notPhoto: 'Este archivo no es una foto.',
+  tooLarge: 'Pesa más de 25 MB.',
   closed: 'El álbum ya no recibe fotos.',
+  full: 'Llegaste al máximo de fotos para tu invitación. ¡Gracias!',
   failed: 'No se pudo subir. Revisa tu conexión y reintenta.',
 };
 
-type Prepare = (file: File) => Promise<AlbumPhotoUpload>;
+/** Answers that will not change by trying again. */
+const FINAL: Partial<Record<ApiErrorCode, string>> = {
+  album_closed: MESSAGES.closed,
+  album_full: MESSAGES.full,
+  too_large: MESSAGES.tooLarge,
+  invalid_payload: MESSAGES.notPhoto,
+  invitation_not_found: MESSAGES.closed,
+};
+
 type Sleep = (ms: number) => Promise<void>;
 
 const defaultSleep: Sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Photos waiting to go to the album: compressed and uploaded a few at a time, each with its
- * progress, retried automatically and, if it still fails, by hand. Plain class (not React
- * state) so the queue logic is easy to follow and to test; components subscribe to it.
+ * Photos waiting to go to the album: uploaded as they are (original quality), a couple at a
+ * time, each with its progress, retried automatically and, if it still fails, by hand. Plain
+ * class (not React state) so the queue logic is easy to follow and to test.
  */
 export class AlbumUploadQueue {
   private items: UploadItem[] = [];
   private listeners = new Set<() => void>();
   private files = new Map<string, File>();
-  private prepared = new Map<string, AlbumPhotoUpload>();
   private waiting: string[] = [];
   private running = 0;
   private controller = new AbortController();
@@ -45,8 +57,8 @@ export class AlbumUploadQueue {
 
   constructor(
     private api: PublicApi,
+    private uploadUrl: string,
     private code: string,
-    private prepare: Prepare,
     private sleep: Sleep = defaultSleep,
   ) {}
 
@@ -59,15 +71,21 @@ export class AlbumUploadQueue {
 
   /** True while photos are waiting or going up (to warn before leaving the page). */
   get busy() {
-    return this.items.some((i) => i.status !== 'done' && i.status !== 'error');
+    return this.items.some((i) => i.status === 'waiting' || i.status === 'uploading');
   }
 
   add(files: File[]) {
-    const added = files.map((file) => {
+    const added = files.map((file): UploadItem => {
       const id = String(this.nextId++);
+      const problem = !photoType(file).startsWith('image/')
+        ? MESSAGES.notPhoto
+        : file.size > MAX_PHOTO_BYTES
+          ? MESSAGES.tooLarge
+          : null;
+      if (problem) return { id, name: file.name, status: 'error', progress: 0, error: problem };
       this.files.set(id, file);
       this.waiting.push(id);
-      return { id, name: file.name, status: 'waiting' as const, progress: 0 };
+      return { id, name: file.name, status: 'waiting', progress: 0 };
     });
     this.set([...this.items, ...added]);
     this.pump();
@@ -75,8 +93,8 @@ export class AlbumUploadQueue {
 
   retry(id: string) {
     const item = this.items.find((i) => i.id === id);
-    if (item?.status !== 'error' || !this.files.has(id)) return;
-    this.update(id, { status: 'waiting', progress: 0, error: undefined });
+    if (item?.status !== 'error' || !item.retryable || !this.files.has(id)) return;
+    this.update(id, { status: 'waiting', progress: 0, error: undefined, retryable: undefined });
     this.waiting.push(id);
     this.pump();
   }
@@ -115,35 +133,22 @@ export class AlbumUploadQueue {
     const file = this.files.get(id)!;
     const signal = this.controller.signal;
 
-    let upload = this.prepared.get(id);
-    if (!upload) {
-      this.update(id, { status: 'preparing' });
-      try {
-        upload = await this.prepare(file);
-        this.prepared.set(id, upload);
-      } catch {
-        this.files.delete(id); // retrying would fail the same way
-        this.update(id, { status: 'error', error: MESSAGES.unreadable, retryable: false });
-        return;
-      }
-    }
-
     for (let attempt = 0; ; attempt++) {
       this.update(id, { status: 'uploading', progress: 0 });
       try {
-        await this.api.uploadAlbumPhoto(this.code, upload, {
+        await this.api.uploadAlbumPhoto(this.uploadUrl, this.code, file, {
           signal,
           onProgress: (progress) => this.update(id, { progress }),
         });
-        // Done: free the memory (a phone may send dozens of photos).
-        this.files.delete(id);
-        this.prepared.delete(id);
+        this.files.delete(id); // free the memory (a phone may send dozens of photos)
         this.update(id, { status: 'done', progress: 1 });
         return;
       } catch (error) {
         if (signal.aborted) return;
-        if (error instanceof ApiError && error.code === 'album_closed') {
-          this.update(id, { status: 'error', error: MESSAGES.closed, retryable: true });
+        const final = error instanceof ApiError ? FINAL[error.code] : undefined;
+        if (final) {
+          this.files.delete(id);
+          this.update(id, { status: 'error', error: final, retryable: false });
           return;
         }
         if (attempt >= RETRIES) {

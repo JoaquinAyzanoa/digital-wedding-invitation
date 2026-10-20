@@ -25,9 +25,9 @@ test('connects the Google Sheet: values to paste, status and a new secret', asyn
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await login(page);
-  await page.getByRole('link', { name: 'Ajustes' }).click();
-  await expect(page.getByRole('heading', { name: 'Google Sheet' })).toBeVisible();
-  await expect(page.getByText('Aún no se sincroniza.')).toBeVisible();
+  await page.getByRole('link', { name: 'Ajustes', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /Google: hoja y álbum/ })).toBeVisible();
+  await expect(page.getByText('Hoja: aún no se sincroniza.', { exact: false })).toBeVisible();
 
   // The script's code, copied for pasting into Apps Script.
   await page.getByRole('button', { name: 'Copiar código del script' }).click();
@@ -44,7 +44,7 @@ test('connects the Google Sheet: values to paste, status and a new secret', asyn
   // A sync makes the status green.
   expect((await exportForSheet(secret)).status).toBe(200);
   await page.reload();
-  await expect(page.getByText(/^Funcionando/)).toBeVisible();
+  await expect(page.getByText(/^Hoja funcionando/)).toBeVisible();
 
   // A new secret: the old one stops working.
   await page.getByRole('button', { name: 'Cambiar secreto' }).click();

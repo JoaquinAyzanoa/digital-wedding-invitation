@@ -7,32 +7,38 @@ export type Database = {
         Row: {
           bytes: number | null;
           created_at: string;
+          drive_file_id: string | null;
+          file_name: string | null;
           height: number | null;
           hidden: boolean;
           id: string;
           invitation_id: string;
-          path: string;
+          path: string | null;
           width: number | null;
         };
         ComputedFields: never;
         Insert: {
           bytes?: number | null;
           created_at?: string;
+          drive_file_id?: string | null;
+          file_name?: string | null;
           height?: number | null;
           hidden?: boolean;
           id?: string;
           invitation_id: string;
-          path: string;
+          path?: string | null;
           width?: number | null;
         };
         Update: {
           bytes?: number | null;
           created_at?: string;
+          drive_file_id?: string | null;
+          file_name?: string | null;
           height?: number | null;
           hidden?: boolean;
           id?: string;
           invitation_id?: string;
-          path?: string;
+          path?: string | null;
           width?: number | null;
         };
         Relationships: [
@@ -199,18 +205,29 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      admin_album_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_dashboard: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_reset_rsvp: { Args: { p_invitation_id: string }; Returns: undefined };
       admin_rotate_sheet_secret: { Args: Record<PropertyKey, never>; Returns: string };
       admin_save_rsvp: { Args: { p_invitation_id: string; p_payload: Json }; Returns: Json };
+      admin_set_album_upload_url: { Args: { p_url: string }; Returns: undefined };
       admin_sheet_settings: { Args: Record<PropertyKey, never>; Returns: Json };
+      album_drive_check: { Args: { p_code: string; p_secret: string }; Returns: Json };
       export_for_sheet: { Args: { p_hash?: string; p_secret: string }; Returns: Json };
       get_content: { Args: Record<PropertyKey, never>; Returns: Json };
       get_invitation: { Args: { p_code: string; p_track?: boolean }; Returns: Json };
+      google_register_folder: {
+        Args: { p_folder_url: string; p_secret: string };
+        Returns: undefined;
+      };
       ping: { Args: Record<PropertyKey, never>; Returns: number };
-      register_album_photo: {
-        Args: { p_code: string; p_meta?: Json; p_path: string };
+      register_drive_photo: {
+        Args: {
+          p_bytes: number;
+          p_code: string;
+          p_file_id: string;
+          p_name: string;
+          p_secret: string;
+        };
         Returns: undefined;
       };
       submit_rsvp: { Args: { p_code: string; p_payload: Json }; Returns: Json };

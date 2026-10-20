@@ -1,54 +1,46 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, type AlbumPhotoUpload, type PublicApi } from '@/shared/api';
-import { AlbumUploadQueue, CONCURRENCY, RETRIES } from './uploadQueue';
+import { ApiError, type PublicApi } from '@/shared/api';
+import { AlbumUploadQueue, CONCURRENCY, MAX_PHOTO_BYTES, RETRIES } from './uploadQueue';
 
-const prepared: AlbumPhotoUpload = {
-  photo: new Blob(['p']),
-  thumb: new Blob(['t']),
-  ext: 'webp',
-  width: 10,
-  height: 10,
-};
+const URL = 'https://script.google.com/macros/s/x/exec';
 
-function file(name: string) {
-  return new File(['x'], name, { type: 'image/jpeg' });
+function file(name: string, { type = 'image/jpeg', size = 10 } = {}) {
+  const f = new File(['x'.repeat(Math.min(size, 10))], name, { type });
+  if (size > 10) Object.defineProperty(f, 'size', { value: size });
+  return f;
 }
 
-/** Resolves once every queued promise and microtask has run. */
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-function setup(
-  upload: PublicApi['uploadAlbumPhoto'],
-  prepare: (file: File) => Promise<AlbumPhotoUpload> = vi.fn(async () => prepared),
-) {
+function setup(upload: PublicApi['uploadAlbumPhoto']) {
   const api = { uploadAlbumPhoto: vi.fn(upload) } as unknown as PublicApi & {
     uploadAlbumPhoto: ReturnType<typeof vi.fn>;
   };
   const sleep = vi.fn(async () => {});
-  const queue = new AlbumUploadQueue(api, 'abc234', prepare, sleep);
-  return { api, queue, prepare, sleep };
+  const queue = new AlbumUploadQueue(api, URL, 'abc234', sleep);
+  return { api, queue, sleep };
 }
 
+const done = (queue: AlbumUploadQueue) => vi.waitFor(() => expect(queue.busy).toBe(false));
+
 describe('AlbumUploadQueue', () => {
-  it(`uploads at most ${CONCURRENCY} photos at a time, all of them in the end`, async () => {
+  it(`sends the original files, at most ${CONCURRENCY} at a time`, async () => {
     let active = 0;
     let peak = 0;
-    const { queue, api } = setup(async (_code, _upload, options) => {
+    const { queue, api } = setup(async (_url, _code, _file, options) => {
       active++;
       peak = Math.max(peak, active);
       options?.onProgress?.(0.5);
       await new Promise((resolve) => setTimeout(resolve, 5));
       active--;
     });
-    queue.add(Array.from({ length: 8 }, (_, i) => file(`foto-${i}.jpg`)));
+    const files = Array.from({ length: 6 }, (_, i) => file(`IMG_${i}.JPG`));
+    queue.add(files);
     expect(queue.busy).toBe(true);
-    await vi.waitFor(() =>
-      expect(queue.getSnapshot().every((i) => i.status === 'done')).toBe(true),
-    );
+    await done(queue);
+    expect(queue.getSnapshot().every((i) => i.status === 'done')).toBe(true);
     expect(peak).toBe(CONCURRENCY);
-    expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(8);
-    expect(api.uploadAlbumPhoto.mock.calls[0]![0]).toBe('abc234');
-    expect(queue.busy).toBe(false);
+    // The very same File objects: nothing is recompressed.
+    expect(api.uploadAlbumPhoto.mock.calls.map((c) => c[2])).toEqual(files);
+    expect(api.uploadAlbumPhoto.mock.calls[0]!.slice(0, 2)).toEqual([URL, 'abc234']);
   });
 
   it('retries a failed upload automatically, then succeeds', async () => {
@@ -57,55 +49,55 @@ describe('AlbumUploadQueue', () => {
       if (++calls < 3) throw new ApiError('network');
     });
     queue.add([file('a.jpg')]);
-    await vi.waitFor(() => expect(queue.getSnapshot()[0]!.status).toBe('done'));
-    expect(calls).toBe(3);
+    await done(queue);
+    expect(queue.getSnapshot()[0]!.status).toBe('done');
     expect(sleep.mock.calls).toEqual([[1000], [3000]]);
   });
 
-  it('after the automatic retries it waits for the guest, reusing the compressed photo', async () => {
+  it('after the automatic retries it waits for the guest', async () => {
     let fail = true;
-    const { queue, prepare, api } = setup(async () => {
+    const { queue, api } = setup(async () => {
       if (fail) throw new ApiError('network');
     });
     queue.add([file('a.jpg')]);
-    await vi.waitFor(() => expect(queue.getSnapshot()[0]!.status).toBe('error'));
+    await done(queue);
     expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(RETRIES + 1);
-    expect(queue.getSnapshot()[0]!.error).toMatch(/Revisa tu conexión/);
+    expect(queue.getSnapshot()[0]).toMatchObject({ status: 'error', retryable: true });
 
     fail = false;
     queue.retry('0');
-    await vi.waitFor(() => expect(queue.getSnapshot()[0]!.status).toBe('done'));
-    expect(prepare).toHaveBeenCalledTimes(1);
+    await done(queue);
+    expect(queue.getSnapshot()[0]!.status).toBe('done');
   });
 
-  it('does not retry when the album refuses (closed or full)', async () => {
+  it.each([
+    ['album_closed', 'El álbum ya no recibe fotos.'],
+    ['album_full', 'Llegaste al máximo de fotos para tu invitación. ¡Gracias!'],
+    ['too_large', 'Pesa más de 25 MB.'],
+  ] as const)('does not retry when the album answers %s', async (code, message) => {
     const { queue, api } = setup(async () => {
-      throw new ApiError('album_closed');
+      throw new ApiError(code);
     });
     queue.add([file('a.jpg')]);
-    await vi.waitFor(() => expect(queue.getSnapshot()[0]!.status).toBe('error'));
+    await done(queue);
     expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(1);
-    expect(queue.getSnapshot()[0]!.error).toBe('El álbum ya no recibe fotos.');
+    expect(queue.getSnapshot()[0]).toMatchObject({ error: message, retryable: false });
   });
 
-  it('reports a photo it cannot read and goes on with the rest', async () => {
-    const prepare = vi.fn(async (f: File) => {
-      if (f.name.endsWith('.heic')) throw new Error('unsupported');
-      return prepared;
-    });
-    const { queue } = setup(async () => {}, prepare);
-    queue.add([file('a.heic'), file('b.jpg')]);
-    await vi.waitFor(() => expect(queue.busy).toBe(false));
-    expect(queue.getSnapshot().map((i) => [i.name, i.status])).toEqual([
-      ['a.heic', 'error'],
-      ['b.jpg', 'done'],
+  it('turns away files that are not photos or are too big, before sending anything', async () => {
+    const { queue, api } = setup(async () => {});
+    queue.add([
+      file('nota.txt', { type: 'text/plain' }),
+      file('video.jpg', { size: MAX_PHOTO_BYTES + 1 }),
+      file('IMG_1.HEIC', { type: '' }), // type guessed from the name
     ]);
-    expect(queue.getSnapshot()[0]!.error).toMatch(/No pudimos leer/);
-    expect(queue.getSnapshot()[0]!.retryable).toBe(false);
-    // Retrying an unreadable photo would fail the same way: nothing happens.
-    queue.retry('0');
-    await flush();
-    expect(queue.getSnapshot()[0]!.status).toBe('error');
+    await done(queue);
+    expect(queue.getSnapshot().map((i) => [i.name, i.status, i.error])).toEqual([
+      ['nota.txt', 'error', 'Este archivo no es una foto.'],
+      ['video.jpg', 'error', 'Pesa más de 25 MB.'],
+      ['IMG_1.HEIC', 'done', undefined],
+    ]);
+    expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(1);
   });
 
   it('notifies subscribers with a new snapshot on every change', async () => {
@@ -113,7 +105,7 @@ describe('AlbumUploadQueue', () => {
     const snapshots: unknown[] = [];
     queue.subscribe(() => snapshots.push(queue.getSnapshot()));
     queue.add([file('a.jpg')]);
-    await vi.waitFor(() => expect(queue.busy).toBe(false));
+    await done(queue);
     expect(new Set(snapshots).size).toBe(snapshots.length);
     expect(snapshots.length).toBeGreaterThan(2);
   });

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { albumFilesOf, removeAlbumFiles } from '@/admin/data/album';
 import { supabase } from '@/admin/supabase';
 import type { PublicContent } from '@/shared/schemas/content';
 import type { InvitationView, RsvpInput } from '@/shared/schemas/invitation';
@@ -177,22 +176,12 @@ export function useMarkSent() {
   });
 }
 
-/** Deletes invitations with their answers, attendees and album photos (files included). */
 export function useDeleteInvitations() {
   const invalidate = useInvalidate();
-  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (ids: string[]) => {
-      const rows = check(await supabase.from('invitations').select('code').in('id', ids)) ?? [];
-      const files = await albumFilesOf(rows.map((r) => r.code));
-      check(await supabase.from('invitations').delete().in('id', ids));
-      // After the rows: if this fails, the invitations are gone and only some files remain.
-      await removeAlbumFiles(files);
-    },
-    onSuccess: async () => {
-      await invalidate();
-      await queryClient.invalidateQueries({ queryKey: ['album'] });
-    },
+    mutationFn: async (ids: string[]) =>
+      check(await supabase.from('invitations').delete().in('id', ids)),
+    onSuccess: invalidate,
   });
 }
 
@@ -222,6 +211,10 @@ export function useResetRsvp() {
 export interface SheetSettings {
   secret: string;
   lastSyncAt: string | null;
+  /** The Apps Script web app that receives the album photos. */
+  albumUploadUrl: string | null;
+  /** The Drive folder with the photos (registered by the script's setup). */
+  albumFolderUrl: string | null;
 }
 
 /** The Google Sheet script's secret and its last sync (admins only). */
@@ -240,6 +233,16 @@ export function useRotateSheetSecret() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => check(await supabase.rpc('admin_rotate_sheet_secret')),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.sheet }),
+  });
+}
+
+/** The web app URL the guests' photos go to (null disconnects the album). */
+export function useSetAlbumUploadUrl() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (url: string | null) =>
+      check(await supabase.rpc('admin_set_album_upload_url', { p_url: url as string })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.sheet }),
   });
 }

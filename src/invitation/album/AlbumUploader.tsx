@@ -4,14 +4,10 @@ import { Button } from '@/shared/ui/Button';
 import styles from './AlbumUploader.module.css';
 import { AlbumUploadQueue, type UploadItem } from './uploadQueue';
 
-const prepare = async (file: File) => (await import('./compress')).preparePhoto(file);
-
 function statusText(item: UploadItem) {
   switch (item.status) {
     case 'waiting':
       return 'En espera';
-    case 'preparing':
-      return 'Preparando…';
     case 'uploading':
       return `Subiendo ${Math.round(item.progress * 100)} %`;
     case 'done':
@@ -21,17 +17,28 @@ function statusText(item: UploadItem) {
   }
 }
 
-/** "Subir fotos": several at once, from the gallery or the camera, each with its progress. */
-export function AlbumUploader({ api, code }: { api: PublicApi; code: string }) {
+/**
+ * "Subir fotos": several at once, from the gallery or the camera, each with its progress.
+ * They go at their original quality to the couple's Google Drive.
+ */
+export function AlbumUploader({
+  api,
+  uploadUrl,
+  code,
+}: {
+  api: PublicApi;
+  uploadUrl: string;
+  code: string;
+}) {
   const inputId = useId();
   const input = useRef<HTMLInputElement>(null);
-  const [queue] = useState(() => new AlbumUploadQueue(api, code, prepare));
+  const [queue] = useState(() => new AlbumUploadQueue(api, uploadUrl, code));
   const items = useSyncExternalStore(queue.subscribe, queue.getSnapshot);
 
   const done = items.filter((i) => i.status === 'done').length;
   const failed = items.filter((i) => i.status === 'error').length;
   const retryable = items.filter((i) => i.status === 'error' && i.retryable).length;
-  const busy = items.some((i) => i.status !== 'done' && i.status !== 'error');
+  const busy = items.some((i) => i.status === 'waiting' || i.status === 'uploading');
 
   useEffect(() => () => queue.abort(), [queue]);
 

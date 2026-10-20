@@ -23,7 +23,8 @@ export default defineConfig([
   },
   {
     // Google Apps Script: classic script, Google services as globals, entry points called by
-    // the trigger or by hand (sync, setup) and helpers shared with the tests.
+    // the trigger, by hand or by the web app (sync, setup, doGet, doPost) and helpers shared
+    // with the tests.
     files: ['apps-script/**/*.js'],
     extends: [js.configs.recommended],
     languageOptions: {
@@ -35,11 +36,15 @@ export default defineConfig([
         LockService: 'readonly',
         UrlFetchApp: 'readonly',
         ScriptApp: 'readonly',
+        DriveApp: 'readonly',
+        Utilities: 'readonly',
+        ContentService: 'readonly',
+        console: 'readonly',
         module: 'readonly',
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^(sync|setup)$' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(sync|setup|doGet|doPost)$' }],
     },
   },
   prettier,

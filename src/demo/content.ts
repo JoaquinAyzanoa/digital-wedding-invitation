@@ -109,6 +109,8 @@ export const demoInvitation: InvitationView = {
   seats: 2,
   rsvpOpen: true,
   albumOpen: true,
+  // The demo API never calls it: uploads only pretend.
+  albumUploadUrl: 'https://script.google.com/macros/s/demo/exec',
   response: null,
   private: {
     gifts: [

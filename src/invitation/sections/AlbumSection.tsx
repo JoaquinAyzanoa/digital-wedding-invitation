@@ -23,10 +23,10 @@ export function AlbumSection({ content, invitation, entry }: SectionProps) {
           <p className={text.body}>{content.album.text}</p>
         </Reveal>
       )}
-      {/* Uploading needs the guest's code and an open album (dates in the content). */}
-      {invitation?.albumOpen && (
+      {/* Uploading needs the guest's code, an open album and the Drive web app connected. */}
+      {invitation?.albumOpen && invitation.albumUploadUrl && (
         <Reveal>
-          <AlbumUploader api={api} code={invitation.code} />
+          <AlbumUploader api={api} uploadUrl={invitation.albumUploadUrl} code={invitation.code} />
         </Reveal>
       )}
     </Section>
