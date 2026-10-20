@@ -2,7 +2,7 @@
 
 `Code.js` hace dos cosas:
 
-1. Copia las invitaciones y los asistentes de Supabase a una hoja de Google cada 5 minutos.
+1. Copia las invitaciones y los asistentes de Supabase a una hoja de Google cada 10 minutos.
    Supabase sigue siendo la fuente de verdad: los cambios se hacen en el panel (`/login/`),
    no en la hoja (la próxima sincronización los sobrescribe).
 2. Publicado como **aplicación web**, recibe las fotos que suben los invitados y las guarda,
@@ -35,7 +35,7 @@ Google Sheet**.
 
 4. Elige la función `setup` y pulsa **Ejecutar**. Acepta los permisos (es tu propio
    script: hoja y Drive). `setup` pone la zona horaria de Lima, crea el activador cada
-   5 minutos, crea la carpeta «Fotos de la boda» (su enlace aparece en el panel) y hace la
+   10 minutos, crea la carpeta «Fotos de la boda» (su enlace aparece en el panel) y hace la
    primera sincronización.
 5. Para el álbum: **Implementar → Nueva implementación**, tipo **Aplicación web**,
    «Ejecutar como»: **Yo**, «Quién tiene acceso»: **Cualquier usuario**. Copia la URL
@@ -67,7 +67,7 @@ el error. Para forzar una copia completa, vuelve a ejecutar `setup`.
   Si nada cambió, Supabase responde unos pocos bytes y la hoja no se toca; si cambió,
   reescribe las pestañas en bloque (`setValues`). `LockService` evita dos ejecuciones a la
   vez.
-- Estas llamadas cada 5 minutos también mantienen activo el proyecto gratuito de Supabase
+- Estas llamadas cada 10 minutos también mantienen activo el proyecto gratuito de Supabase
   (se pausa tras una semana sin uso). El workflow `keepalive.yml` es el respaldo diario.
 - Con el secreto se puede leer la lista de invitados: si se filtra, cámbialo en Ajustes
   («Cambiar secreto») y actualiza la propiedad `SECRET`.

@@ -10,7 +10,7 @@ async function login(page: Page) {
   await expect(page.getByRole('heading', { name: 'Resumen' })).toBeVisible();
 }
 
-/** What the Apps Script does every 5 minutes. */
+/** What the Apps Script does every 10 minutes. */
 function exportForSheet(secret: string) {
   return fetch(`${process.env.E2E_SUPABASE_URL}/rest/v1/rpc/export_for_sheet`, {
     method: 'POST',

@@ -275,11 +275,14 @@ function load() {
       },
     },
     ScriptApp: {
-      getProjectTriggers: () => triggers.map((name) => ({ getHandlerFunction: () => name })),
+      getProjectTriggers: () =>
+        triggers.map((name) => ({ getHandlerFunction: () => name.split(' ')[0] })),
       deleteTrigger: () => triggers.shift(),
       newTrigger: (name: string) => ({
         timeBased: () => ({
-          everyMinutes: () => ({ create: () => triggers.push(name) }),
+          everyMinutes: (minutes: number) => ({
+            create: () => triggers.push(`${name} every ${minutes}`),
+          }),
         }),
       }),
     },
@@ -365,7 +368,7 @@ describe('Apps Script sync', () => {
     env.props.set('LAST_HASH', 'old');
     env.script.setup!();
     env.script.setup!();
-    expect(env.triggers).toEqual(['sync']);
+    expect(env.triggers).toEqual(['sync every 10']);
     const exports = env.requests.filter((r) => r.url.endsWith('/export_for_sheet'));
     expect(exports[0]!.payload.p_hash).toBeNull();
   });

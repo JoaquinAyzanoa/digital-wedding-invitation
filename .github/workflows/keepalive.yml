@@ -1,5 +1,5 @@
 # Backup keep-alive: free Supabase projects pause after a week without requests. The main
-# keep-alive is the Google Sheet sync (every 5 minutes); this daily ping covers the time
+# keep-alive is the Google Sheet sync (every 10 minutes); this daily ping covers the time
 # before the Sheet is set up or if its trigger stops.
 #
 # GitHub disables scheduled workflows in repositories with no commits for 60 days: re-enable

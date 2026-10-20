@@ -1,7 +1,7 @@
 /**
  * Supabase → Google Sheet mirror for the wedding invitation (read only: edit in the admin).
  *
- * Every 5 minutes `sync` asks Supabase for the invitations and attendees and rewrites the
+ * Every 10 minutes `sync` asks Supabase for the invitations and attendees and rewrites the
  * "Invitaciones" and "Asistentes" sheets; "Resumen" holds formulas over them. When nothing
  * changed since the last run, Supabase answers with a few bytes and nothing is rewritten.
  * These calls also keep the free Supabase project from pausing for inactivity.
@@ -68,7 +68,7 @@ const STATUS = { yes: 'Sí', no: 'No', pending: 'Pendiente' };
 const DATE_FORMAT = 'dd/mm/yyyy hh:mm';
 const SYNC_CELL = 'B1';
 
-/** Runs every 5 minutes (trigger created by `setup`). */
+/** Runs every 10 minutes (trigger created by `setup`). */
 function sync() {
   const lock = LockService.getScriptLock();
   // Another run is still going: this one is not needed.
@@ -119,7 +119,7 @@ function setup() {
   for (const trigger of ScriptApp.getProjectTriggers()) {
     if (trigger.getHandlerFunction() === 'sync') ScriptApp.deleteTrigger(trigger);
   }
-  ScriptApp.newTrigger('sync').timeBased().everyMinutes(5).create();
+  ScriptApp.newTrigger('sync').timeBased().everyMinutes(10).create();
   // Forget the last hash so everything is written again (e.g. after deleting a sheet).
   props.deleteProperty('LAST_HASH');
   sync();

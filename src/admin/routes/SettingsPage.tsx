@@ -14,8 +14,8 @@ import { copyText } from '@/shared/utils/clipboard';
 import { siteUrl } from '@/shared/utils/links';
 import styles from './SettingsPage.module.css';
 
-/** The script runs every 5 minutes: older than this means it stopped. */
-const STALE_MINUTES = 15;
+/** The script runs every 10 minutes: older than this means it stopped. */
+const STALE_MINUTES = 25;
 
 function minutesSince(iso: string) {
   return Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -199,7 +199,7 @@ export function SettingsPage() {
         <h2 className={ui.cardTitle}>Google: hoja y álbum de fotos</h2>
         <p className={ui.hint}>
           Un solo script de Google hace dos cosas: copia invitaciones, asistentes y un resumen a una
-          hoja de Google cada 5 minutos (solo lectura: los cambios se hacen aquí), y recibe las
+          hoja de Google cada 10 minutos (solo lectura: los cambios se hacen aquí), y recibe las
           fotos de los invitados en una carpeta de tu Google Drive, en su calidad original.
         </p>
 
@@ -245,7 +245,7 @@ export function SettingsPage() {
               <li>
                 En el editor, elige la función <code>setup</code> y pulsa <strong>Ejecutar</strong>.
                 Acepta los permisos que pide Google (es tu propio script: hoja y Drive). Crea las
-                hojas, un activador cada 5 minutos y la carpeta «Fotos de la boda» en tu Drive.
+                hojas, un activador cada 10 minutos y la carpeta «Fotos de la boda» en tu Drive.
               </li>
               <li>
                 Para el álbum: <strong>Implementar → Nueva implementación</strong>, tipo{' '}

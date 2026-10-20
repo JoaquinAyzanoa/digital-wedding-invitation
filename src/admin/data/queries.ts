@@ -223,7 +223,7 @@ export function useSheetSettings() {
     queryKey: keys.sheet,
     queryFn: async () =>
       check(await supabase.rpc('admin_sheet_settings')) as unknown as SheetSettings,
-    // The script syncs every 5 minutes: keep the status fresh while the page is open.
+    // The script syncs every 10 minutes: keep the status fresh while the page is open.
     refetchInterval: 60_000,
   });
 }
