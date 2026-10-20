@@ -1,5 +1,9 @@
 -- get_invitation and submit_rsvp, called as anon like the public site does.
 begin;
+-- `supabase test db --linked` connects as a NOINHERIT login role: act as postgres explicitly
+-- (a no-op locally). Tests switch to anon/authenticated and back with `set local role`.
+set local role postgres;
+set local search_path to "$user", public, extensions;
 create extension if not exists pgtap with schema extensions;
 select plan(30);
 
@@ -28,7 +32,7 @@ select is(public.get_invitation('tst234', false) -> 'response', 'null'::jsonb,
   'response is null while pending');
 select is((public.get_invitation('tst234', false) ->> 'rsvpOpen')::boolean, true,
   'rsvp is open before the deadline');
-reset role;
+set local role postgres;
 
 select is((select open_count from public.invitations where code = 'tst234'), 1,
   'tracked visit increments open_count');
@@ -78,7 +82,7 @@ select lives_ok($$select public.submit_rsvp('tst234', '{
     "songRequest": "Una canción",
     "message": "¡Felicidades!"
   }')$$, 'valid rsvp is accepted');
-reset role;
+set local role postgres;
 
 select is((select count(*) from public.attendees a join public.invitations i on i.id = a.invitation_id
   where i.code = 'tst234'), 2::bigint, 'attendees are saved');
@@ -99,7 +103,7 @@ select is(jsonb_array_length(public.get_invitation('tst234', false) #> '{respons
   'a new rsvp replaces the attendees');
 select is((public.submit_rsvp('tst234', '{"attending": false}') #>> '{response,attending}')::boolean,
   false, 'declining returns attending = false');
-reset role;
+set local role postgres;
 
 select is((select count(*) from public.attendees), 0::bigint, 'declining removes attendees');
 
@@ -109,7 +113,7 @@ set public_data = jsonb_set(public_data, '{rsvp,closed}', 'true') where id = 1;
 set local role anon;
 select throws_ok($$select public.submit_rsvp('tst234', '{"attending": false}')$$,
   'P0001', 'rsvp_closed', 'manual close blocks rsvp');
-reset role;
+set local role postgres;
 
 update public.site_content
 set public_data = jsonb_set(jsonb_set(public_data, '{rsvp,closed}', 'false'),
@@ -117,7 +121,7 @@ set public_data = jsonb_set(jsonb_set(public_data, '{rsvp,closed}', 'false'),
 set local role anon;
 select throws_ok($$select public.submit_rsvp('tst234', '{"attending": false}')$$,
   'P0001', 'rsvp_closed', 'past deadline blocks rsvp');
-reset role;
+set local role postgres;
 
 -- a bare-date deadline lasts until the end of that day in Lima (UTC-5)
 select is(private.lima_instant('2027-04-15', true), '2027-04-16 05:00:00+00'::timestamptz,

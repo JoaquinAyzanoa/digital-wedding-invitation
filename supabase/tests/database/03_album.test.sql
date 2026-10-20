@@ -1,5 +1,9 @@
 -- Album uploads: storage policy, can_upload_album and register_album_photo.
 begin;
+-- `supabase test db --linked` connects as a NOINHERIT login role: act as postgres explicitly
+-- (a no-op locally). Tests switch to anon/authenticated and back with `set local role`.
+set local role postgres;
+set local search_path to "$user", public, extensions;
 create extension if not exists pgtap with schema extensions;
 select plan(14);
 
@@ -41,7 +45,7 @@ select throws_ok($$select public.register_album_photo('tst234',
 select throws_ok($$select public.register_album_photo('tst234',
   'abc234/11111111-1111-4111-8111-111111111111.webp')$$,
   'P0001', 'invalid_payload', 'photo must be in the invitation folder');
-reset role;
+set local role postgres;
 
 select results_eq($$select width, height, bytes from public.album_photos$$,
   $$values (800, 600, 51200)$$, 'photo metadata is stored');
@@ -55,7 +59,7 @@ set local role anon;
 select throws_ok($$select public.register_album_photo('tst234',
   'tst234/11111111-1111-4111-8111-111111111111.webp')$$,
   'P0001', 'album_closed', 'disabled album rejects registration');
-reset role;
+set local role postgres;
 
 select * from finish();
 rollback;

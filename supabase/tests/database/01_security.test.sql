@@ -1,5 +1,9 @@
 -- RLS, table privileges and function privileges.
 begin;
+-- `supabase test db --linked` connects as a NOINHERIT login role: act as postgres explicitly
+-- (a no-op locally). Tests switch to anon/authenticated and back with `set local role`.
+set local role postgres;
+set local search_path to "$user", public, extensions;
 create extension if not exists pgtap with schema extensions;
 select plan(25);
 
@@ -39,6 +43,7 @@ select is(
   array(select p.proname::text from pg_proc p
     where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace)
       and has_function_privilege('anon', p.oid, 'execute')
+      and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
     order by p.proname::text collate "C"),
   array['can_upload_album', 'export_for_sheet', 'get_content', 'get_invitation',
         'ping', 'register_album_photo', 'submit_rsvp'],
@@ -47,6 +52,7 @@ select is(
   array(select p.proname::text from pg_proc p
     where p.pronamespace = 'private'::regnamespace
       and has_function_privilege('authenticated', p.oid, 'execute')
+      and p.prorettype not in ('trigger'::regtype, 'event_trigger'::regtype)
     order by p.proname::text collate "C"),
   array['can_upload_album', 'is_admin'],
   'authenticated can execute only the private helpers used by policies');
@@ -57,7 +63,7 @@ select throws_ok('select * from public.invitations', '42501', null,
   'anon cannot select invitations');
 select throws_ok('select * from public.site_content', '42501', null,
   'anon cannot select site_content');
-reset role;
+set local role postgres;
 
 -- authenticated without the admin role sees and changes nothing
 set local role authenticated;
@@ -85,7 +91,7 @@ select matches((select code from public.invitations where display_name = 'Nueva'
   '^[abcdefghjkmnpqrstuvwxyz23456789]{6}$', 'generated code uses the unambiguous alphabet');
 select lives_ok($$update public.site_content set public_data = '{"a": 1}' where id = 1$$,
   'admin can update site_content');
-reset role;
+set local role postgres;
 
 select * from finish();
 rollback;

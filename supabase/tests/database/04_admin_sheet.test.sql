@@ -1,5 +1,9 @@
 -- get_content, admin_dashboard, export_for_sheet and ping.
 begin;
+-- `supabase test db --linked` connects as a NOINHERIT login role: act as postgres explicitly
+-- (a no-op locally). Tests switch to anon/authenticated and back with `set local role`.
+set local role postgres;
+set local search_path to "$user", public, extensions;
 create extension if not exists pgtap with schema extensions;
 select plan(11);
 
@@ -31,7 +35,7 @@ select throws_ok($$select public.export_for_sheet(null)$$, 'P0001', 'forbidden',
   'missing secret is rejected');
 select is(jsonb_array_length(public.export_for_sheet(current_setting('test.secret')) -> 'attendees'),
   2, 'export returns attendees with the right secret');
-reset role;
+set local role postgres;
 
 select isnt((select value from private.settings where key = 'last_sheet_sync_at'), null,
   'export records the sync time');
@@ -51,7 +55,7 @@ select is(public.admin_dashboard() -> 'dietary',
   'dashboard lists dietary restrictions with names');
 select isnt(public.admin_dashboard() #>> '{sheet,lastSyncAt}', null,
   'dashboard shows the last sheet sync');
-reset role;
+set local role postgres;
 
 select * from finish();
 rollback;
