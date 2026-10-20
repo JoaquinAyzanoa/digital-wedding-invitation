@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
+import { RevealContext } from './revealContext';
 
 interface RevealProps {
   children: ReactNode;
@@ -9,6 +10,17 @@ interface RevealProps {
 
 /** Fades and lifts its content in the first time it scrolls into view. */
 export function Reveal({ children, delay = 0, className }: RevealProps) {
+  const enabled = useContext(RevealContext);
+
+  // Mounting the motion element only once enabled gives it a fresh in-view check.
+  if (!enabled) {
+    return (
+      <div className={className} style={{ opacity: 0 }}>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className={className}

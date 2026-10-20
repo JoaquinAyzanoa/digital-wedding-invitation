@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { mix } from './color';
 import { customFontFaces, fontStack, googleFontsUrl } from './fonts';
-import { DEFAULT_THEME, themeVariables } from './theme';
+import { DEFAULT_THEME, derivedColors, themeVariables } from './theme';
 
 describe('googleFontsUrl', () => {
   it('builds one CSS2 URL with the curated axes', () => {
@@ -50,5 +52,19 @@ describe('themeVariables', () => {
     expect(vars['--color-primary']).toBe('#4F6496');
     expect(vars['--font-script']).toBe('"Pinyon Script", cursive');
     expect(vars['--font-sans']).toMatch(/^"Jost", system-ui/);
+  });
+});
+
+describe('derived colors', () => {
+  it('mixes in sRGB like color-mix', () => {
+    expect(mix('#000000', '#ffffff', 0.5)).toBe('#808080');
+    expect(mix('#4f6496', '#4f6496', 0.3)).toBe('#4f6496');
+  });
+
+  it('keeps the global.css defaults in sync with the default theme', () => {
+    const css = readFileSync(new URL('../global.css', import.meta.url), 'utf8');
+    for (const [name, value] of Object.entries(derivedColors(DEFAULT_THEME.colors))) {
+      expect(css, name).toContain(`${name}: ${value};`);
+    }
   });
 });

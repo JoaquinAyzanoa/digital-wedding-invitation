@@ -8,6 +8,20 @@
   --color-accent: #c9a46c;
   --color-line: #e6e1d8;
 
+  /* Derived shades (theme.ts derivedColors), computed in JS for old in-app browsers */
+  --env: #9facc8;
+  --env-side: #abb6cf;
+  --env-bottom: #b7c0d5;
+  --env-inside: #7e8fb3;
+  --primary-a55: rgb(79 100 150 / 0.55);
+  --primary-a25: rgb(79 100 150 / 0.25);
+  --seal-hi: #e7d6bd;
+  --seal-lo: #93764a;
+  --seal-well-hi: #d9bf98;
+  --seal-well-lo: #a68656;
+  --seal-emboss-hi: #e9dbc4;
+  --seal-emboss-lo: #816740;
+
   --font-script: 'Pinyon Script', cursive;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Jost', system-ui, sans-serif;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Icon } from '@/shared/icons/Icon';
 import { ICON_KEYS, type FontRef } from '@/shared/schemas/content';
 import { CURATED_FONTS, fontStack, loadFonts } from '@/shared/theme/fonts';
+import { Button, ButtonLink } from '@/shared/ui/Button';
 import styles from './DesignPanel.module.css';
 
 const SCRIPT_REFS: FontRef[] = CURATED_FONTS.script.map((font) => ({
@@ -15,10 +16,10 @@ interface DesignPanelProps {
   onChange: (font: FontRef) => void;
 }
 
-/** Review tool (`?design=1`): try every curated script font on the real names and see the icons. */
+/** Review tool (`?design=1`): try every curated script font on the real names; see icons and buttons. */
 export function DesignPanel({ sample, value, onChange }: DesignPanelProps) {
   const [open, setOpen] = useState(true);
-  const [tab, setTab] = useState<'fonts' | 'icons'>('fonts');
+  const [tab, setTab] = useState<'fonts' | 'icons' | 'buttons'>('fonts');
 
   useEffect(() => {
     void loadFonts(SCRIPT_REFS, [], { id: 'wi-design-panel-fonts' });
@@ -45,6 +46,14 @@ export function DesignPanel({ sample, value, onChange }: DesignPanelProps) {
             onClick={() => setTab('icons')}
           >
             Íconos
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'buttons'}
+            onClick={() => setTab('buttons')}
+          >
+            Botones
           </button>
         </div>
         <button type="button" className={styles.toggle} onClick={() => setOpen(!open)}>
@@ -84,6 +93,14 @@ export function DesignPanel({ sample, value, onChange }: DesignPanelProps) {
             </li>
           ))}
         </ul>
+      )}
+      {open && tab === 'buttons' && (
+        <div className={styles.buttons}>
+          <ButtonLink href="https://maps.google.com">Ver ubicación</ButtonLink>
+          <Button>Confirma aquí</Button>
+          <Button variant="outline">Agregar al calendario</Button>
+          <Button disabled>Enviando…</Button>
+        </div>
       )}
     </aside>
   );

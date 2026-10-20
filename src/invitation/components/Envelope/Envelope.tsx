@@ -61,11 +61,18 @@ export function Envelope({ content, invitation, ready, onOpen, onOpened }: Envel
     setOpening(true);
     onOpen?.();
     rememberOpened();
-
-    const root = scope.current;
-    if (skip || reducedMotion) {
-      await animate(root, { opacity: 0 }, { duration: 0.5 });
+    try {
+      await play(skip || !!reducedMotion);
+    } finally {
+      // Never leave the guest stuck behind the envelope, even if an animation fails.
       onOpened();
+    }
+  }
+
+  async function play(fadeOnly: boolean) {
+    const root = scope.current;
+    if (fadeOnly) {
+      await animate(root, { opacity: 0 }, { duration: 0.5 });
       return;
     }
 
@@ -92,7 +99,6 @@ export function Envelope({ content, invitation, ready, onOpen, onOpened }: Envel
     await animate(flap, { rotateX: 180 }, { duration: 0.35, ease: 'easeOut' });
     await animate('[data-card]', { y: '-58%' }, { duration: 0.8, ease: [0.22, 1, 0.36, 1] });
     await animate(root, { opacity: 0, y: -24 }, { duration: 0.7, ease: 'easeInOut', delay: 0.25 });
-    onOpened();
   }
 
   const seats = invitation?.seats ?? 0;

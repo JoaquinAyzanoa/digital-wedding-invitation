@@ -1,10 +1,4 @@
 .overlay {
-  /* Envelope paper, derived from the theme's primary color */
-  --env: color-mix(in oklab, var(--color-primary) 50%, #eef3fa);
-  --env-side: color-mix(in oklab, var(--color-primary) 44%, #f3f6fb);
-  --env-bottom: color-mix(in oklab, var(--color-primary) 38%, #f6f8fc);
-  --env-inside: color-mix(in oklab, var(--color-primary) 68%, #e3e9f2);
-
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -21,6 +15,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 16px;
   gap: clamp(10px, 2.2svh, 22px);
   width: 100%;
   max-width: var(--page-width);
@@ -100,6 +95,7 @@
   position: relative;
   width: min(82vw, 340px);
   aspect-ratio: 3 / 2;
+  margin: 12px 0;
   margin: clamp(8px, 2svh, 18px) 0;
   padding: 0;
   border: 0;
@@ -278,7 +274,7 @@
   min-width: 64px;
   height: 64px;
   padding: 0 12px;
-  border: 1.5px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
+  border: 1.5px solid var(--primary-a55);
   border-radius: 12px;
   color: var(--color-primary);
   font-size: 46px;

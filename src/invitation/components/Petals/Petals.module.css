@@ -1,0 +1,14 @@
+.petals {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.petal {
+  position: absolute;
+  top: 0;
+  height: auto;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.08));
+}

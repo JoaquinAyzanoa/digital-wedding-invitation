@@ -27,9 +27,6 @@ const OUTLINE = (() => {
 const CRACK_LEFT = 'M-10 -10H63L57 22L65 41L55 63L64 82L58 130H-10Z';
 const CRACK_RIGHT = 'M130 -10H63L57 22L65 41L55 63L64 82L58 130H130Z';
 
-const mix = (accentPct: number, other: string) =>
-  `color-mix(in oklab, var(--color-accent) ${accentPct}%, ${other})`;
-
 interface WaxSealProps {
   monogram: string;
   /** Draw only one half (for the cracking animation). */
@@ -46,14 +43,14 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
     <svg viewBox="0 0 120 120" className={className} aria-hidden="true" focusable="false">
       <defs>
         <radialGradient id={`${id}-wax`} cx="36%" cy="30%" r="78%">
-          <stop offset="0" style={{ stopColor: mix(45, 'white') }} />
+          <stop offset="0" style={{ stopColor: 'var(--seal-hi)' }} />
           <stop offset="0.45" style={{ stopColor: 'var(--color-accent)' }} />
-          <stop offset="1" style={{ stopColor: mix(62, '#3b2a12') }} />
+          <stop offset="1" style={{ stopColor: 'var(--seal-lo)' }} />
         </radialGradient>
         <radialGradient id={`${id}-well`} cx="64%" cy="70%" r="80%">
-          <stop offset="0" style={{ stopColor: mix(70, 'white') }} />
+          <stop offset="0" style={{ stopColor: 'var(--seal-well-hi)' }} />
           <stop offset="0.6" style={{ stopColor: 'var(--color-accent)' }} />
-          <stop offset="1" style={{ stopColor: mix(75, '#3b2a12') }} />
+          <stop offset="1" style={{ stopColor: 'var(--seal-well-lo)' }} />
         </radialGradient>
         <linearGradient id={`${id}-shine`} x1="0" x2="1">
           <stop offset="0" stopColor="white" stopOpacity="0" />
@@ -72,7 +69,7 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
 
       <g clipPath={half ? `url(#${id}-half)` : undefined}>
         <path d={OUTLINE} fill={`url(#${id}-wax)`} />
-        <path d={OUTLINE} fill="none" style={{ stroke: mix(55, '#3b2a12') }} strokeOpacity="0.35" />
+        <path d={OUTLINE} fill="none" style={{ stroke: 'var(--seal-lo)' }} strokeOpacity="0.35" />
 
         {/* Pressed well with a light rim on the bottom-right and shadow on the top-left */}
         <circle cx="60" cy="60" r="37" fill={`url(#${id}-well)`} />
@@ -86,7 +83,7 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
         <path
           d="M86.2 33.8A37 37 0 0 0 33.8 86.2"
           fill="none"
-          style={{ stroke: mix(50, '#2a1d0a') }}
+          style={{ stroke: 'var(--seal-emboss-lo)' }}
           strokeOpacity="0.5"
           strokeWidth="1.4"
         />
@@ -108,7 +105,7 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
           y="61.8"
           className={styles.monogram}
           fontSize={fontSize}
-          style={{ fill: mix(40, 'white') }}
+          style={{ fill: 'var(--seal-emboss-hi)' }}
         >
           {monogram}
         </text>
@@ -117,7 +114,7 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
           y="61"
           className={styles.monogram}
           fontSize={fontSize}
-          style={{ fill: mix(55, '#2a1d0a') }}
+          style={{ fill: 'var(--seal-emboss-lo)' }}
         >
           {monogram}
         </text>
