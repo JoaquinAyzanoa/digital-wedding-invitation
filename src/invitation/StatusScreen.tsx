@@ -14,6 +14,17 @@ export function LoadingScreen() {
   );
 }
 
+/** Last resort when something fails while rendering: never leave a blank page. */
+export function CrashScreen() {
+  return (
+    <div className={styles.screen} role="alert">
+      <p className={styles.title}>Algo salió mal al mostrar la invitación.</p>
+      <p className={styles.text}>Recarga la página para intentarlo de nuevo.</p>
+      <Button onClick={() => window.location.reload()}>Recargar</Button>
+    </div>
+  );
+}
+
 export function ErrorScreen({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
   // No (valid) content in the database yet: the couple is still setting it up.
   if (error.code === 'content_invalid') {

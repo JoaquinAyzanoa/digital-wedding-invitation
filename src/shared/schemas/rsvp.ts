@@ -74,8 +74,10 @@ export function rsvpFormSchema({ seats, menuOptions, questions }: RsvpRules) {
       }
     });
 
-  // Declining ignores whatever was typed in the attendee cards.
-  const declining = z.object({ attending: z.literal(false), contactPhone, message });
+  // Declining only shows the message: anything typed on the attendee step (cards, phone)
+  // is ignored, or a guest who went back and chose "no" could be blocked by a field
+  // they can no longer see.
+  const declining = z.object({ attending: z.literal(false), message });
 
   return z.discriminatedUnion('attending', [attending, declining], {
     error: 'Elige una opción',
@@ -150,8 +152,10 @@ export function rsvpDefaults(
 
 /** The payload for submit_rsvp, keeping only what the enabled questions ask for. */
 export function toRsvpInput(values: RsvpFormValues, questions: RsvpRules['questions']): RsvpInput {
+  const phone = values.contactPhone.trim();
   const common = {
-    contactPhone: values.contactPhone.trim() || null,
+    // Not validated when declining (that step does not show it): send it only if valid.
+    contactPhone: PHONE.test(phone) ? phone : null,
     message: values.message.trim() || null,
   };
   if (!values.attending) return { attending: false, attendees: [], ...common };

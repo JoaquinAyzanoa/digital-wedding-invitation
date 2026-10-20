@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { demoContent, demoInvitation } from '@/demo/content';
@@ -169,6 +169,56 @@ describe('RSVP form', () => {
     expect(await screen.findByText('Gracias por avisarnos')).toBeInTheDocument();
   });
 
+  it('switching to "no" is not blocked by an invalid field left on a hidden step', async () => {
+    const { api, user } = setup(demoInvitation);
+    await openForm(user);
+    await user.click(screen.getByLabelText('Sí, asistiremos'));
+    await next(user);
+    await user.type(screen.getByLabelText(/Teléfono/), 'abc');
+    await user.click(screen.getByRole('button', { name: 'Atrás' }));
+    await stepReady();
+    await user.click(screen.getByLabelText('No podremos asistir'));
+    await next(user);
+    await user.click(screen.getByRole('button', { name: 'Enviar respuesta' }));
+    await waitFor(() =>
+      expect(api.submitRsvp).toHaveBeenCalledWith('demo', {
+        attending: false,
+        attendees: [],
+        contactPhone: null,
+        message: null,
+      }),
+    );
+  });
+
+  it('focuses the first question when the form opens', async () => {
+    const { user } = setup(demoInvitation);
+    await openForm(user);
+    await waitFor(() => expect(screen.getByText('¿Nos acompañan?')).toHaveFocus());
+  });
+
+  it('a second submit while sending is ignored', async () => {
+    let finish: () => void = () => {};
+    const { api, user } = setup(
+      demoInvitation,
+      () =>
+        new Promise((resolve) => {
+          finish = () => resolve(demoInvitation);
+        }),
+    );
+    await openForm(user);
+    await user.click(screen.getByLabelText('No podremos asistir'));
+    await next(user);
+    // Two submit events in a row: what Enter in a field or a fast double tap produces.
+    const form = screen.getByRole('button', { name: 'Enviar respuesta' }).closest('form')!;
+    fireEvent.submit(form);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Enviando…' })).toBeDisabled());
+    fireEvent.submit(form);
+    // Validation is async: give a second submission time to reach the API.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(api.submitRsvp).toHaveBeenCalledTimes(1);
+    finish();
+  });
+
   it('shows the closed message when the server says the RSVP closed', async () => {
     const { user, refresh } = setup(demoInvitation, async () => {
       throw new ApiError('rsvp_closed');
@@ -222,7 +272,7 @@ describe('RSVP form', () => {
     await user.click(screen.getByRole('button', { name: 'Atrás' }));
     await stepReady();
     await user.click(await screen.findByRole('button', { name: 'Cancelar' }));
-    expect(await screen.findByText('¡Gracias por confirmar!')).toBeInTheDocument();
+    expect(await screen.findByText('¡Gracias por confirmar!')).toHaveFocus();
   });
 
   it('after the deadline the summary is read-only', () => {

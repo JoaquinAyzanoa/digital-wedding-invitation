@@ -5,6 +5,7 @@ import { Reveal } from '@/invitation/components/Reveal';
 import { RsvpSummary } from '@/invitation/rsvp/RsvpSummary';
 import { Icon } from '@/shared/icons/Icon';
 import { Button } from '@/shared/ui/Button';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { dayMonthInLima } from '@/shared/utils/date';
 import styles from './RsvpSection.module.css';
 import { Section, SectionTitle } from './Section';
@@ -18,7 +19,8 @@ const RsvpForm = lazy(() =>
 
 export function RsvpSection({ content, invitation, entry }: SectionProps) {
   const [editing, setEditing] = useState(false);
-  const [justAnswered, setJustAnswered] = useState(false);
+  // Move focus to the summary when the form closes (its buttons disappear with it).
+  const [focusSummary, setFocusSummary] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const stopCelebrating = useCallback(() => setCelebrate(false), []);
   const response = invitation?.response;
@@ -30,18 +32,38 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
 
     if (editing && invitation.rsvpOpen) {
       return (
-        <Suspense fallback={<p className={text.small}>Cargando…</p>}>
-          <RsvpForm
-            content={content}
-            invitation={invitation}
-            onCancel={response ? () => setEditing(false) : undefined}
-            onDone={(attending) => {
-              setEditing(false);
-              setJustAnswered(true);
-              if (attending) setCelebrate(true);
-            }}
-          />
-        </Suspense>
+        // A failed download of the form (weak signal) must not take the whole page down.
+        <ErrorBoundary
+          fallback={
+            <>
+              <p className={text.body} role="alert">
+                No pudimos cargar el formulario. Revisa tu conexión.
+              </p>
+              <Button onClick={() => window.location.reload()}>Recargar la página</Button>
+            </>
+          }
+        >
+          <Suspense fallback={<p className={text.small}>Cargando…</p>}>
+            <RsvpForm
+              content={content}
+              invitation={invitation}
+              autoFocus
+              onCancel={
+                response
+                  ? () => {
+                      setEditing(false);
+                      setFocusSummary(true);
+                    }
+                  : undefined
+              }
+              onDone={(attending) => {
+                setEditing(false);
+                setFocusSummary(true);
+                if (attending) setCelebrate(true);
+              }}
+            />
+          </Suspense>
+        </ErrorBoundary>
       );
     }
 
@@ -50,9 +72,9 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
         <RsvpSummary
           content={content}
           invitation={{ ...invitation, response }}
-          focusOnMount={justAnswered}
+          focusOnMount={focusSummary}
           onChange={() => {
-            setJustAnswered(false);
+            setFocusSummary(false);
             setEditing(true);
           }}
         />

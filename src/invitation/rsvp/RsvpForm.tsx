@@ -44,9 +44,11 @@ interface RsvpFormProps {
   onDone: (attending: boolean | null) => void;
   /** Present when changing an existing answer: go back to the summary. */
   onCancel?: () => void;
+  /** Focus the first question on mount (the button that opened the form is gone). */
+  autoFocus?: boolean;
 }
 
-export function RsvpForm({ content, invitation, onDone, onCancel }: RsvpFormProps) {
+export function RsvpForm({ content, invitation, onDone, onCancel, autoFocus }: RsvpFormProps) {
   const { api, onInvitationChange } = useRsvpContext();
   const { menuOptions, questions } = content.rsvp;
   const seats = invitation.seats;
@@ -106,7 +108,7 @@ export function RsvpForm({ content, invitation, onDone, onCancel }: RsvpFormProp
   const [serverError, setServerError] = useState('');
   // Steps animate out before the next one mounts: focus each new question as it appears
   // (not on first render) so keyboards and screen readers follow along.
-  const focusNextHeading = useRef(false);
+  const focusNextHeading = useRef(Boolean(autoFocus));
   const headingRef = useCallback((element: HTMLLegendElement | null) => {
     if (element && focusNextHeading.current) {
       focusNextHeading.current = false;
@@ -172,6 +174,8 @@ export function RsvpForm({ content, invitation, onDone, onCancel }: RsvpFormProp
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    // Enter while sending would submit again (the disabled button does not stop it).
+    if (isSubmitting) return;
     // Enter on an earlier step means "continue", not "send".
     if (step === 'message') void submit();
     else void next();

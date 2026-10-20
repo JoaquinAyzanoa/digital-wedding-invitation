@@ -40,8 +40,10 @@ describe('rsvpFormSchema', () => {
     });
   });
 
-  it('declining ignores the attendee cards', () => {
-    expect(paths(values({ attending: false, attendees: [emptyAttendee()] }))).toEqual([]);
+  it('declining ignores the attendee step (cards and phone)', () => {
+    expect(
+      paths(values({ attending: false, attendees: [emptyAttendee()], contactPhone: 'abc' })),
+    ).toEqual([]);
   });
 
   it('validates each attendee', () => {
