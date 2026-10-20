@@ -20,3 +20,7 @@ dist-local/
 # playwright
 test-results/
 playwright-report/
+
+#skills
+.agents/
+skills-lock.json
