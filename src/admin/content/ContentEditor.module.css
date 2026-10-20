@@ -1,0 +1,80 @@
+.layout {
+  display: grid;
+  gap: 24px;
+}
+
+/* Wide screens: the phone preview stays next to the form. */
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+
+  .preview {
+    position: sticky;
+    top: 80px;
+  }
+
+  .previewButton {
+    display: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  .preview {
+    display: none;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 24px;
+}
+
+.notice {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff4d6;
+  color: #7a5300;
+  font-size: 14px;
+}
+
+.saveBar {
+  position: sticky;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.08);
+}
+
+@media (min-width: 720px) {
+  .saveBar {
+    bottom: 12px;
+  }
+}
+
+.drawerPreview {
+  height: calc(100vh - 120px);
+  height: calc(100svh - 120px);
+  margin: -16px;
+}

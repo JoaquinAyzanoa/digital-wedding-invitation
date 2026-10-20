@@ -21,6 +21,13 @@ export function Photo({ src, alt, priority = false }: PhotoProps) {
     <div ref={ref} className={styles.photo}>
       <motion.img
         src={src}
+        // Photos uploaded from the admin come in two sizes (see admin/data/storage.ts).
+        {...(src.endsWith('-2000.webp')
+          ? {
+              srcSet: `${src.replace(/-2000\.webp$/, '-1000.webp')} 1000w, ${src} 2000w`,
+              sizes: '(max-width: 720px) 100vw, 720px',
+            }
+          : {})}
         alt={alt}
         className={styles.image}
         style={reducedMotion ? undefined : { y }}
