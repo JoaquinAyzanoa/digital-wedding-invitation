@@ -21,15 +21,19 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > src/shared/types/database.types.ts && prettier --write src/shared/types/database.types.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:admin": "node scripts/e2e-admin.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
     "@supabase/supabase-js": "^2.118.0",
+    "@tanstack/react-query": "^5.104.5",
     "motion": "^14.4.0",
+    "papaparse": "^5.7.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.90.0",
+    "react-router": "^8.5.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -39,6 +43,7 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "^22.20.5",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",

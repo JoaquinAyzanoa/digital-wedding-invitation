@@ -1,0 +1,60 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.body > * {
+  max-width: 100%;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.summary {
+  font-size: 15px;
+}
+
+.bad {
+  color: #b3261e;
+}
+
+.problems {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.problems > li {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.problems > li[data-kind='error'] {
+  background: #fdecea;
+}
+
+.problems > li[data-kind='warning'] {
+  background: #fff4d6;
+}
+
+.problems ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.preview {
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+}

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { UiIcon } from '@/shared/icons/UiIcon';
 import { ToastContext } from './toastContext';
 import styles from './Toast.module.css';
@@ -7,7 +7,19 @@ import styles from './Toast.module.css';
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
 
+  const regionRef = useRef<HTMLDivElement>(null);
+
   const show = useCallback((message: string) => setToast({ id: Date.now(), message }), []);
+
+  // Modal <dialog>s (the admin's panels) live in the browser's top layer, above any z-index.
+  // A popover is top-layer too, and re-showing it stacks it above whatever opened last, so
+  // the message is visible over an open panel. Without the Popover API it stays as before.
+  useEffect(() => {
+    const region = regionRef.current;
+    if (!toast || !region || typeof region.showPopover !== 'function') return;
+    if (region.matches(':popover-open')) region.hidePopover();
+    region.showPopover();
+  }, [toast]);
 
   useEffect(() => {
     if (!toast) return;
@@ -18,7 +30,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext value={show}>
       {children}
-      <div className={styles.region} role="status" aria-live="polite">
+      <div
+        ref={regionRef}
+        popover="manual"
+        className={styles.region}
+        role="status"
+        aria-live="polite"
+      >
         <AnimatePresence>
           {toast && (
             <motion.div

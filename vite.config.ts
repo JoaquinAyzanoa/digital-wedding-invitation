@@ -40,7 +40,8 @@ function invitationMeta(env: Record<string, string>): Plugin {
   };
 }
 
-// Two separate entries so the admin code is never downloaded with the invitation.
+// Two separate entries so the admin code is never downloaded with the invitation. The admin
+// lives at /login/: nothing on the invitation links to it.
 export default defineConfig(({ mode }) => ({
   plugins: [react(), invitationMeta(loadEnv(mode, process.cwd(), 'VITE_'))],
   resolve: {
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         invitation: fileURLToPath(new URL('./index.html', import.meta.url)),
-        admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./login/index.html', import.meta.url)),
       },
     },
   },

@@ -1,0 +1,20 @@
+/* The admin uses the default tokens (not the couple's theme) and a sans font for readability. */
+body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 500;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}

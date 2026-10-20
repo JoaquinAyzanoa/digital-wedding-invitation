@@ -1,5 +1,5 @@
 import { Reveal } from '@/invitation/components/Reveal';
-import { useToast } from '@/invitation/toast/toastContext';
+import { useToast } from '@/shared/toast/toastContext';
 import { Icon } from '@/shared/icons/Icon';
 import { UiIcon } from '@/shared/icons/UiIcon';
 import { copyText } from '@/shared/utils/clipboard';

@@ -58,6 +58,24 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
 
+  # Database (pgTAP) and admin E2E against a local Supabase stack in Docker. Slower, so it
+  # runs alongside and does not block the deploy; a red run here still needs attention.
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npx supabase start -x realtime,edge-runtime,logflare,vector,supavisor,studio,imgproxy
+      - run: npm run db:test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e:admin
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: [build, e2e]

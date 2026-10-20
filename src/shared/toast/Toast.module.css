@@ -1,4 +1,13 @@
 .region {
+  /* Undo the browser's popover defaults (centered box with border and background). */
+  inset: auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
   position: fixed;
   right: 0;
   bottom: max(80px, calc(env(safe-area-inset-bottom) + 64px));
@@ -20,4 +29,10 @@
   font-family: var(--font-sans);
   font-size: 15px;
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+}
+
+/* A popover that has not been shown yet is display: none; keep the live region in the page
+   so screen readers still announce messages (and browsers without popovers show it). */
+.region:not(:popover-open) {
+  display: flex;
 }

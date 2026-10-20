@@ -14,7 +14,7 @@ import { RevealContext } from './components/revealContext';
 import styles from './Invitation.module.css';
 import { RsvpContext } from './rsvpContext';
 import { SECTION_COMPONENTS } from './sections/registry';
-import { ToastProvider } from './toast/ToastProvider';
+import { ToastProvider } from '@/shared/toast/ToastProvider';
 import type { CodeStatus } from './useInvitationData';
 
 interface InvitationProps {
