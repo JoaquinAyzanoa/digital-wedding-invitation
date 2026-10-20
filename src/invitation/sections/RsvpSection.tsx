@@ -1,8 +1,7 @@
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { CodeEntry } from '@/invitation/components/CodeEntry/CodeEntry';
 import { Confetti } from '@/invitation/components/Confetti/Confetti';
 import { Reveal } from '@/invitation/components/Reveal';
-import { RsvpForm } from '@/invitation/rsvp/RsvpForm';
 import { RsvpSummary } from '@/invitation/rsvp/RsvpSummary';
 import { Icon } from '@/shared/icons/Icon';
 import { Button } from '@/shared/ui/Button';
@@ -11,6 +10,11 @@ import styles from './RsvpSection.module.css';
 import { Section, SectionTitle } from './Section';
 import text from './text.module.css';
 import { sectionTitle, type SectionProps } from './types';
+
+// The form (and react-hook-form) only loads when the guest taps "Confirma aquí".
+const RsvpForm = lazy(() =>
+  import('@/invitation/rsvp/RsvpForm').then((module) => ({ default: module.RsvpForm })),
+);
 
 export function RsvpSection({ content, invitation, entry }: SectionProps) {
   const [editing, setEditing] = useState(false);
@@ -26,16 +30,18 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
 
     if (editing && invitation.rsvpOpen) {
       return (
-        <RsvpForm
-          content={content}
-          invitation={invitation}
-          onCancel={response ? () => setEditing(false) : undefined}
-          onDone={(attending) => {
-            setEditing(false);
-            setJustAnswered(true);
-            if (attending) setCelebrate(true);
-          }}
-        />
+        <Suspense fallback={<p className={text.small}>Cargando…</p>}>
+          <RsvpForm
+            content={content}
+            invitation={invitation}
+            onCancel={response ? () => setEditing(false) : undefined}
+            onDone={(attending) => {
+              setEditing(false);
+              setJustAnswered(true);
+              if (attending) setCelebrate(true);
+            }}
+          />
+        </Suspense>
       );
     }
 

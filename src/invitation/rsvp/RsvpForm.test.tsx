@@ -55,6 +55,12 @@ async function stepReady() {
   );
 }
 
+/** "Confirma aquí" loads the form lazily: wait for its first question. */
+async function openForm(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+  await screen.findByText(/¿Nos acompañ/);
+}
+
 async function next(user: ReturnType<typeof userEvent.setup>) {
   await user.click(continueButton());
   await stepReady();
@@ -63,7 +69,7 @@ async function next(user: ReturnType<typeof userEvent.setup>) {
 describe('RSVP form', () => {
   it('uses singular wording and prefills the name of an individual invitation', async () => {
     const { user } = setup({ ...demoInvitation, seats: 1, displayName: 'Ana Pérez' });
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     expect(screen.getByText('¿Nos acompañas?')).toBeInTheDocument();
     await user.click(screen.getByLabelText('Sí, asistiré'));
     await next(user);
@@ -73,7 +79,7 @@ describe('RSVP form', () => {
 
   it('validates each step and focuses the first error', async () => {
     const { user } = setup(demoInvitation);
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await next(user);
     expect(await screen.findByText('Elige una opción')).toBeInTheDocument();
 
@@ -98,7 +104,7 @@ describe('RSVP form', () => {
 
   it('limits attendees to the reserved seats and asks a child’s age', async () => {
     const { user } = setup(demoInvitation);
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await user.click(screen.getByLabelText('Sí, asistiremos'));
     await next(user);
 
@@ -117,7 +123,7 @@ describe('RSVP form', () => {
 
   it('confirms attendance and shows the summary', async () => {
     const { api, user, refresh } = setup(demoInvitation);
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await user.click(screen.getByLabelText('Sí, asistiremos'));
     await next(user);
     await user.type(await screen.findByLabelText('Nombre completo'), 'Ana Torres');
@@ -146,7 +152,7 @@ describe('RSVP form', () => {
 
   it('declining takes two steps', async () => {
     const { api, user, refresh } = setup(demoInvitation);
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await user.click(screen.getByLabelText('No podremos asistir'));
     expect(screen.getByText('Paso 1 de 2')).toBeInTheDocument();
     await next(user);
@@ -167,7 +173,7 @@ describe('RSVP form', () => {
     const { user, refresh } = setup(demoInvitation, async () => {
       throw new ApiError('rsvp_closed');
     });
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await user.click(screen.getByLabelText('No podremos asistir'));
     await next(user);
     await user.click(screen.getByRole('button', { name: 'Enviar respuesta' }));
@@ -182,7 +188,7 @@ describe('RSVP form', () => {
     const { user } = setup(demoInvitation, async () => {
       throw new ApiError('network');
     });
-    await user.click(screen.getByRole('button', { name: 'Confirma aquí' }));
+    await openForm(user);
     await user.click(screen.getByLabelText('No podremos asistir'));
     await next(user);
     await user.type(await screen.findByLabelText(/Tu mensaje/), 'Lo siento');
@@ -209,6 +215,7 @@ describe('RSVP form', () => {
       },
     });
     await user.click(screen.getByRole('button', { name: 'Cambiar mi respuesta' }));
+    await screen.findByText(/¿Nos acompañ/);
     expect(screen.getByLabelText('Sí, asistiremos')).toBeChecked();
     await next(user);
     expect(await screen.findByLabelText('Nombre completo')).toHaveValue('Ana Torres');
