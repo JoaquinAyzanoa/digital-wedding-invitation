@@ -23,53 +23,39 @@ async function bytes(download: Download) {
 
 test.describe.configure({ mode: 'serial' });
 
-test('sends an invitation by WhatsApp with its PDF and marks it sent', async ({ page }) => {
+test('downloads an invitation PDF from its row and from its panel', async ({ page }) => {
   await login(page);
   await goToInvitations(page);
   await page.getByLabel('Buscar invitaciones').fill('Familia López');
-  await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia López' }).click();
 
-  const dialog = page.getByRole('dialog', { name: 'Enviar a Familia López' });
-  // Peruvian mobile without the country code: 51 is added; the message carries the link.
-  const href = await dialog.getByRole('link', { name: 'Abrir WhatsApp' }).getAttribute('href');
-  expect(href).toMatch(/^https:\/\/wa\.me\/51900000001\?text=/);
-  expect(decodeURIComponent(href!.split('text=')[1])).toContain('/?i=abc234');
-
-  const downloading = page.waitForEvent('download');
-  await dialog.getByRole('button', { name: 'Descargar PDF' }).click();
-  const download = await downloading;
+  let downloading = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Descargar PDF de Familia López' }).click();
+  let download = await downloading;
   expect(download.suggestedFilename()).toMatch(/^Invitacion-.+-Familia-Lopez\.pdf$/);
   expect((await bytes(download)).subarray(0, 5).toString()).toBe('%PDF-');
-  await expect(dialog.getByRole('button', { name: 'Descargado ✓' })).toBeVisible();
 
-  await dialog.getByRole('button', { name: 'Ya la envié' }).click();
-  await expect(dialog).toBeHidden();
-  await expect(page.getByText('Marcada como enviada')).toBeVisible();
-  const row = page.getByRole('button', { name: 'Editar Familia López' });
-  // Sent and still unanswered: the row now offers a reminder.
-  await expect(
-    page.getByRole('button', { name: 'Recordatorio por WhatsApp a Familia López' }),
-  ).toBeVisible();
-
-  // An accidental "sent" can be undone from the panel.
-  await row.click();
+  await page.getByRole('button', { name: 'Editar Familia López' }).click();
   const panel = page.getByRole('dialog', { name: 'Familia López' });
+  downloading = page.waitForEvent('download');
+  await panel.getByRole('button', { name: 'Descargar PDF' }).click();
+  download = await downloading;
+  expect(download.suggestedFilename()).toMatch(/-Familia-Lopez\.pdf$/);
+});
+
+test('the admin marks an invitation as sent (sending happens outside the web)', async ({
+  page,
+}) => {
+  await login(page);
+  await goToInvitations(page);
+  await page.getByLabel('Buscar invitaciones').fill('Familia López');
+  await page.getByRole('button', { name: 'Editar Familia López' }).click();
+  const panel = page.getByRole('dialog', { name: 'Familia López' });
+
+  await expect(panel.getByText('Aún no se envía.')).toBeVisible();
+  await panel.getByRole('button', { name: 'Marcar como enviada' }).click();
   await expect(panel.getByText(/^Enviada el/)).toBeVisible();
   await panel.getByRole('button', { name: 'Marcar como no enviada' }).click();
   await expect(panel.getByText('Aún no se envía.')).toBeVisible();
-});
-
-test('sends a reminder from the pending list', async ({ page }) => {
-  await login(page);
-  await page.getByRole('button', { name: 'Recordatorio para Diego Salas' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Recordatorio para Diego Salas' });
-  const href = await dialog.getByRole('link', { name: 'Abrir WhatsApp' }).getAttribute('href');
-  expect(href).toMatch(/^https:\/\/wa\.me\/51900000005\?text=/);
-  expect(decodeURIComponent(href!.split('text=')[1])).toContain('/?i=pqr678');
-  // A reminder is only the message: no PDF step, nothing to mark.
-  await expect(dialog.getByRole('button', { name: 'Descargar PDF' })).toHaveCount(0);
-  await dialog.getByRole('button', { name: 'Cerrar' }).click();
-  await expect(dialog).toBeHidden();
 });
 
 test('downloads the PDFs of the selected invitations as a ZIP', async ({ page }) => {

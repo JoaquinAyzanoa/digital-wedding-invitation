@@ -114,11 +114,7 @@ set public_data = $json$
       "sans": { "source": "google", "family": "Jost" }
     }
   },
-  "customFonts": [],
-  "whatsapp": {
-    "inviteTemplate": "¡Hola {name}! Con mucha alegría te invitamos a nuestra boda. Hemos reservado {seats} lugar(es) en tu honor. Aquí está tu invitación: {link}",
-    "reminderTemplate": "¡Hola {name}! Te recordamos confirmar tu asistencia a nuestra boda aquí: {link}"
-  }
+  "customFonts": []
 }
 $json$::jsonb,
 private_data = $json$

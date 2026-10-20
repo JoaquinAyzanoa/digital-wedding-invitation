@@ -10,7 +10,7 @@ import { useToast } from '@/shared/toast/toastContext';
 import { copyText } from '@/shared/utils/clipboard';
 import { adminPreviewLink, invitationLink } from '@/shared/utils/links';
 import styles from './InvitationRow.module.css';
-import { whatsappModeFor } from './whatsappMode';
+import { useInvitationPdf } from './useInvitationPdf';
 
 const STATUS_LABEL = { pending: 'Pendiente', attending: 'Asiste', declined: 'No asiste' };
 
@@ -19,17 +19,10 @@ interface InvitationRowProps {
   selected: boolean;
   onToggle: () => void;
   onOpen: () => void;
-  onWhatsapp: () => void;
 }
 
-export function InvitationRow({
-  invitation: i,
-  selected,
-  onToggle,
-  onOpen,
-  onWhatsapp,
-}: InvitationRowProps) {
-  const reminder = whatsappModeFor(i) === 'reminder';
+export function InvitationRow({ invitation: i, selected, onToggle, onOpen }: InvitationRowProps) {
+  const pdf = useInvitationPdf();
   const toast = useToast();
   const status = responseStatus(i);
   const people = status === 'attending' ? i.attendees.length : 0;
@@ -76,11 +69,13 @@ export function InvitationRow({
         <button
           type="button"
           className={styles.icon}
-          aria-label={`${reminder ? 'Recordatorio' : 'Enviar'} por WhatsApp a ${i.display_name}`}
-          title={reminder ? 'Recordatorio por WhatsApp' : 'Enviar por WhatsApp'}
-          onClick={onWhatsapp}
+          aria-label={`Descargar PDF de ${i.display_name}`}
+          title="Descargar PDF"
+          disabled={pdf.busy}
+          aria-busy={pdf.busy}
+          onClick={() => pdf.download(i)}
         >
-          <UiIcon name="whatsapp" size={20} />
+          <UiIcon name="download" size={20} />
         </button>
         <button
           type="button"

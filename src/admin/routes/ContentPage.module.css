@@ -36,13 +36,3 @@
   padding: 0;
   border: 0;
 }
-
-.whatsapp {
-  margin-top: -6px;
-  padding: 10px 12px;
-  border-radius: 10px 10px 10px 2px;
-  background: #dcf8c6;
-  font-size: 14px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}

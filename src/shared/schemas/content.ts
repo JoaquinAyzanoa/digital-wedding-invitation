@@ -168,7 +168,6 @@ export const publicContentSchema = z.object({
   titles: z.partialRecord(z.enum(SECTION_IDS), text(60)).optional(),
   theme: themeSchema,
   customFonts: z.array(customFontSchema),
-  whatsapp: z.object({ inviteTemplate: text(1000), reminderTemplate: text(1000) }),
 });
 
 export type PublicContent = z.infer<typeof publicContentSchema>;

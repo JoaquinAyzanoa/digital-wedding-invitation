@@ -15,8 +15,6 @@ import { sectionOfPath, type ContentForm, type ContentSectionKey } from '@/admin
 import { uploadDecoration, uploadMusic, uploadPhoto } from '@/admin/data/storage';
 import ui from '@/admin/ui/ui.module.css';
 import { ICON_KEYS, PHOTO_SLOTS, SECTION_IDS, type SectionId } from '@/shared/schemas/content';
-import { invitationLink } from '@/shared/utils/links';
-import { renderTemplate } from '@/shared/utils/whatsapp';
 import styles from './ContentPage.module.css';
 
 const ICON_LABELS: Record<(typeof ICON_KEYS)[number], string> = {
@@ -147,20 +145,6 @@ function SectionEntryFields({ index }: { index: number }) {
       </div>
       <Toggle name={`public.sections.${index}.visible`} label="Visible" />
     </>
-  );
-}
-
-function WhatsappPreview({ name }: { name: 'inviteTemplate' | 'reminderTemplate' }) {
-  const { control } = useFormContext<ContentForm>();
-  const template = useWatch({ control, name: `public.whatsapp.${name}` });
-  return (
-    <p className={styles.whatsapp}>
-      {renderTemplate(template ?? '', {
-        name: 'Familia Pérez',
-        seats: 4,
-        link: invitationLink('k7m2qp'),
-      })}
-    </p>
   );
 }
 
@@ -460,17 +444,6 @@ export function ContentPage() {
                 />
               ))}
             </div>
-          </Group>
-
-          <Group {...group('whatsapp')} title="Mensajes de WhatsApp">
-            <p className={ui.hint}>
-              Puedes usar <code>{'{name}'}</code> (nombre de la invitación),{' '}
-              <code>{'{seats}'}</code> (pases) y <code>{'{link}'}</code> (enlace personal).
-            </p>
-            <TextField name="public.whatsapp.inviteTemplate" label="Invitación" multiline />
-            <WhatsappPreview name="inviteTemplate" />
-            <TextField name="public.whatsapp.reminderTemplate" label="Recordatorio" multiline />
-            <WhatsappPreview name="reminderTemplate" />
           </Group>
         </>
       )}

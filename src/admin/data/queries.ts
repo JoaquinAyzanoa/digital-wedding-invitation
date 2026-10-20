@@ -160,7 +160,7 @@ export function useImportInvitations() {
   });
 }
 
-/** sent_at: when the invitation went out by WhatsApp (null = not sent yet). */
+/** sent_at: when the admin sent the invitation (by hand, outside the web); null = not yet. */
 export function useMarkSent() {
   const invalidate = useInvalidate();
   return useMutation({

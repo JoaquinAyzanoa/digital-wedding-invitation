@@ -19,8 +19,6 @@ import { InvitationDataForm } from './InvitationDataForm';
 import styles from './InvitationPanel.module.css';
 import { PdfButton } from './PdfButton';
 import { RsvpEditor } from './RsvpEditor';
-import { WhatsappDialog } from './WhatsappDialog';
-import type { WhatsappMode } from './whatsappMode';
 
 type Tab = 'data' | 'rsvp';
 
@@ -37,7 +35,6 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
   const rules = useRsvpRules();
   const remove = useDeleteInvitations();
   const markSent = useMarkSent();
-  const [whatsapp, setWhatsapp] = useState<WhatsappMode | null>(null);
   // After creating, the panel switches to the new invitation (to copy its link, etc.).
   const [created, setCreated] = useState<InvitationWithAttendees>();
   const currentId = created?.id ?? initial?.id;
@@ -81,10 +78,11 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
     }
   }
 
-  async function markNotSent(invitationId: string) {
+  // Sending happens outside the web (the admin shares the PDF); this only keeps track.
+  async function setSent(invitationId: string, sent: boolean) {
     try {
-      await markSent.mutateAsync({ id: invitationId, sent: false });
-      toast('Marcada como no enviada');
+      await markSent.mutateAsync({ id: invitationId, sent });
+      toast(sent ? 'Marcada como enviada' : 'Marcada como no enviada');
     } catch (error) {
       toast(adminErrorMessage(error));
     }
@@ -148,38 +146,24 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
               Abrirla desde aquí no cuenta como visita.
             </p>
             <div className={styles.linkActions}>
-              <Btn size="sm" onClick={() => setWhatsapp('invite')}>
-                Enviar por WhatsApp
-              </Btn>
-              {invitation.attending === null && invitation.sent_at && (
-                <Btn size="sm" variant="secondary" onClick={() => setWhatsapp('reminder')}>
-                  Recordatorio
-                </Btn>
-              )}
               <PdfButton invitation={invitation} />
             </div>
             <p className={ui.hint}>
-              {invitation.sent_at ? (
-                <>
-                  Enviada el{' '}
-                  {new Date(invitation.sent_at).toLocaleDateString('es-PE', {
+              {invitation.sent_at
+                ? `Enviada el ${new Date(invitation.sent_at).toLocaleDateString('es-PE', {
                     timeZone: 'America/Lima',
                     day: 'numeric',
                     month: 'long',
-                  })}
-                  .{' '}
-                  <button
-                    type="button"
-                    className={styles.inlineLink}
-                    disabled={markSent.isPending}
-                    onClick={() => void markNotSent(invitation.id)}
-                  >
-                    Marcar como no enviada
-                  </button>
-                </>
-              ) : (
-                'Aún no se envía.'
-              )}
+                  })}.`
+                : 'Aún no se envía.'}{' '}
+              <button
+                type="button"
+                className={styles.inlineLink}
+                disabled={markSent.isPending}
+                onClick={() => void setSent(invitation.id, !invitation.sent_at)}
+              >
+                {invitation.sent_at ? 'Marcar como no enviada' : 'Marcar como enviada'}
+              </button>
             </p>
           </div>
 
@@ -245,10 +229,6 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
           </>
         )}
       </div>
-
-      {whatsapp && invitation && (
-        <WhatsappDialog mode={whatsapp} invitation={invitation} onClose={() => setWhatsapp(null)} />
-      )}
 
       {pending && (
         <ConfirmDialog

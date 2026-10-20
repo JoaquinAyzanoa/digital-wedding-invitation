@@ -153,7 +153,7 @@ export function InvitationDataForm({
       <div className={ui.row}>
         <div className={ui.field}>
           <label htmlFor={`${id}-phone`} className={ui.label}>
-            Teléfono (WhatsApp)
+            Teléfono
           </label>
           <input
             type="tel"

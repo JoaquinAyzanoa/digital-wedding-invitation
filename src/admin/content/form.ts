@@ -52,7 +52,6 @@ export const CONTENT_SECTIONS = {
   rsvp: ['rsvp'],
   album: ['album', 'farewell'],
   sections: ['sections', 'titles'],
-  whatsapp: ['whatsapp'],
 } as const;
 
 export type ContentSectionKey = keyof typeof CONTENT_SECTIONS;
