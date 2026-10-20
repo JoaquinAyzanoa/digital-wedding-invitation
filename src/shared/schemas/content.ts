@@ -160,6 +160,8 @@ export const publicContentSchema = z.object({
       parts: z.boolean(),
       /** DNI of each person (8 digits, required). Missing in older content: on. */
       dni: z.boolean().default(true),
+      /** Children at the wedding (asks adult or child, and the age). Missing: no. */
+      children: z.boolean().default(false),
     }),
   }),
   album: z.object({

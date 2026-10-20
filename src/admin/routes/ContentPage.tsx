@@ -456,6 +456,10 @@ export function ContentPage() {
                 name="public.rsvp.questions.dni"
                 label="DNI de cada persona (obligatorio, 8 números)"
               />
+              <Toggle
+                name="public.rsvp.questions.children"
+                label="Se permiten niños (pregunta adulto o niño y su edad)"
+              />
             </fieldset>
           </Group>
 

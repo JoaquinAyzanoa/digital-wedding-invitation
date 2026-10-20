@@ -9,6 +9,8 @@ interface AttendeeCardProps {
   menuOptions: string[];
   /** Ask each person's DNI (content: rsvp.questions.dni). */
   askDni: boolean;
+  /** Children allowed: ask adult or child, and the age (content: rsvp.questions.children). */
+  allowChildren: boolean;
   onRemove?: () => void;
 }
 
@@ -19,6 +21,7 @@ export function AttendeeCard({
   idPrefix,
   menuOptions,
   askDni,
+  allowChildren,
   onRemove,
 }: AttendeeCardProps) {
   const {
@@ -89,29 +92,31 @@ export function AttendeeCard({
         </div>
       )}
 
-      <fieldset className={styles.fieldset}>
-        <legend className={styles.label}>¿Adulto o niño?</legend>
-        <div className={styles.segments}>
-          {(
-            [
-              ['adult', 'Adulto'],
-              ['child', 'Niño o niña'],
-            ] as const
-          ).map(([value, label]) => (
-            <label key={value} className={styles.segment} data-checked={kind === value}>
-              <input
-                type="radio"
-                value={value}
-                className="visually-hidden"
-                {...register(`attendees.${index}.kind`)}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {allowChildren && (
+        <fieldset className={styles.fieldset}>
+          <legend className={styles.label}>¿Adulto o niño?</legend>
+          <div className={styles.segments}>
+            {(
+              [
+                ['adult', 'Adulto'],
+                ['child', 'Niño o niña'],
+              ] as const
+            ).map(([value, label]) => (
+              <label key={value} className={styles.segment} data-checked={kind === value}>
+                <input
+                  type="radio"
+                  value={value}
+                  className="visually-hidden"
+                  {...register(`attendees.${index}.kind`)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
-      {kind === 'child' && (
+      {allowChildren && kind === 'child' && (
         <div className={styles.field}>
           <label htmlFor={id('age')} className={styles.label}>
             Edad

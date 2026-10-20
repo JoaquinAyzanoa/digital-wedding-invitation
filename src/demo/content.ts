@@ -64,8 +64,15 @@ export const demoContent: PublicContent = {
     closed: false,
     intro:
       'Tu compañía es muy importante para nosotros. Por favor confírmanos tu presencia con anticipación.',
-    menuOptions: ['Carne', 'Pescado', 'Vegetariano', 'Infantil'],
-    questions: { transport: false, lodging: false, song: true, parts: false, dni: true },
+    menuOptions: [],
+    questions: {
+      transport: false,
+      lodging: false,
+      song: true,
+      parts: false,
+      dni: true,
+      children: false,
+    },
   },
   album: {
     enabled: true,

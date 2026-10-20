@@ -233,41 +233,45 @@ export function RsvpEditor({
                     </div>
                   )}
                   <div className={ui.row}>
-                    <div className={ui.field}>
-                      <label htmlFor={fid('kind')} className={ui.label}>
-                        Tipo
-                      </label>
-                      <select
-                        id={fid('kind')}
-                        className={ui.select}
-                        {...register(`attendees.${index}.kind`)}
-                      >
-                        <option value="adult">Adulto</option>
-                        <option value="child">Niño o niña</option>
-                      </select>
-                    </div>
-                    {kind === 'child' && (
-                      <div className={ui.field}>
-                        <label htmlFor={fid('age')} className={ui.label}>
-                          Edad
-                        </label>
-                        <select
-                          id={fid('age')}
-                          className={ui.select}
-                          aria-invalid={Boolean(e?.age)}
-                          {...register(`attendees.${index}.age`, {
-                            setValueAs: (v) => (v === '' || v === null ? null : Number(v)),
-                          })}
-                        >
-                          <option value="">—</option>
-                          {Array.from({ length: 18 }, (_, age) => (
-                            <option key={age} value={age}>
-                              {age}
-                            </option>
-                          ))}
-                        </select>
-                        {fieldError(e?.age?.message)}
-                      </div>
+                    {rules.questions.children && (
+                      <>
+                        <div className={ui.field}>
+                          <label htmlFor={fid('kind')} className={ui.label}>
+                            Tipo
+                          </label>
+                          <select
+                            id={fid('kind')}
+                            className={ui.select}
+                            {...register(`attendees.${index}.kind`)}
+                          >
+                            <option value="adult">Adulto</option>
+                            <option value="child">Niño o niña</option>
+                          </select>
+                        </div>
+                        {kind === 'child' && (
+                          <div className={ui.field}>
+                            <label htmlFor={fid('age')} className={ui.label}>
+                              Edad
+                            </label>
+                            <select
+                              id={fid('age')}
+                              className={ui.select}
+                              aria-invalid={Boolean(e?.age)}
+                              {...register(`attendees.${index}.age`, {
+                                setValueAs: (v) => (v === '' || v === null ? null : Number(v)),
+                              })}
+                            >
+                              <option value="">—</option>
+                              {Array.from({ length: 18 }, (_, age) => (
+                                <option key={age} value={age}>
+                                  {age}
+                                </option>
+                              ))}
+                            </select>
+                            {fieldError(e?.age?.message)}
+                          </div>
+                        )}
+                      </>
                     )}
                     {rules.menuOptions.length > 0 && (
                       <div className={ui.field}>

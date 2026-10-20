@@ -25,7 +25,12 @@ export function keepsSavedDni(attendee: AttendeeValues): boolean {
   );
 }
 
-function attendeeSchema(menuOptions: string[], askDni: boolean, dniOptional: boolean) {
+function attendeeSchema(
+  menuOptions: string[],
+  askDni: boolean,
+  dniOptional: boolean,
+  children: boolean,
+) {
   return z
     .object({
       fullName: z
@@ -50,7 +55,7 @@ function attendeeSchema(menuOptions: string[], askDni: boolean, dniOptional: boo
           ctx.addIssue({ code: 'custom', path: ['dni'], message: 'Escribe el DNI' });
         }
       }
-      if (attendee.kind === 'child' && attendee.age === null) {
+      if (children && attendee.kind === 'child' && attendee.age === null) {
         ctx.addIssue({ code: 'custom', path: ['age'], message: 'Indica la edad' });
       }
       if (menuOptions.length > 0 && !menuOptions.includes(attendee.menu)) {
@@ -71,7 +76,7 @@ export function rsvpFormSchema({ seats, menuOptions, questions, dniOptional = fa
     .object({
       attending: z.literal(true),
       attendees: z
-        .array(attendeeSchema(menuOptions, questions.dni, dniOptional))
+        .array(attendeeSchema(menuOptions, questions.dni, dniOptional, questions.children))
         .min(1, 'Agrega al menos una persona')
         .max(seats, `Solo hay ${seats} ${seats === 1 ? 'lugar' : 'lugares'} reservados`),
       parts: z.object({ ceremony: z.boolean(), reception: z.boolean() }),
@@ -220,8 +225,9 @@ export function toRsvpInput(values: RsvpFormValues, questions: RsvpRules['questi
     attending: true,
     attendees: values.attendees.map((a) => ({
       fullName: a.fullName.trim(),
-      kind: a.kind,
-      age: a.kind === 'child' ? a.age : null,
+      // Without children at the wedding everyone is an adult.
+      kind: questions.children ? a.kind : 'adult',
+      age: questions.children && a.kind === 'child' ? a.age : null,
       menu: a.menu || null,
       dietary: a.dietary.trim() || null,
       // Empty: keeps the DNI already given for the same name (or none, for the admin).

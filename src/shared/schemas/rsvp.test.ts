@@ -7,7 +7,14 @@ import {
   type RsvpFormValues,
 } from './rsvp';
 
-const questions = { transport: true, lodging: false, song: true, parts: true, dni: false };
+const questions = {
+  transport: true,
+  lodging: false,
+  song: true,
+  parts: true,
+  dni: false,
+  children: true,
+};
 const schema = rsvpFormSchema({ seats: 3, menuOptions: ['Carne', 'Infantil'], questions });
 
 function values(overrides: Partial<RsvpFormValues> = {}): RsvpFormValues {
@@ -206,5 +213,18 @@ describe('DNI', () => {
       },
     });
     expect(defaults.attendees[0]).toMatchObject({ dni: '', savedDniHint: '678', savedName: 'Ana' });
+  });
+});
+
+describe('without children at the wedding', () => {
+  const adultsOnly = { ...questions, children: false };
+  const schemaAdults = rsvpFormSchema({ seats: 3, menuOptions: [], questions: adultsOnly });
+
+  it('does not ask the age and sends everyone as an adult', () => {
+    const form = values({
+      attendees: [{ ...emptyAttendee('Mateo'), kind: 'child', age: null }],
+    });
+    expect(schemaAdults.safeParse(form).success).toBe(true);
+    expect(toRsvpInput(form, adultsOnly).attendees[0]).toMatchObject({ kind: 'adult', age: null });
   });
 });

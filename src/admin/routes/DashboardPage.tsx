@@ -1,5 +1,10 @@
 import { Link } from 'react-router';
-import { adminErrorMessage, useDashboard, useInvitations } from '@/admin/data/queries';
+import {
+  adminErrorMessage,
+  useDashboard,
+  useInvitations,
+  useRsvpRules,
+} from '@/admin/data/queries';
 import { Btn } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import { SIDE_LABELS, type Side } from '@/shared/schemas/invitationAdmin';
@@ -51,6 +56,7 @@ function Bar({ value, total }: { value: number; total: number }) {
 export function DashboardPage() {
   const dashboard = useDashboard();
   const invitations = useInvitations();
+  const rules = useRsvpRules();
   const toast = useToast();
 
   if (dashboard.isPending) return <p className={ui.empty}>Cargando…</p>;
@@ -67,6 +73,7 @@ export function DashboardPage() {
 
   const d = dashboard.data;
   const pending = (invitations.data ?? []).filter((i) => i.attending === null);
+  const hasMenu = (rules.data?.menuOptions.length ?? 0) > 0;
 
   return (
     <div className={styles.page}>
@@ -81,7 +88,9 @@ export function DashboardPage() {
         <Stat
           label="Personas confirmadas"
           value={d.people.confirmed}
-          detail={`de ${d.invitations.seats} pases · ${d.people.adults} adultos · ${d.people.children} niños`}
+          detail={`de ${d.invitations.seats} pases${
+            d.people.children ? ` · ${d.people.adults} adultos · ${d.people.children} niños` : ''
+          }`}
         />
         <Stat
           label="Respondieron"
@@ -159,8 +168,10 @@ export function DashboardPage() {
         </section>
 
         <section className={ui.card}>
-          <h2 className={ui.cardTitle}>Menús</h2>
-          {d.menu.length === 0 ? (
+          <h2 className={ui.cardTitle}>{hasMenu ? 'Menús' : 'Alergias y restricciones'}</h2>
+          {!hasMenu ? (
+            d.dietary.length === 0 && <p className={ui.muted}>Nadie indicó alergias todavía.</p>
+          ) : d.menu.length === 0 ? (
             <p className={ui.muted}>Aún no hay confirmaciones.</p>
           ) : (
             <ul className={styles.list}>
@@ -174,7 +185,7 @@ export function DashboardPage() {
           )}
           {d.dietary.length > 0 && (
             <>
-              <h3 className={styles.subtitle}>Alergias y restricciones</h3>
+              {hasMenu && <h3 className={styles.subtitle}>Alergias y restricciones</h3>}
               <ul className={styles.notes}>
                 {d.dietary.map((row, i) => (
                   <li key={i}>

@@ -129,12 +129,11 @@ test('creates an invitation, records the RSVP for the guest and resets it', asyn
   await panel.getByLabel('Nombre completo').fill('Pedro E2E');
   // The admin sees the whole DNI and may leave it empty (answers taken by phone).
   await panel.getByLabel(/^DNI/).fill('01234567');
-  await panel.getByLabel('Menú').selectOption('Carne');
+  // No menu and no children at this wedding: not asked.
+  await expect(panel.getByLabel('Menú')).toHaveCount(0);
+  await expect(panel.getByLabel('Tipo')).toHaveCount(0);
   await panel.getByRole('button', { name: /Agregar persona/ }).click();
   await panel.getByLabel('Nombre completo').nth(1).fill('Lucía E2E');
-  await panel.getByLabel('Tipo').nth(1).selectOption('child');
-  await panel.getByLabel('Edad').selectOption('5');
-  await panel.getByLabel('Menú').nth(1).selectOption('Infantil');
   await panel.getByRole('button', { name: 'Guardar respuesta' }).click();
   await expect(page.getByRole('status')).toHaveText('Respuesta guardada');
 

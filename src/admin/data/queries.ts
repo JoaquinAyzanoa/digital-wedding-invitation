@@ -108,6 +108,7 @@ export function useRsvpRules() {
           song: Boolean(rsvp?.questions?.song),
           parts: Boolean(rsvp?.questions?.parts),
           dni: rsvp?.questions?.dni ?? true,
+          children: Boolean(rsvp?.questions?.children),
         },
         ceremonyTitle: content.events?.find((e) => e.kind === 'ceremony')?.title ?? 'Ceremonia',
         receptionTitle: content.events?.find((e) => e.kind === 'reception')?.title ?? 'Recepción',

@@ -17,7 +17,7 @@ set public_data = '{
     "deadline": "2999-01-01",
     "closed": false,
     "menuOptions": [],
-    "questions": { "transport": false, "lodging": false, "song": false, "parts": false }
+    "questions": { "transport": false, "lodging": false, "song": false, "parts": false, "children": true }
   }
 }'
 where id = 1;

@@ -6,11 +6,26 @@ import { demoContent, demoInvitation } from '@/demo/content';
 import { RsvpContext } from '@/invitation/rsvpContext';
 import { RsvpSection } from '@/invitation/sections/RsvpSection';
 import { ApiError, type PublicApi } from '@/shared/api';
+import type { PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 
 const entry = { id: 'rsvp' as const, visible: true };
 
-function setup(invitation: InvitationView, submitRsvp?: PublicApi['submitRsvp']) {
+// The wedding itself has no menu and no children; the form still supports both.
+const fullContent: PublicContent = {
+  ...demoContent,
+  rsvp: {
+    ...demoContent.rsvp,
+    menuOptions: ['Carne', 'Pescado', 'Vegetariano', 'Infantil'],
+    questions: { ...demoContent.rsvp.questions, children: true },
+  },
+};
+
+function setup(
+  invitation: InvitationView,
+  submitRsvp?: PublicApi['submitRsvp'],
+  content: PublicContent = fullContent,
+) {
   let current = invitation;
   const api: PublicApi = {
     getContent: vi.fn(),
@@ -37,7 +52,7 @@ function setup(invitation: InvitationView, submitRsvp?: PublicApi['submitRsvp'])
   function Harness() {
     return (
       <RsvpContext value={{ api, onInvitationChange: (v) => (current = v) }}>
-        <RsvpSection content={demoContent} invitation={current} entry={entry} />
+        <RsvpSection content={content} invitation={current} entry={entry} />
       </RsvpContext>
     );
   }
@@ -160,6 +175,31 @@ describe('RSVP form', () => {
     refresh();
     expect(await screen.findByText('¡Gracias por confirmar!')).toBeInTheDocument();
     expect(screen.getByText('Ana Torres · Pescado')).toBeInTheDocument();
+  });
+
+  it('without menu or children it asks only name and DNI per person', async () => {
+    const { api, user } = setup(demoInvitation, undefined, demoContent);
+    await openForm(user);
+    await user.click(screen.getByLabelText('Sí, asistiremos'));
+    await next(user);
+    await user.type(await screen.findByLabelText('Nombre completo'), 'Ana Torres');
+    expect(screen.queryByText('¿Adulto o niño?')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Menú')).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('DNI'), '07654321');
+    await user.type(screen.getByLabelText(/canción/), 'Vivir mi vida');
+    await next(user);
+    await user.click(await screen.findByRole('button', { name: 'Enviar respuesta' }));
+    await waitFor(() => expect(api.submitRsvp).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(api.submitRsvp).mock.calls[0]![1].attendees).toEqual([
+      {
+        fullName: 'Ana Torres',
+        kind: 'adult',
+        age: null,
+        menu: null,
+        dietary: null,
+        dni: '07654321',
+      },
+    ]);
   });
 
   it('declining takes two steps', async () => {
