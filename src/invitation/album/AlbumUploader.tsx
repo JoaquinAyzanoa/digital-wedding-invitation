@@ -9,7 +9,7 @@ function statusText(item: UploadItem) {
     case 'waiting':
       return 'En espera';
     case 'uploading':
-      return `Subiendo ${Math.round(item.progress * 100)} %`;
+      return 'Subiendo…';
     case 'done':
       return 'Subida ✓';
     case 'error':
@@ -86,7 +86,9 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
                 <progress
                   className={styles.bar}
                   max={1}
-                  value={item.status === 'done' ? 1 : item.progress}
+                  // No value while going up: an indeterminate bar (the upload cannot report
+                  // its progress, see driveUpload).
+                  value={item.status === 'done' ? 1 : item.status === 'uploading' ? undefined : 0}
                   aria-label={`${item.name}: ${statusText(item)}`}
                 />
                 {item.status === 'error' && item.retryable && (

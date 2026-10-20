@@ -28,14 +28,15 @@ function readBase64(file: File): Promise<string> {
 
 /**
  * Sends the original photo (not recompressed) to the Apps Script web app, which saves it in
- * the couple's Google Drive. Plain text body: a "simple" request without CORS preflight, which
- * Apps Script cannot answer; its JSON reply comes back after a redirect. XHR rather than
- * fetch: it reports upload progress.
+ * the couple's Google Drive. It must stay a CORS "simple" request: Apps Script never answers
+ * a preflight, so the browser would cancel anything that needs one. That is why the body is
+ * plain text, there are no custom headers and no upload-progress listener (watching an XHR
+ * upload's progress alone forces a preflight). The JSON reply comes back after a redirect.
  */
 export async function uploadToDrive(
   uploadUrl: string,
   file: File,
-  { onProgress, signal }: UploadOptions = {},
+  { signal }: UploadOptions = {},
 ): Promise<void> {
   const body = JSON.stringify({
     name: file.name,
@@ -44,29 +45,28 @@ export async function uploadToDrive(
   });
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', uploadUrl);
-    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
-    };
-    xhr.onload = () => {
-      let reply: { ok?: boolean; error?: string } = {};
-      try {
-        reply = JSON.parse(xhr.responseText);
-      } catch {
-        // not JSON (an error page): unknown
-      }
-      if (xhr.status === 200 && reply.ok) return resolve();
-      const code = (API_ERROR_CODES as readonly string[]).includes(reply.error ?? '')
-        ? (reply.error as ApiErrorCode)
-        : 'unknown';
-      reject(new ApiError(code, xhr.responseText.slice(0, 200)));
-    };
-    xhr.onerror = () => reject(new ApiError('network'));
-    xhr.onabort = () => reject(new DOMException('Aborted', 'AbortError'));
-    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
-    xhr.send(body);
-  });
+  let response: Response;
+  try {
+    response = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body,
+      signal,
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new ApiError('network');
+  }
+  const text = await response.text();
+  let reply: { ok?: boolean; error?: string } = {};
+  try {
+    reply = JSON.parse(text);
+  } catch {
+    // not JSON (an error page): unknown
+  }
+  if (response.ok && reply.ok) return;
+  const code = (API_ERROR_CODES as readonly string[]).includes(reply.error ?? '')
+    ? (reply.error as ApiErrorCode)
+    : 'unknown';
+  throw new ApiError(code, text.slice(0, 200));
 }
