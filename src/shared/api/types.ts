@@ -31,9 +31,27 @@ export interface GetInvitationOptions {
   track?: boolean;
 }
 
+/** A photo ready to upload: compressed in the browser, with its thumbnail. */
+export interface AlbumPhotoUpload {
+  photo: Blob;
+  thumb: Blob;
+  /** File extension for both files: `webp`, `jpg` or `png`. */
+  ext: string;
+  width: number | null;
+  height: number | null;
+}
+
+export interface UploadOptions {
+  /** 0–1, as the bytes go out. */
+  onProgress?: (fraction: number) => void;
+  signal?: AbortSignal;
+}
+
 /** Everything the public invitation needs from the backend. */
 export interface PublicApi {
   getContent(): Promise<PublicContent>;
   getInvitation(code: string, options?: GetInvitationOptions): Promise<InvitationView | null>;
   submitRsvp(code: string, rsvp: RsvpInput): Promise<InvitationView>;
+  /** Uploads a photo (and its thumbnail) to the album and registers it. */
+  uploadAlbumPhoto(code: string, upload: AlbumPhotoUpload, options?: UploadOptions): Promise<void>;
 }

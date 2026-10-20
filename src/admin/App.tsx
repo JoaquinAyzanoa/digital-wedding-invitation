@@ -3,6 +3,7 @@ import { ToastProvider } from '@/shared/toast/ToastProvider';
 import { LoginPage } from './auth/LoginPage';
 import { useSession } from './auth/useSession';
 import { AdminLayout } from './layout/AdminLayout';
+import { AlbumPage } from './routes/AlbumPage';
 import { ContentPage } from './routes/ContentPage';
 import { DashboardPage } from './routes/DashboardPage';
 import { InvitationsPage } from './routes/InvitationsPage';
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="invitations" element={<InvitationsPage />} />
             <Route path="content" element={<ContentPage />} />
             <Route path="theme" element={<ThemePage />} />
+            <Route path="album" element={<AlbumPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

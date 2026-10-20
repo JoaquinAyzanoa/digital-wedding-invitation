@@ -1,11 +1,11 @@
--- Album uploads: storage policy, can_upload_album and register_album_photo.
+-- Album uploads: storage policy, can_upload_album, register_album_photo and the admin stats.
 begin;
 -- `supabase test db --linked` connects as a NOINHERIT login role: act as postgres explicitly
 -- (a no-op locally). Tests switch to anon/authenticated and back with `set local role`.
 set local role postgres;
 set local search_path to "$user", public, extensions;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(21);
 
 delete from public.invitations;
 update public.site_content
@@ -21,6 +21,10 @@ select ok(not private.can_upload_album('tst234/../11111111-1111-4111-8111-111111
   'path traversal is rejected');
 select ok(not private.can_upload_album('tst234/sub/11111111-1111-4111-8111-111111111111.webp'),
   'nested folders are rejected');
+select ok(private.can_upload_album('tst234/11111111-1111-4111-8111-111111111111.thumb.webp'),
+  'the thumbnail next to a photo can be uploaded');
+select ok(not private.can_upload_album('tst234/11111111-1111-4111-8111-111111111111.big.webp'),
+  'other suffixes are rejected');
 
 -- storage policies, as anon
 set local role anon;
@@ -49,6 +53,30 @@ set local role postgres;
 
 select results_eq($$select width, height, bytes from public.album_photos$$,
   $$values (800, 600, 51200)$$, 'photo metadata is stored');
+
+-- a thumbnail is not a photo of its own
+set local role anon;
+select lives_ok($$insert into storage.objects (bucket_id, name, metadata)
+  values ('album', 'tst234/11111111-1111-4111-8111-111111111111.thumb.webp', '{"size": 2048}')$$,
+  'anon can upload the thumbnail');
+select throws_ok($$select public.register_album_photo('tst234',
+  'tst234/11111111-1111-4111-8111-111111111111.thumb.webp')$$,
+  'P0001', 'invalid_payload', 'a thumbnail cannot be registered as a photo');
+set local role postgres;
+
+-- admin stats: counts and space used
+select function_privs_are('public', 'admin_album_stats', array[]::name[], 'anon',
+  array[]::text[], 'anon cannot read the album stats');
+set local role authenticated;
+select set_config('request.jwt.claims', '{"role": "authenticated", "app_metadata": {}}', true);
+select throws_ok('select public.admin_album_stats()', 'P0001', 'forbidden',
+  'a non-admin cannot read the album stats');
+select set_config('request.jwt.claims',
+  '{"role": "authenticated", "app_metadata": {"role": "admin"}}', true);
+select is(public.admin_album_stats() - 'siteBytes',
+  '{"photos": 1, "hidden": 0, "guests": 1, "albumBytes": 2048}'::jsonb,
+  'album stats count photos and the bytes stored');
+set local role postgres;
 
 -- closed album
 update public.site_content

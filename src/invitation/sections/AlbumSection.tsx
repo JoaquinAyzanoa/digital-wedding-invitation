@@ -1,13 +1,13 @@
+import { AlbumUploader } from '@/invitation/album/AlbumUploader';
 import { Reveal } from '@/invitation/components/Reveal';
-import { useToast } from '@/shared/toast/toastContext';
+import { useRsvpContext } from '@/invitation/rsvpContext';
 import { Icon } from '@/shared/icons/Icon';
-import { Button } from '@/shared/ui/Button';
 import { Section, SectionTitle } from './Section';
 import text from './text.module.css';
 import { sectionTitle, type SectionProps } from './types';
 
 export function AlbumSection({ content, invitation, entry }: SectionProps) {
-  const toast = useToast();
+  const { api } = useRsvpContext();
   if (!content.album.enabled) return null;
 
   return (
@@ -26,10 +26,7 @@ export function AlbumSection({ content, invitation, entry }: SectionProps) {
       {/* Uploading needs the guest's code and an open album (dates in the content). */}
       {invitation?.albumOpen && (
         <Reveal>
-          {/* Phase 9: compression and upload to the `album` bucket. */}
-          <Button onClick={() => toast('Muy pronto podrás subir tus fotos')}>
-            Clic para subir fotos
-          </Button>
+          <AlbumUploader api={api} code={invitation.code} />
         </Reveal>
       )}
     </Section>

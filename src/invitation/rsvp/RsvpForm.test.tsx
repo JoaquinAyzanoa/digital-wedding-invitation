@@ -15,6 +15,7 @@ function setup(invitation: InvitationView, submitRsvp?: PublicApi['submitRsvp'])
   const api: PublicApi = {
     getContent: vi.fn(),
     getInvitation: vi.fn(),
+    uploadAlbumPhoto: vi.fn(),
     submitRsvp: vi.fn(
       submitRsvp ??
         (async (_code, rsvp) => ({

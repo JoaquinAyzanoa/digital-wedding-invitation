@@ -2,7 +2,13 @@ import { createDemoApi, DEMO_CODE } from './demoApi';
 import { createSupabaseApi } from './supabaseApi';
 import type { PublicApi } from './types';
 
-export { ApiError, type ApiErrorCode, type PublicApi } from './types';
+export {
+  ApiError,
+  type AlbumPhotoUpload,
+  type ApiErrorCode,
+  type PublicApi,
+  type UploadOptions,
+} from './types';
 export { DEMO_CODE } from './demoApi';
 
 export const hasBackend = Boolean(import.meta.env.VITE_SUPABASE_URL);

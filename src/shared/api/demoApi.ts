@@ -53,5 +53,16 @@ export function createDemoApi(): PublicApi {
       };
       return invitation;
     },
+
+    /** Nothing is stored: the progress runs as if the photo went out. */
+    async uploadAlbumPhoto(code, _upload, { onProgress, signal } = {}) {
+      if (code.trim().toLowerCase() !== DEMO_CODE) throw new ApiError('invitation_not_found');
+      if (!invitation.albumOpen) throw new ApiError('album_closed');
+      for (let step = 1; step <= 5; step++) {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        onProgress?.(step / 5);
+      }
+    },
   };
 }

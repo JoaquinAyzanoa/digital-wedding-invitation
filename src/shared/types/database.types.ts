@@ -199,6 +199,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_album_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_dashboard: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_reset_rsvp: { Args: { p_invitation_id: string }; Returns: undefined };
       admin_rotate_sheet_secret: { Args: Record<PropertyKey, never>; Returns: string };

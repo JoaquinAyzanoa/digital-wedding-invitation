@@ -94,8 +94,10 @@
 
   .link {
     flex: 1;
-    padding: 8px 4px;
-    font-size: 14px;
+    min-width: 0;
+    padding: 8px 0;
+    font-size: 12px;
     text-align: center;
+    white-space: nowrap;
   }
 }

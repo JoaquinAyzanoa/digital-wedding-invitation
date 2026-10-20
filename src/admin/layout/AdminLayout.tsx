@@ -10,6 +10,7 @@ const NAV = [
   { to: '/invitations', label: 'Invitados', end: false },
   { to: '/content', label: 'Contenido', end: false },
   { to: '/theme', label: 'Diseño', end: false },
+  { to: '/album', label: 'Álbum', end: false },
   { to: '/settings', label: 'Ajustes', end: false },
 ];
 

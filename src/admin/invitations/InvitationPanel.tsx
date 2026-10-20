@@ -244,7 +244,7 @@ export function InvitationPanel({ invitation: initial, onClose }: InvitationPane
       {confirmDelete && invitation && (
         <ConfirmDialog
           title={`¿Eliminar "${invitation.display_name}"?`}
-          message="Se borran también su respuesta y asistentes. El enlace dejará de funcionar."
+          message="Se borran también su respuesta, asistentes y fotos del álbum. El enlace dejará de funcionar."
           confirmLabel="Eliminar"
           danger
           busy={remove.isPending}

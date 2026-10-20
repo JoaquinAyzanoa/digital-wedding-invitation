@@ -30,6 +30,29 @@ test.describe('invitation (demo)', () => {
     }
   });
 
+  test('uploads photos to the album (demo)', async ({ page }) => {
+    await page.goto('/?i=demo');
+    await openEnvelope(page);
+    const button = page.getByRole('button', { name: 'Clic para subir fotos' });
+    await button.scrollIntoViewIfNeeded();
+    // A tiny real PNG: it goes through the same compression as a phone photo.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4AWM8AQQMQMDEAAUAMKYDJOk+9mYAAAAASUVORK5CYII=',
+      'base64',
+    );
+    await page.locator('input[type="file"]').setInputFiles([
+      { name: 'uno.png', mimeType: 'image/png', buffer: png },
+      { name: 'dos.png', mimeType: 'image/png', buffer: png },
+      { name: 'nota.txt', mimeType: 'image/png', buffer: Buffer.from('no es una foto') },
+    ]);
+    await expect(page.getByText('2 de 3 fotos subidas. 1 con problemas.')).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(
+      page.getByText('No pudimos leer esta foto (¿formato no compatible?).'),
+    ).toBeVisible();
+  });
+
   test('copies a payment method', async ({ page }) => {
     await page.goto('/?i=demo');
     await openEnvelope(page);

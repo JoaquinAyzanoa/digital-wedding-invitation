@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { albumFilesOf, removeAlbumFiles } from '@/admin/data/album';
 import { supabase } from '@/admin/supabase';
 import type { PublicContent } from '@/shared/schemas/content';
 import type { InvitationView, RsvpInput } from '@/shared/schemas/invitation';
@@ -176,12 +177,22 @@ export function useMarkSent() {
   });
 }
 
+/** Deletes invitations with their answers, attendees and album photos (files included). */
 export function useDeleteInvitations() {
   const invalidate = useInvalidate();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (ids: string[]) =>
-      check(await supabase.from('invitations').delete().in('id', ids)),
-    onSuccess: invalidate,
+    mutationFn: async (ids: string[]) => {
+      const rows = check(await supabase.from('invitations').select('code').in('id', ids)) ?? [];
+      const files = await albumFilesOf(rows.map((r) => r.code));
+      check(await supabase.from('invitations').delete().in('id', ids));
+      // After the rows: if this fails, the invitations are gone and only some files remain.
+      await removeAlbumFiles(files);
+    },
+    onSuccess: async () => {
+      await invalidate();
+      await queryClient.invalidateQueries({ queryKey: ['album'] });
+    },
   });
 }
 
