@@ -46,6 +46,13 @@ const PATHS = {
   external: (
     <path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />
   ),
+  whatsapp: (
+    <>
+      <path d="M4.5 19.5 5.6 16A8 8 0 1 1 8.4 18.6z" />
+      <path d="M9.2 8.6c.3-.6.9-.6 1.2 0l.5 1.2c.1.3 0 .6-.2.8l-.4.4c.4 1 1.3 1.9 2.4 2.4l.4-.4c.2-.2.5-.3.8-.2l1.2.5c.6.3.6.9 0 1.2-.8.6-1.9.6-3.2-.1-1.2-.7-2.3-1.8-3-3-.6-1.1-.4-2.2.3-2.8z" />
+    </>
+  ),
+  download: <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14" />,
 } satisfies Record<string, ReactNode>;
 
 export type UiIconName = keyof typeof PATHS;

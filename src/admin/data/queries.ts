@@ -160,6 +160,21 @@ export function useImportInvitations() {
   });
 }
 
+/** sent_at: when the invitation went out by WhatsApp (null = not sent yet). */
+export function useMarkSent() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async ({ id, sent }: { id: string; sent: boolean }) =>
+      check(
+        await supabase
+          .from('invitations')
+          .update({ sent_at: sent ? new Date().toISOString() : null })
+          .eq('id', id),
+      ),
+    onSuccess: invalidate,
+  });
+}
+
 export function useDeleteInvitations() {
   const invalidate = useInvalidate();
   return useMutation({

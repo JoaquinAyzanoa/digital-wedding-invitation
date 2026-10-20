@@ -15,16 +15,26 @@ import {
 import { ImportDialog } from '@/admin/invitations/ImportDialog';
 import { InvitationPanel } from '@/admin/invitations/InvitationPanel';
 import { InvitationRow } from '@/admin/invitations/InvitationRow';
+import { PdfZipDialog } from '@/admin/invitations/PdfZipDialog';
+import { WhatsappDialog } from '@/admin/invitations/WhatsappDialog';
+import { whatsappModeFor } from '@/admin/invitations/whatsappMode';
 import { Btn } from '@/admin/ui/Btn';
 import { ConfirmDialog } from '@/admin/ui/ConfirmDialog';
 import ui from '@/admin/ui/ui.module.css';
-import { SIDE_LABELS, SIDES } from '@/shared/schemas/invitationAdmin';
+import { SIDE_LABELS, SIDES, type InvitationWithAttendees } from '@/shared/schemas/invitationAdmin';
 import { useToast } from '@/shared/toast/toastContext';
 import { attendeesCsv, downloadText, invitationsCsv } from '@/shared/utils/csv';
 import { invitationLink } from '@/shared/utils/links';
 import styles from './InvitationsPage.module.css';
 
-type Panel = { kind: 'new' } | { kind: 'edit'; id: string } | { kind: 'import' } | null;
+type Panel =
+  | { kind: 'new' }
+  | { kind: 'edit'; id: string }
+  | { kind: 'import' }
+  | { kind: 'whatsapp'; id: string }
+  // A frozen copy of the rows: the ZIP must not restart if the list changes meanwhile.
+  | { kind: 'zip'; rows: InvitationWithAttendees[] }
+  | null;
 
 export function InvitationsPage() {
   const invitations = useInvitations();
@@ -280,6 +290,7 @@ export function InvitationsPage() {
               selected={selected.has(invitation.id)}
               onToggle={() => toggle(invitation.id)}
               onOpen={() => setPanel({ kind: 'edit', id: invitation.id })}
+              onWhatsapp={() => setPanel({ kind: 'whatsapp', id: invitation.id })}
             />
           ))}
         </ul>
@@ -290,6 +301,13 @@ export function InvitationsPage() {
           <span>{selectedRows.length} seleccionadas</span>
           <Btn size="sm" variant="secondary" onClick={() => setSelected(new Set())}>
             Deseleccionar
+          </Btn>
+          <Btn
+            size="sm"
+            variant="secondary"
+            onClick={() => setPanel({ kind: 'zip', rows: selectedRows })}
+          >
+            PDFs (ZIP)
           </Btn>
           <Btn size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
             Eliminar
@@ -305,6 +323,12 @@ export function InvitationsPage() {
         />
       )}
       {panel?.kind === 'import' && <ImportDialog existing={all} onClose={() => setPanel(null)} />}
+      {panel?.kind === 'whatsapp' && (
+        <WhatsappFor rows={all} id={panel.id} onClose={() => setPanel(null)} />
+      )}
+      {panel?.kind === 'zip' && (
+        <PdfZipDialog invitations={panel.rows} onClose={() => setPanel(null)} />
+      )}
 
       {confirmDelete && (
         <ConfirmDialog
@@ -319,4 +343,19 @@ export function InvitationsPage() {
       )}
     </div>
   );
+}
+
+/** The mode is fixed when the dialog opens: marking it sent must not flip it to a reminder. */
+function WhatsappFor({
+  rows,
+  id,
+  onClose,
+}: {
+  rows: InvitationWithAttendees[];
+  id: string;
+  onClose: () => void;
+}) {
+  const row = rows.find((i) => i.id === id);
+  const [mode] = useState(() => (row ? whatsappModeFor(row) : 'invite'));
+  return row ? <WhatsappDialog mode={mode} invitation={row} onClose={onClose} /> : null;
 }

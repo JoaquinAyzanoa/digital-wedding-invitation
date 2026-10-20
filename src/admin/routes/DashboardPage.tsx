@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { adminErrorMessage, useDashboard, useInvitations } from '@/admin/data/queries';
+import { WhatsappDialog } from '@/admin/invitations/WhatsappDialog';
 import { Btn } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import { SIDE_LABELS, type Side } from '@/shared/schemas/invitationAdmin';
@@ -52,6 +54,7 @@ export function DashboardPage() {
   const dashboard = useDashboard();
   const invitations = useInvitations();
   const toast = useToast();
+  const [reminderFor, setReminderFor] = useState<string | null>(null);
 
   if (dashboard.isPending) return <p className={ui.empty}>Cargando…</p>;
   if (dashboard.isError) {
@@ -67,6 +70,7 @@ export function DashboardPage() {
 
   const d = dashboard.data;
   const pending = (invitations.data ?? []).filter((i) => i.attending === null);
+  const reminderRow = pending.find((i) => i.id === reminderFor);
 
   return (
     <div className={styles.page}>
@@ -228,19 +232,30 @@ export function DashboardPage() {
                         : 'sin enviar'}
                   </span>
                 </span>
-                <Btn
-                  size="sm"
-                  variant="secondary"
-                  onClick={async () =>
-                    toast(
-                      (await copyText(invitationLink(i.code)))
-                        ? 'Enlace copiado'
-                        : 'No se pudo copiar',
-                    )
-                  }
-                >
-                  Copiar enlace
-                </Btn>
+                <span className={styles.pendingActions}>
+                  {i.sent_at && (
+                    <Btn
+                      size="sm"
+                      aria-label={`Recordatorio para ${i.display_name}`}
+                      onClick={() => setReminderFor(i.id)}
+                    >
+                      Recordatorio
+                    </Btn>
+                  )}
+                  <Btn
+                    size="sm"
+                    variant="secondary"
+                    onClick={async () =>
+                      toast(
+                        (await copyText(invitationLink(i.code)))
+                          ? 'Enlace copiado'
+                          : 'No se pudo copiar',
+                      )
+                    }
+                  >
+                    Copiar enlace
+                  </Btn>
+                </span>
               </li>
             ))}
           </ul>
@@ -286,6 +301,14 @@ export function DashboardPage() {
           )}
         </section>
       </div>
+
+      {reminderRow && (
+        <WhatsappDialog
+          mode="reminder"
+          invitation={reminderRow}
+          onClose={() => setReminderFor(null)}
+        />
+      )}
     </div>
   );
 }

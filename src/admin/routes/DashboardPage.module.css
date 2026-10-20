@@ -174,3 +174,9 @@
 .messages span {
   font-size: 13px;
 }
+
+.pendingActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}

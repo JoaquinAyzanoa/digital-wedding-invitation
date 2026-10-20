@@ -10,6 +10,7 @@ import { useToast } from '@/shared/toast/toastContext';
 import { copyText } from '@/shared/utils/clipboard';
 import { adminPreviewLink, invitationLink } from '@/shared/utils/links';
 import styles from './InvitationRow.module.css';
+import { whatsappModeFor } from './whatsappMode';
 
 const STATUS_LABEL = { pending: 'Pendiente', attending: 'Asiste', declined: 'No asiste' };
 
@@ -18,9 +19,17 @@ interface InvitationRowProps {
   selected: boolean;
   onToggle: () => void;
   onOpen: () => void;
+  onWhatsapp: () => void;
 }
 
-export function InvitationRow({ invitation: i, selected, onToggle, onOpen }: InvitationRowProps) {
+export function InvitationRow({
+  invitation: i,
+  selected,
+  onToggle,
+  onOpen,
+  onWhatsapp,
+}: InvitationRowProps) {
+  const reminder = whatsappModeFor(i) === 'reminder';
   const toast = useToast();
   const status = responseStatus(i);
   const people = status === 'attending' ? i.attendees.length : 0;
@@ -64,6 +73,15 @@ export function InvitationRow({ invitation: i, selected, onToggle, onOpen }: Inv
         </span>
       </button>
       <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.icon}
+          aria-label={`${reminder ? 'Recordatorio' : 'Enviar'} por WhatsApp a ${i.display_name}`}
+          title={reminder ? 'Recordatorio por WhatsApp' : 'Enviar por WhatsApp'}
+          onClick={onWhatsapp}
+        >
+          <UiIcon name="whatsapp" size={20} />
+        </button>
         <button
           type="button"
           className={styles.icon}

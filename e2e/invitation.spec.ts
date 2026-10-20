@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 
 async function openEnvelope(page: Page) {
@@ -28,6 +29,19 @@ test.describe('invitation (demo)', () => {
       await element.scrollIntoViewIfNeeded();
       await expect(element).toBeVisible();
     }
+  });
+
+  test('downloads the guest PDF', async ({ page }) => {
+    await page.goto('/?i=demo');
+    await openEnvelope(page);
+    const button = page.getByRole('button', { name: 'Descargar mi invitación (PDF)' }).last();
+    await button.scrollIntoViewIfNeeded();
+    const downloading = page.waitForEvent('download');
+    await button.click();
+    const download = await downloading;
+    expect(download.suggestedFilename()).toBe('Invitacion-Valeria-y-Mateo-Familia-Demo.pdf');
+    const bytes = await readFile((await download.path())!);
+    expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   test('copies a payment method', async ({ page }) => {

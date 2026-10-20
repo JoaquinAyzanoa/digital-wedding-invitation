@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { downloadBlob } from './download';
 import {
   invitationInputSchema,
   SIDE_LABELS,
@@ -221,12 +222,5 @@ export function attendeesCsv(invitations: InvitationWithAttendees[]): string {
 }
 
 export function downloadText(content: string, filename: string, type = 'text/csv;charset=utf-8') {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadBlob(new Blob([content], { type }), filename);
 }

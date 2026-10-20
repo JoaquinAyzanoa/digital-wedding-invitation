@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { AddToCalendar } from '@/invitation/components/AddToCalendar/AddToCalendar';
+import { DownloadPdfButton } from '@/invitation/components/DownloadPdfButton';
 import {
   calendarUid,
   weddingCalendarEntry,
@@ -74,6 +75,8 @@ export function RsvpSummary({ content, invitation, onChange, focusOnMount }: Rsv
           filename="boda.ics"
         />
       )}
+
+      <DownloadPdfButton content={content} invitation={invitation} />
 
       {invitation.rsvpOpen ? (
         <>
