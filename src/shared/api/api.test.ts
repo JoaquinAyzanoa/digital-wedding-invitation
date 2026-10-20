@@ -37,7 +37,7 @@ describe('demo api', () => {
       songRequest: 'Una canción',
     });
     expect(view.response?.attendees).toEqual([
-      { fullName: 'Ana', kind: 'adult', age: null, menu: 'Carne', dietary: null },
+      { fullName: 'Ana', kind: 'adult', age: null, menu: 'Carne', dietary: null, dniHint: null },
     ]);
     expect((await api.getInvitation('demo'))?.response?.songRequest).toBe('Una canción');
   });
