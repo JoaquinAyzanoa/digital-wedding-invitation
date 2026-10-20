@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { UiIcon } from '@/shared/icons/UiIcon';
-import { useAudio } from './audioContext';
+import { useAudioActions, useAudioState, useAudioTime } from './audioContext';
 import styles from './AudioPlayer.module.css';
 
 function formatSeconds(seconds: number) {
@@ -10,10 +10,12 @@ function formatSeconds(seconds: number) {
 
 /** "Dale play a nuestra canción": progress line and controls like a music app. */
 export function AudioPlayer({ label }: { label: string }) {
-  const audio = useAudio();
-  if (!audio.available) return null;
+  const { available, playing, loop } = useAudioState();
+  const { currentTime, duration } = useAudioTime();
+  const actions = useAudioActions();
+  if (!available) return null;
 
-  const progress = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  const progress = duration ? (currentTime / duration) * 100 : 0;
 
   return (
     <div className={styles.player}>
@@ -23,14 +25,14 @@ export function AudioPlayer({ label }: { label: string }) {
         type="range"
         className={styles.progress}
         min={0}
-        max={audio.duration || 1}
+        max={duration || 1}
         step={0.1}
-        value={audio.currentTime}
-        onChange={(e) => audio.seek(Number(e.target.value))}
+        value={currentTime}
+        onChange={(e) => actions.seek(Number(e.target.value))}
         style={{ '--progress': `${progress}%` } as CSSProperties}
         aria-label="Progreso de la canción"
-        aria-valuetext={`${formatSeconds(audio.currentTime)} de ${formatSeconds(audio.duration)}`}
-        disabled={!audio.duration}
+        aria-valuetext={`${formatSeconds(currentTime)} de ${formatSeconds(duration)}`}
+        disabled={!duration}
       />
 
       <div className={styles.controls}>
@@ -41,7 +43,7 @@ export function AudioPlayer({ label }: { label: string }) {
         <button
           type="button"
           className={styles.icon}
-          onClick={audio.restart}
+          onClick={actions.restart}
           aria-label="Volver al inicio"
         >
           <UiIcon name="prev" size={24} />
@@ -49,10 +51,10 @@ export function AudioPlayer({ label }: { label: string }) {
         <button
           type="button"
           className={styles.play}
-          onClick={audio.toggle}
-          aria-label={audio.playing ? 'Pausar la canción' : 'Reproducir la canción'}
+          onClick={actions.toggle}
+          aria-label={playing ? 'Pausar la canción' : 'Reproducir la canción'}
         >
-          <UiIcon name={audio.playing ? 'pause' : 'play'} size={30} />
+          <UiIcon name={playing ? 'pause' : 'play'} size={30} />
         </button>
         <span className={styles.secondary} aria-hidden="true">
           <UiIcon name="next" size={24} />
@@ -60,10 +62,10 @@ export function AudioPlayer({ label }: { label: string }) {
         <button
           type="button"
           className={styles.icon}
-          onClick={() => audio.setLoop(!audio.loop)}
-          aria-pressed={audio.loop}
+          onClick={() => actions.setLoop(!loop)}
+          aria-pressed={loop}
           aria-label="Repetir la canción"
-          data-active={audio.loop}
+          data-active={loop}
         >
           <UiIcon name="repeat" size={22} />
         </button>

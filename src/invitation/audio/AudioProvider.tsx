@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AudioContext, type AudioControls } from './audioContext';
+import {
+  AudioActionsContext,
+  AudioStateContext,
+  AudioTimeContext,
+  type AudioActions,
+} from './audioContext';
 
 /** Owns the single <audio> element shared by the player and the floating mute button. */
 export function AudioProvider({ src, children }: { src: string | null; children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [loop, setLoopState] = useState(true);
+  const [loop, setLoop] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -19,22 +24,26 @@ export function AudioProvider({ src, children }: { src: string | null; children:
     audio.loop = true;
     audioRef.current = audio;
 
-    const sync = () => {
-      setPlaying(!audio.paused);
+    const syncState = () => setPlaying(!audio.paused);
+    const syncTime = () => {
       setCurrentTime(audio.currentTime);
       setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
     };
-    const events = ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended'];
-    events.forEach((event) => audio.addEventListener(event, sync));
+    const stateEvents = ['play', 'pause', 'ended'];
+    const timeEvents = ['timeupdate', 'loadedmetadata', 'durationchange'];
+    stateEvents.forEach((event) => audio.addEventListener(event, syncState));
+    timeEvents.forEach((event) => audio.addEventListener(event, syncTime));
     return () => {
-      events.forEach((event) => audio.removeEventListener(event, sync));
+      stateEvents.forEach((event) => audio.removeEventListener(event, syncState));
+      timeEvents.forEach((event) => audio.removeEventListener(event, syncTime));
       audio.pause();
       audio.removeAttribute('src');
       audioRef.current = null;
     };
   }, [src]);
 
-  const controls = useMemo<AudioControls>(() => {
+  // Built once: everything goes through the ref, so consumers never re-render for these.
+  const actions = useMemo<AudioActions>(() => {
     const audio = () => audioRef.current;
     const play = () => {
       // In-app browsers may still refuse: stay paused, never break the page.
@@ -43,12 +52,6 @@ export function AudioProvider({ src, children }: { src: string | null; children:
         .catch(() => setPlaying(false));
     };
     return {
-      available: Boolean(src),
-      playing,
-      muted,
-      loop,
-      currentTime,
-      duration,
       play,
       pause: () => audio()?.pause(),
       toggle: () => (audio()?.paused ? play() : audio()?.pause()),
@@ -65,7 +68,7 @@ export function AudioProvider({ src, children }: { src: string | null; children:
       setLoop: (value) => {
         const a = audio();
         if (a) a.loop = value;
-        setLoopState(value);
+        setLoop(value);
       },
       toggleMute: () => {
         const a = audio();
@@ -80,7 +83,19 @@ export function AudioProvider({ src, children }: { src: string | null; children:
         setMuted(a.muted);
       },
     };
-  }, [src, playing, muted, loop, currentTime, duration]);
+  }, []);
 
-  return <AudioContext value={controls}>{children}</AudioContext>;
+  const state = useMemo(
+    () => ({ available: Boolean(src), playing, muted, loop }),
+    [src, playing, muted, loop],
+  );
+  const time = useMemo(() => ({ currentTime, duration }), [currentTime, duration]);
+
+  return (
+    <AudioActionsContext value={actions}>
+      <AudioStateContext value={state}>
+        <AudioTimeContext value={time}>{children}</AudioTimeContext>
+      </AudioStateContext>
+    </AudioActionsContext>
+  );
 }

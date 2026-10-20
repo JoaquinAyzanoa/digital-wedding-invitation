@@ -31,3 +31,17 @@ describe('content schema', () => {
     expect(issues).toEqual(['itinerary.0.icon', 'theme.colors.primary']);
   });
 });
+
+describe('content schema security', () => {
+  it('only accepts http(s) URLs', () => {
+    const bad = structuredClone(demoContent);
+    bad.events[0]!.mapsUrl = 'javascript:alert(1)';
+    expect(publicContentSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('rejects font names that could break out of CSS', () => {
+    const bad = structuredClone(demoContent);
+    bad.theme.fonts.script = { source: 'google', family: 'X"; } body { display: none' };
+    expect(publicContentSchema.safeParse(bad).success).toBe(false);
+  });
+});

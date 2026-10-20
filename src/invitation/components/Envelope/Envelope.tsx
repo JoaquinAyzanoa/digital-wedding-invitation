@@ -8,6 +8,8 @@ import styles from './Envelope.module.css';
 import { WaxSeal } from './WaxSeal';
 
 const OPENED_KEY = 'wi-envelope-opened';
+// The full sequence takes ~3.5 s; past this, open anyway (e.g. animation frames paused).
+const SAFETY_TIMEOUT_MS = 6000;
 
 function readOpenedBefore() {
   try {
@@ -71,10 +73,11 @@ export function Envelope({
     setOpening(true);
     onOpen?.();
     rememberOpened();
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, SAFETY_TIMEOUT_MS));
     try {
-      await play(skip || !!reducedMotion);
+      await Promise.race([play(skip || !!reducedMotion), timeout]);
     } finally {
-      // Never leave the guest stuck behind the envelope, even if an animation fails.
+      // Never leave the guest stuck behind the envelope, even if an animation fails or stalls.
       onOpened();
     }
   }

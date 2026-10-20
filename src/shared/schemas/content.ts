@@ -47,20 +47,26 @@ const requiredText = (max: number) => text(max).min(1);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color hexadecimal, p. ej. #4F6496');
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora en formato 24 h, p. ej. 15:30');
 
+// Only http(s): content URLs end up in href/src, and `javascript:` is a valid URL.
+const httpUrl = z.url({ protocol: /^https?$/, error: 'Debe ser un enlace https://' });
+// Font names and ids are written into CSS (font-family, @font-face): no quotes or braces.
+const fontFamily = z.string().regex(/^[A-Za-z0-9 ]{1,60}$/, 'Solo letras, números y espacios');
+const fontId = z.string().regex(/^[a-z0-9-]{1,40}$/, 'Solo minúsculas, números y guiones');
+
 // A bare date (YYYY-MM-DD, read in America/Lima) or an ISO datetime with offset.
 const dateOrDateTime = z.union([z.iso.date(), z.iso.datetime({ offset: true })]);
 
 export const fontRefSchema = z.discriminatedUnion('source', [
-  z.object({ source: z.literal('google'), family: requiredText(60) }),
-  z.object({ source: z.literal('custom'), id: requiredText(40) }),
+  z.object({ source: z.literal('google'), family: fontFamily }),
+  z.object({ source: z.literal('custom'), id: fontId }),
 ]);
 
 export type FontRef = z.infer<typeof fontRefSchema>;
 
 export const customFontSchema = z.object({
-  id: requiredText(40),
+  id: fontId,
   family: requiredText(60),
-  url: z.url(),
+  url: httpUrl,
 });
 
 export type CustomFont = z.infer<typeof customFontSchema>;
@@ -96,14 +102,14 @@ export const publicContentSchema = z.object({
   welcome: z.object({ text: text(1000), quote: text(300).optional() }),
   dateIntro: text(300),
   music: z
-    .object({ url: z.url(), title: text(80).optional() })
+    .object({ url: httpUrl, title: text(80).optional() })
     .nullable()
     .optional(),
-  photos: z.record(z.enum(PHOTO_SLOTS), z.url().nullable()),
+  photos: z.record(z.enum(PHOTO_SLOTS), httpUrl.nullable()),
   decorations: z.object({
-    cornerTL: z.url().optional(),
-    cornerBR: z.url().optional(),
-    side: z.url().optional(),
+    cornerTL: httpUrl.optional(),
+    cornerBR: httpUrl.optional(),
+    side: httpUrl.optional(),
   }),
   family: z
     .object({
@@ -120,7 +126,7 @@ export const publicContentSchema = z.object({
       time,
       venue: requiredText(120),
       address: text(200),
-      mapsUrl: z.url().optional(),
+      mapsUrl: httpUrl.optional(),
       intro: text(200).optional(),
     }),
   ),

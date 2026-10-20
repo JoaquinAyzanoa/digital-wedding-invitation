@@ -29,6 +29,13 @@
 
 .decor[data-side='left'] {
   left: 0;
+}
+
+.decor img {
+  width: 100%;
+}
+
+.decor[data-side='left'] img {
   transform: scaleX(-1);
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Reveal } from '@/invitation/components/Reveal';
 import { Icon } from '@/shared/icons/Icon';
 import { downloadIcs, googleCalendarUrl, type CalendarEvent } from '@/shared/utils/calendar';
-import { formatTime12, weddingInstant } from '@/shared/utils/time';
+import { formatTime12, limaDate, weddingInstant } from '@/shared/utils/time';
 import { Button, ButtonLink } from '@/shared/ui/Button';
 import styles from './EventsSection.module.css';
 import { Section } from './Section';
@@ -25,7 +25,16 @@ function calendarEvent(event: WeddingEvent, content: SectionProps['content']): C
   };
 }
 
-function AddToCalendar({ event, uid }: { event: CalendarEvent; uid: string }) {
+function AddToCalendar({
+  event,
+  uid,
+  filename,
+}: {
+  event: CalendarEvent;
+  /** Globally unique, so re-importing updates the same entry. */
+  uid: string;
+  filename: string;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className={styles.calendar}>
@@ -37,7 +46,7 @@ function AddToCalendar({ event, uid }: { event: CalendarEvent; uid: string }) {
           <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer">
             Google Calendar
           </a>
-          <button type="button" onClick={() => downloadIcs(event, uid, `${uid}.ics`)}>
+          <button type="button" onClick={() => downloadIcs(event, uid, filename)}>
             Apple / Outlook (.ics)
           </button>
         </div>
@@ -64,7 +73,11 @@ export function EventsSection({ content, entry }: SectionProps) {
           {event.address && <p className={styles.address}>{event.address}</p>}
           <div className={styles.actions}>
             {event.mapsUrl && <ButtonLink href={event.mapsUrl}>Ver ubicación</ButtonLink>}
-            <AddToCalendar event={calendarEvent(event, content)} uid={`boda-${event.kind}`} />
+            <AddToCalendar
+              event={calendarEvent(event, content)}
+              uid={`${event.kind}-${limaDate(content.date)}@${window.location.host || 'boda'}`}
+              filename={`boda-${event.kind}.ics`}
+            />
           </div>
         </Reveal>
       ))}

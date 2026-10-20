@@ -24,11 +24,11 @@ export function GiftsSection({ content, invitation, entry }: SectionProps) {
         <SectionTitle id="gifts-title">{sectionTitle(content, 'gifts')}</SectionTitle>
         {content.gifts.text && <p className={text.body}>{content.gifts.text}</p>}
 
-        {methods.map((method) => (
-          <div key={method.label} className={styles.method}>
+        {methods.map((method, i) => (
+          <div key={i} className={styles.method}>
             <p className={styles.label}>{method.label}</p>
-            {method.lines.map((line) => (
-              <p key={line} className={styles.line}>
+            {method.lines.map((line, j) => (
+              <p key={j} className={styles.line}>
                 {line}
               </p>
             ))}

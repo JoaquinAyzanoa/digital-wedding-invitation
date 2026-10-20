@@ -1,10 +1,10 @@
 import { MotionConfig } from 'motion/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FontRef, PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 import { applyTheme } from '@/shared/theme/theme';
 import { AudioProvider } from './audio/AudioProvider';
-import { useAudio } from './audio/audioContext';
+import { useAudioActions } from './audio/audioContext';
 import { MuteButton } from './audio/MuteButton';
 import { DesignPanel } from './components/DesignPanel/DesignPanel';
 import { Envelope } from './components/Envelope/Envelope';
@@ -35,13 +35,14 @@ export function Invitation(props: InvitationProps) {
 }
 
 function InvitationPage({ content, invitation, codeStatus, showDesignPanel }: InvitationProps) {
-  const audio = useAudio();
+  const audio = useAudioActions();
   const hasEnvelope = content.sections.some((s) => s.id === 'envelope' && s.visible);
   const [envelopeOpen, setEnvelopeOpen] = useState(!hasEnvelope);
   const [petals, setPetals] = useState(false);
   const hidePetals = useCallback(() => setPetals(false), []);
   const [scriptFont, setScriptFont] = useState<FontRef>(content.theme.fonts.script);
   const [fontsReady, setFontsReady] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   const theme = useMemo(
     () => ({ ...content.theme, fonts: { ...content.theme.fonts, script: scriptFont } }),
@@ -69,7 +70,11 @@ function InvitationPage({ content, invitation, codeStatus, showDesignPanel }: In
   return (
     <>
       <RevealContext value={envelopeOpen}>
-        <main className={styles.page} aria-hidden={!envelopeOpen}>
+        <main ref={mainRef} className={styles.page} aria-hidden={!envelopeOpen} tabIndex={-1}>
+          {/* The envelope's heading disappears with it: keep one for screen readers. */}
+          <h1 className="visually-hidden">
+            Invitación a la boda de {content.couple.bride} y {content.couple.groom}
+          </h1>
           {sections.map((entry, i) => {
             const Component = SECTION_COMPONENTS[entry.id as Exclude<typeof entry.id, 'envelope'>];
             return (
@@ -94,7 +99,11 @@ function InvitationPage({ content, invitation, codeStatus, showDesignPanel }: In
             audio.play();
             setPetals(true);
           }}
-          onOpened={() => setEnvelopeOpen(true)}
+          onOpened={() => {
+            setEnvelopeOpen(true);
+            // The focused envelope button is gone: continue from the top of the page.
+            requestAnimationFrame(() => mainRef.current?.focus({ preventScroll: true }));
+          }}
         />
       )}
 

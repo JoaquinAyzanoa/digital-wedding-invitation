@@ -44,8 +44,8 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
             </p>
             {response.attending && (
               <ul className={styles.attendees}>
-                {response.attendees.map((attendee) => (
-                  <li key={attendee.fullName}>{attendee.fullName}</li>
+                {response.attendees.map((attendee, i) => (
+                  <li key={i}>{attendee.fullName}</li>
                 ))}
               </ul>
             )}

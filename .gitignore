@@ -16,3 +16,7 @@ coverage/
 .DS_Store
 Thumbs.db
 dist-local/
+
+# playwright
+test-results/
+playwright-report/

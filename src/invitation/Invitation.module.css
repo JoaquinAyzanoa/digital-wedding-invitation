@@ -1,3 +1,7 @@
+.page:focus {
+  outline: none;
+}
+
 .page {
   min-height: 100vh;
   min-height: 100svh;
