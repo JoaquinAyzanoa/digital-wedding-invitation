@@ -33,7 +33,7 @@ test.describe('invitation (demo)', () => {
   test('uploads photos to the album (demo)', async ({ page }) => {
     await page.goto('/?i=demo');
     await openEnvelope(page);
-    const button = page.getByRole('button', { name: 'Clic para subir fotos' });
+    const button = page.getByRole('button', { name: 'Clic para subir fotos y videos' });
     await button.scrollIntoViewIfNeeded();
     // Sent as they are (original quality); the demo only pretends to upload.
     const png = Buffer.from(
@@ -45,17 +45,17 @@ test.describe('invitation (demo)', () => {
       { name: 'dos.png', mimeType: 'image/png', buffer: png },
       { name: 'nota.txt', mimeType: 'text/plain', buffer: Buffer.from('no es una foto') },
     ]);
-    await expect(page.getByText('2 de 3 fotos subidas. 1 con problemas.')).toBeVisible({
+    await expect(page.getByText('2 de 3 subidos. 1 con problemas.')).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByText('Este archivo no es una foto.')).toBeVisible();
+    await expect(page.getByText('Este archivo no es una foto ni un video.')).toBeVisible();
   });
 
   test('the /photos/ page (QR on the tables) lets anyone upload, without a code', async ({
     page,
   }) => {
     await page.goto('/photos/');
-    await expect(page.getByRole('heading', { name: 'Comparte tus fotos' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Comparte tus fotos y videos' })).toBeVisible();
     await expect(page.getByText('Valeria & Mateo')).toBeVisible();
     await page.locator('input[type="file"]').setInputFiles([
       {

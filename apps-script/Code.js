@@ -181,27 +181,84 @@ function fetchExport_(config, lastHash) {
 // Album: the guests' photos, to a Google Drive folder
 // ---------------------------------------------------------------------------------------
 
-/** Original photos from phones weigh 2–10 MB; this leaves room and stays within the limits. */
+/** The slower way (the photo through this script, as text) cannot carry more than this. */
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+/** Straight to Drive: original photos (2–10 MB from a phone) and videos (~100 MB a minute). */
+const MAX_SESSION_BYTES = { image: 50 * 1024 * 1024, video: 1024 * 1024 * 1024 };
 
-/** The admin's "Probar conexión": the web app answers and says where the photos go. */
-function doGet() {
+/**
+ * Two uses:
+ * - `?action=session&name=…&type=…&size=…&origin=…`: a Drive upload session for one photo or
+ *   video.
+ *   The guest's browser then sends the photo straight to Drive (fast, with real progress);
+ *   the account's permission never leaves this script, the session only takes that one file.
+ * - Without parameters: the admin's "Probar conexión" (where the photos go).
+ */
+function doGet(e) {
+  const params = (e && e.parameter) || {};
   try {
+    if (params.action === 'session') return reply_(uploadSession_(params));
     const folder = albumFolder_();
     return reply_({
       ok: true,
       service: 'album',
+      sessions: true,
       folderName: folder.getName(),
       folderUrl: folder.getUrl(),
     });
   } catch (error) {
-    return reply_({ ok: false, error: String((error && error.message) || error) });
+    console.error(`Álbum: ${String((error && error.message) || error)}`);
+    return reply_({ ok: false, error: 'unknown' });
   }
 }
 
 /**
- * A guest's photo: { name, type, data (base64) }, sent as text/plain (no CORS preflight).
- * Saved as it is in the folder. Answers { ok: true } or { ok: false, error }.
+ * Creates the resumable upload session in the folder. Google only lets the browser of
+ * `origin` use it (CORS), and only for exactly `size` bytes of `type`. The browser sends the
+ * file in parts and can resume after a dropped connection.
+ */
+function uploadSession_(params) {
+  const type = String(params.type || '');
+  const size = Number(params.size);
+  const origin = String(params.origin || '');
+  const kind = (/^(image|video)\/[\w.+-]+$/.exec(type) || [])[1];
+  if (!kind || !/^https?:\/\/[\w.-]+(:\d+)?$/.test(origin) || !(size > 0)) {
+    return { ok: false, error: 'invalid_payload' };
+  }
+  if (size > MAX_SESSION_BYTES[kind]) return { ok: false, error: 'too_large' };
+
+  const response = UrlFetchApp.fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id',
+    {
+      method: 'post',
+      contentType: 'application/json; charset=UTF-8',
+      headers: {
+        Authorization: `Bearer ${ScriptApp.getOAuthToken()}`,
+        'X-Upload-Content-Type': type,
+        'X-Upload-Content-Length': String(size),
+        Origin: origin,
+      },
+      payload: JSON.stringify({
+        name: photoName(params.name, type),
+        parents: [albumFolder_().getId()],
+      }),
+      muteHttpExceptions: true,
+    },
+  );
+  const headers = response.getHeaders();
+  const session = headers.Location || headers.location;
+  if (response.getResponseCode() !== 200 || !session) {
+    throw new Error(
+      `Drive ${response.getResponseCode()}: ${response.getContentText().slice(0, 200)}`,
+    );
+  }
+  return { ok: true, session };
+}
+
+/**
+ * The slower way, kept for pages loaded before sessions existed: a guest's photo as
+ * { name, type, data (base64) }, sent as text/plain (no CORS preflight), saved as it is in
+ * the folder. Answers { ok: true } or { ok: false, error }.
  */
 function doPost(e) {
   try {

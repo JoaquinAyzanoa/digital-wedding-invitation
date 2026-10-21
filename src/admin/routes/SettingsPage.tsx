@@ -221,7 +221,9 @@ export function SettingsPage() {
             </ol>
             <p className={ui.hint}>
               Listo: los dos estados de arriba pasan a verde. Si un script falla, Google le avisa
-              por correo a la cuenta dueña. Si más adelante cambias el código del álbum, usa{' '}
+              por correo a la cuenta dueña. Cuando cambie el código del álbum (por ejemplo, para
+              recibir videos): pega el código nuevo, ejecuta <code>setupAlbum</code> (acepta los
+              permisos nuevos) y usa{' '}
               <strong>Implementar → Gestionar implementaciones → Editar → Versión nueva</strong>:
               así la URL no cambia.
             </p>

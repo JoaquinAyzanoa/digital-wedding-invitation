@@ -211,7 +211,11 @@ function load() {
     ['SECRET', 's3cret'],
     ['SITE_URL', 'https://example.com/'],
   ]);
-  const requests: Array<{ url: string; payload: Record<string, unknown> }> = [];
+  const requests: Array<{
+    url: string;
+    payload: Record<string, unknown>;
+    headers?: Record<string, string>;
+  }> = [];
   /** Answers of the other RPCs (album check, register, folder), by name. */
   const rpc = new Map<
     string,
@@ -266,9 +270,16 @@ function load() {
     },
     console: { error: () => {}, log: () => {} },
     UrlFetchApp: {
-      fetch: (url: string, options: { payload: string }) => {
+      fetch: (url: string, options: { payload: string; headers: Record<string, string> }) => {
         const payload = JSON.parse(options.payload);
-        requests.push({ url, payload });
+        requests.push({ url, payload, headers: options.headers });
+        if (url.startsWith('https://www.googleapis.com/upload/drive/v3/files')) {
+          return {
+            getResponseCode: () => 200,
+            getHeaders: () => ({ Location: `${url}&upload_id=SESSION1` }),
+            getContentText: () => '',
+          };
+        }
         const name = url.split('/rpc/')[1]!;
         const next =
           name === 'export_for_sheet'
@@ -282,6 +293,7 @@ function load() {
       },
     },
     ScriptApp: {
+      getOAuthToken: () => 'owner-token',
       getProjectTriggers: () =>
         triggers.map((name) => ({ getHandlerFunction: () => name.split(' ')[0] })),
       deleteTrigger: () => triggers.shift(),
@@ -312,7 +324,7 @@ describe('Apps Script sync', () => {
   it('writes invitations, attendees and the summary, then remembers the hash', () => {
     env.script.sync!();
 
-    expect(env.requests[0]).toEqual({
+    expect(env.requests[0]).toMatchObject({
       url: 'https://demo.supabase.co/rest/v1/rpc/export_for_sheet',
       payload: { p_secret: 's3cret', p_hash: null },
     });
@@ -453,6 +465,7 @@ describe('Apps Script album (photos to a Google Drive folder)', () => {
     expect(JSON.parse((env.script.doGet!() as { text: string }).text)).toEqual({
       ok: true,
       service: 'album',
+      sessions: true,
       folderName: 'Photos',
       folderUrl: `https://drive.google.com/drive/folders/${folder.id}`,
     });
@@ -469,5 +482,74 @@ describe('Apps Script album (photos to a Google Drive folder)', () => {
     expect(env.script.photoName!('IMG_1.HEIC', 'image/heic')).toBe('IMG_1.HEIC');
     expect(env.script.photoName!('a/b:c?.jpg', 'image/jpeg')).toBe('a_b_c_.jpg');
     expect(env.script.photoName!('', 'image/jpeg')).toMatch(/^foto-.+\.jpg$/);
+  });
+});
+
+describe('Apps Script album: straight to Drive (upload sessions)', () => {
+  let env: ReturnType<typeof load>;
+  let folder: { id: string };
+  beforeEach(() => {
+    env = load();
+    folder = env.drive.folder('Photos');
+    env.props.set('FOLDER_ID', folder.id);
+  });
+
+  const session = (params: Record<string, string>) =>
+    JSON.parse(
+      (env.script.doGet!({ parameter: { action: 'session', ...params } }) as { text: string }).text,
+    );
+  const photo = {
+    name: 'IMG_1.JPG',
+    type: 'image/jpeg',
+    size: '4194304',
+    origin: 'https://camilayjoaquin.com',
+  };
+
+  it('creates a resumable session in the folder for that origin, size and type', () => {
+    expect(session(photo)).toEqual({
+      ok: true,
+      session: expect.stringContaining('upload_id=SESSION1'),
+    });
+    const [request] = env.requests;
+    expect(request!.url).toBe(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id',
+    );
+    expect(request!.payload).toEqual({ name: 'IMG_1.JPG', parents: [folder.id] });
+    expect(request!.headers).toMatchObject({
+      Authorization: 'Bearer owner-token',
+      'X-Upload-Content-Type': 'image/jpeg',
+      'X-Upload-Content-Length': '4194304',
+      // Without the origin, Google would not let the guest's browser use the session.
+      Origin: 'https://camilayjoaquin.com',
+    });
+  });
+
+  it('accepts videos, each kind with its own limit', () => {
+    const video = { ...photo, name: 'VID_1.MOV', type: 'video/quicktime' };
+    expect(session({ ...video, size: String(900 * 1024 * 1024) }).ok).toBe(true);
+    expect(session({ ...video, size: String(1025 * 1024 * 1024) })).toEqual({
+      ok: false,
+      error: 'too_large',
+    });
+    expect(session({ ...photo, size: String(51 * 1024 * 1024) })).toEqual({
+      ok: false,
+      error: 'too_large',
+    });
+  });
+
+  it('refuses anything else before asking Drive', () => {
+    expect(session({ ...photo, type: 'application/pdf' }).error).toBe('invalid_payload');
+    expect(session({ ...photo, origin: 'javascript:alert(1)' }).error).toBe('invalid_payload');
+    expect(session({ ...photo, size: '0' }).error).toBe('invalid_payload');
+    expect(env.requests).toHaveLength(0);
+  });
+
+  it('tells the admin test that sessions are available', () => {
+    expect(
+      JSON.parse((env.script.doGet!({ parameter: {} }) as { text: string }).text),
+    ).toMatchObject({
+      ok: true,
+      sessions: true,
+    });
   });
 });

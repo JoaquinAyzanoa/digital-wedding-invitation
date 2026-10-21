@@ -70,10 +70,20 @@ fotos del todo (además de cerrar el álbum en el panel), archiva la implementac
 - El invitado sube fotos desde su invitación o desde `/photos/` (el QR de las mesas, que se
   descarga en el panel → Álbum). El botón solo aparece mientras el álbum está abierto
   (Contenido: activo y fechas) y conectado (la URL de la aplicación web).
-- Cada foto se envía tal cual (base64 en un `text/plain`, sin preflight de CORS) a `doPost`,
-  que solo acepta imágenes de hasta 25 MB y la guarda en la carpeta `FOLDER_ID`, con su
-  nombre original. La subida es inmediata: al ver «Subida ✓», la foto ya está en Drive.
-- `doGet` responde a «Probar conexión» con el nombre y el enlace de la carpeta.
+- **Directo a Drive** (fotos de hasta 50 MB y videos de hasta 1 GB): el navegador pide a
+  `doGet?action=session` una sesión de subida de Drive para ese archivo (tipo, tamaño exacto
+  y el origen de la página, sin el cual Drive no deja usarla desde el navegador) y envía el
+  archivo tal cual a Drive, en partes de 8 MB, con avance real; si se corta la conexión,
+  pregunta a Drive qué tiene y sigue desde ahí. El permiso de la cuenta nunca sale del
+  script: la sesión solo sirve para ese archivo. Medido: una foto de 4 MB en ~4 s, un video
+  de 20 MB en ~6 s.
+- **La vía antigua** (scripts anteriores a las sesiones; solo fotos de hasta 25 MB): la foto
+  en base64 dentro de un `text/plain` (sin preflight de CORS, que Apps Script no responde)
+  a `doPost`, que la guarda. Unos 24 s por foto de 4 MB.
+- `doGet` sin parámetros responde a «Probar conexión» con el nombre y el enlace de la carpeta.
+- Al actualizar el código del álbum: pégalo, ejecuta `setupAlbum` (acepta los permisos
+  nuevos: crear archivos en Drive y conectarse a servicios externos) y crea una versión nueva
+  de la implementación (la URL no cambia).
 - Espacio: el de la cuenta B (15 GB gratis, compartidos con Gmail y Fotos).
 
 ### Hoja

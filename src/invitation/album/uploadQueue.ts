@@ -1,11 +1,12 @@
 import { ApiError, type ApiErrorCode, type PublicApi } from '@/shared/api';
-import { photoType } from '@/shared/api/driveUpload';
+import { mediaType } from '@/shared/api/driveUpload';
 
 export type UploadStatus = 'waiting' | 'uploading' | 'done' | 'error';
 
 export interface UploadItem {
   id: string;
   name: string;
+  kind: 'photo' | 'video';
   status: UploadStatus;
   /** 0–1 while uploading, when the upload reports it (the Drive one cannot: see driveUpload). */
   progress: number;
@@ -17,15 +18,17 @@ export interface UploadItem {
   retryable?: boolean;
 }
 
-/** Original photos go up as they are; the web app accepts up to 25 MB. */
-export const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
+/** Originals go up as they are, straight to Drive (the script's limits, checked here first). */
+export const MAX_BYTES = { photo: 50 * 1024 * 1024, video: 1024 * 1024 * 1024 };
 export const CONCURRENCY = 3;
 /** Automatic retries after the first try (network hiccups on a phone). */
 export const RETRIES = 2;
 
 const MESSAGES = {
-  notPhoto: 'Este archivo no es una foto.',
-  tooLarge: 'Pesa más de 25 MB.',
+  notMedia: 'Este archivo no es una foto ni un video.',
+  photoTooLarge: 'La foto pesa más de 50 MB.',
+  videoTooLarge: 'El video pesa más de 1 GB.',
+  tooLarge: 'Pesa demasiado para el álbum.',
   closed: 'El álbum ya no recibe fotos.',
   failed: 'No se pudo subir. Revisa tu conexión y reintenta.',
 };
@@ -34,7 +37,7 @@ const MESSAGES = {
 const FINAL: Partial<Record<ApiErrorCode, string>> = {
   album_closed: MESSAGES.closed,
   too_large: MESSAGES.tooLarge,
-  invalid_payload: MESSAGES.notPhoto,
+  invalid_payload: MESSAGES.notMedia,
 };
 
 /**
@@ -45,9 +48,10 @@ const FINAL: Partial<Record<ApiErrorCode, string>> = {
 export function shownProgress(item: UploadItem, now: number): number {
   if (item.status === 'done') return 1;
   if (item.status !== 'uploading') return 0;
-  if (!item.startedAt || !item.expectedMs) return item.progress;
-  const estimate = 0.95 * (1 - Math.exp((-2.3 * (now - item.startedAt)) / item.expectedMs));
-  return Math.max(item.progress, estimate);
+  // Straight to Drive the progress is real; the estimate only covers the moments before the
+  // first report (and the older way, which reports nothing).
+  if (item.progress > 0 || !item.startedAt || !item.expectedMs) return item.progress;
+  return 0.95 * (1 - Math.exp((-2.3 * (now - item.startedAt)) / item.expectedMs));
 }
 
 type Sleep = (ms: number) => Promise<void>;
@@ -67,10 +71,10 @@ export class AlbumUploadQueue {
   private running = 0;
   private controller = new AbortController();
   private nextId = 0;
-  // Measured against the real Apps Script web app: about 4 s to answer at all, then about
-  // 5 s per MB (it is far slower than the guest's connection). Recalibrated as photos finish.
-  private overheadMs = 4000;
-  private msPerByte = 0.005;
+  // A first guess (about 2 s for the upload session, then ~0.7 MB/s, a modest phone
+  // connection), recalibrated as files finish. Only shown until real progress arrives.
+  private overheadMs = 2000;
+  private msPerByte = 0.0015;
 
   constructor(
     private api: PublicApi,
@@ -93,15 +97,21 @@ export class AlbumUploadQueue {
   add(files: File[]) {
     const added = files.map((file): UploadItem => {
       const id = String(this.nextId++);
-      const problem = !photoType(file).startsWith('image/')
-        ? MESSAGES.notPhoto
-        : file.size > MAX_PHOTO_BYTES
-          ? MESSAGES.tooLarge
+      const type = mediaType(file);
+      const kind = type.startsWith('video/') ? 'video' : 'photo';
+      const problem = !/^(image|video)\//.test(type)
+        ? MESSAGES.notMedia
+        : file.size > MAX_BYTES[kind]
+          ? kind === 'video'
+            ? MESSAGES.videoTooLarge
+            : MESSAGES.photoTooLarge
           : null;
-      if (problem) return { id, name: file.name, status: 'error', progress: 0, error: problem };
+      if (problem) {
+        return { id, name: file.name, kind, status: 'error', progress: 0, error: problem };
+      }
       this.files.set(id, file);
       this.waiting.push(id);
-      return { id, name: file.name, status: 'waiting', progress: 0 };
+      return { id, name: file.name, kind, status: 'waiting', progress: 0 };
     });
     this.set([...this.items, ...added]);
     this.pump();

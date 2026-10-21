@@ -3,7 +3,7 @@ import { ApiError, type PublicApi } from '@/shared/api';
 import {
   AlbumUploadQueue,
   CONCURRENCY,
-  MAX_PHOTO_BYTES,
+  MAX_BYTES,
   RETRIES,
   shownProgress,
   type UploadItem,
@@ -79,7 +79,7 @@ describe('AlbumUploadQueue', () => {
 
   it.each([
     ['album_closed', 'El álbum ya no recibe fotos.'],
-    ['too_large', 'Pesa más de 25 MB.'],
+    ['too_large', 'Pesa demasiado para el álbum.'],
   ] as const)('does not retry when the album answers %s', async (code, message) => {
     const { queue, api } = setup(async () => {
       throw new ApiError(code);
@@ -90,20 +90,24 @@ describe('AlbumUploadQueue', () => {
     expect(queue.getSnapshot()[0]).toMatchObject({ error: message, retryable: false });
   });
 
-  it('turns away files that are not photos or are too big, before sending anything', async () => {
+  it('turns away files that are not photos or videos, or are too big, before sending', async () => {
     const { queue, api } = setup(async () => {});
     queue.add([
       file('nota.txt', { type: 'text/plain' }),
-      file('video.jpg', { size: MAX_PHOTO_BYTES + 1 }),
+      file('enorme.jpg', { size: MAX_BYTES.photo + 1 }),
+      file('pelicula.mp4', { type: 'video/mp4', size: MAX_BYTES.video + 1 }),
       file('IMG_1.HEIC', { type: '' }), // type guessed from the name
+      file('VID_1.MOV', { type: '', size: 300 * 1024 * 1024 }), // a video, within its limit
     ]);
     await done(queue);
-    expect(queue.getSnapshot().map((i) => [i.name, i.status, i.error])).toEqual([
-      ['nota.txt', 'error', 'Este archivo no es una foto.'],
-      ['video.jpg', 'error', 'Pesa más de 25 MB.'],
-      ['IMG_1.HEIC', 'done', undefined],
+    expect(queue.getSnapshot().map((i) => [i.name, i.kind, i.status, i.error])).toEqual([
+      ['nota.txt', 'photo', 'error', 'Este archivo no es una foto ni un video.'],
+      ['enorme.jpg', 'photo', 'error', 'La foto pesa más de 50 MB.'],
+      ['pelicula.mp4', 'video', 'error', 'El video pesa más de 1 GB.'],
+      ['IMG_1.HEIC', 'photo', 'done', undefined],
+      ['VID_1.MOV', 'video', 'done', undefined],
     ]);
-    expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(1);
+    expect(api.uploadAlbumPhoto).toHaveBeenCalledTimes(2);
   });
 
   it('notifies subscribers with a new snapshot on every change', async () => {
@@ -121,6 +125,7 @@ describe('the bar while a photo goes up', () => {
   const uploading: UploadItem = {
     id: '0',
     name: 'a.jpg',
+    kind: 'photo',
     status: 'uploading',
     progress: 0,
     startedAt: 1000,
@@ -137,8 +142,10 @@ describe('the bar while a photo goes up', () => {
     expect(at(5_000)).toBeGreaterThan(at(2_500));
   });
 
-  it('uses the real progress when the upload reports more, and is full when done', () => {
+  it('switches to the real progress as soon as the upload reports it', () => {
     expect(shownProgress({ ...uploading, progress: 0.99 }, 1001)).toBe(0.99);
+    // Real progress wins even when the estimate would show more.
+    expect(shownProgress({ ...uploading, progress: 0.1 }, 1000 + 60_000)).toBe(0.1);
     expect(shownProgress({ ...uploading, status: 'done' }, 0)).toBe(1);
     expect(shownProgress({ ...uploading, status: 'waiting' }, 99_999)).toBe(0);
   });

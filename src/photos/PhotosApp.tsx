@@ -81,7 +81,7 @@ export function PhotosApp() {
         {couple.bride} <span className={styles.amp}>&</span> {couple.groom}
       </p>
       <Icon name="camera" size={64} className={styles.icon} />
-      <h1 className={styles.title}>Comparte tus fotos</h1>
+      <h1 className={styles.title}>Comparte tus fotos y videos</h1>
       {album.text && <p className={styles.text}>{album.text}</p>}
       {open && album.uploadUrl ? (
         <AlbumUploader api={api} uploadUrl={album.uploadUrl} />

@@ -17,6 +17,19 @@ function statusText(item: UploadItem) {
   }
 }
 
+/** "3 fotos y 1 video", from what went up. */
+function uploadedText(items: UploadItem[]) {
+  const count = (kind: UploadItem['kind']) =>
+    items.filter((i) => i.kind === kind && i.status === 'done').length;
+  const photos = count('photo');
+  const videos = count('video');
+  const parts = [
+    photos ? `${photos} ${photos === 1 ? 'foto' : 'fotos'}` : '',
+    videos ? `${videos} ${videos === 1 ? 'video' : 'videos'}` : '',
+  ].filter(Boolean);
+  return parts.join(' y ') || 'nada';
+}
+
 /**
  * "Subir fotos": several at once, from the gallery or the camera, each with its progress.
  * They go at their original quality to the couple's Google Drive.
@@ -56,7 +69,7 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
         ref={input}
         id={inputId}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="visually-hidden"
         tabIndex={-1}
@@ -68,17 +81,17 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
         }}
       />
       <Button onClick={() => input.current?.click()}>
-        {items.length ? 'Subir más fotos' : 'Clic para subir fotos'}
+        {items.length ? 'Subir más' : 'Clic para subir fotos y videos'}
       </Button>
 
       {items.length > 0 && (
         <>
           <p className={styles.summary} role="status">
             {busy
-              ? `Subiendo fotos: ${done} de ${items.length} listas…`
+              ? `Subiendo: ${done} de ${items.length} listos…`
               : failed
-                ? `${done} de ${items.length} fotos subidas. ${failed} con problemas.`
-                : `¡Gracias! ${done === 1 ? 'Subiste 1 foto' : `Subiste ${done} fotos`}.`}
+                ? `${done} de ${items.length} subidos. ${failed} con problemas.`
+                : `¡Gracias! Subiste ${uploadedText(items)}.`}
           </p>
           {busy && <p className={styles.hint}>No cierres esta página hasta que terminen.</p>}
           {retryable > 1 && !busy && (
@@ -86,7 +99,7 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
               Reintentar todas
             </Button>
           )}
-          <ul className={styles.list} aria-label="Fotos">
+          <ul className={styles.list} aria-label="Fotos y videos">
             {items.map((item) => (
               <li key={item.id} className={styles.item} data-status={item.status}>
                 <span className={styles.name}>{item.name}</span>

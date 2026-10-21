@@ -48,8 +48,8 @@ export function AlbumPage() {
 
       <section className={ui.card}>
         <p>
-          Las fotos llegan en su calidad original a tu carpeta de Google Drive, apenas el invitado
-          las sube. Allí puedes verlas, borrarlas o descargar todo.
+          Las fotos y videos llegan en su calidad original a tu carpeta de Google Drive, apenas el
+          invitado los sube. Allí puedes verlos, borrarlos o descargar todo.
         </p>
         {album && !album.uploadUrl && (
           <p className={styles.notice}>
@@ -68,8 +68,8 @@ export function AlbumPage() {
       <section className={ui.card}>
         <h2 className={ui.cardTitle}>QR para las mesas</h2>
         <p className={ui.hint}>
-          Abre una página donde cualquiera sube sus fotos, sin código. Imprímelo en las mesas o en
-          un cartel.
+          Abre una página donde cualquiera sube sus fotos y videos, sin código. Imprímelo en las
+          mesas o en un cartel.
         </p>
         <div className={styles.qrBox}>
           {qr.data ? (
