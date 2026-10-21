@@ -2,15 +2,16 @@ import { useId, type CSSProperties } from 'react';
 import styles from './WaxSeal.module.css';
 
 // Irregular wax outline: a circle with a fixed "random" radius per point, smoothed with
-// quadratic curves through the midpoints.
+// quadratic curves through the midpoints. A few larger values are where the wax spread
+// further when it was pressed.
 const OUTLINE = (() => {
   const jitter = [
-    3.2, 1.1, 2.6, 0.4, 3.6, 1.8, 2.9, 0.8, 3.4, 2.1, 1.2, 3.0, 0.6, 2.4, 3.5, 1.5, 2.8, 0.9, 3.1,
-    1.9, 2.2, 1.0,
+    2.2, 4.8, 6.0, 3.1, 1.0, 2.4, 1.6, 3.8, 1.2, 0.6, 2.9, 5.4, 4.0, 1.4, 2.0, 0.8, 2.6, 1.1, 3.5,
+    6.2, 3.0, 1.3, 2.2, 0.9, 1.8, 3.3, 1.0, 2.5,
   ];
   const points = jitter.map((j, i) => {
     const angle = (i / jitter.length) * Math.PI * 2;
-    const r = 50 + j;
+    const r = 48.5 + j;
     return [60 + r * Math.cos(angle), 60 + r * Math.sin(angle)] as const;
   });
   const mid = (a: readonly [number, number], b: readonly [number, number]) =>
@@ -75,7 +76,7 @@ interface WaxSealProps {
 
 export function WaxSeal({ monogram, shine = false, className }: WaxSealProps) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
-  const fontSize = monogram.length <= 3 ? 23 : monogram.length <= 5 ? 16 : 12;
+  const fontSize = monogram.length <= 3 ? 21 : monogram.length <= 5 ? 16 : 12;
 
   return (
     <svg viewBox="0 0 120 120" className={className} aria-hidden="true" focusable="false">
@@ -95,14 +96,51 @@ export function WaxSeal({ monogram, shine = false, className }: WaxSealProps) {
           <stop offset="0.5" stopColor="white" stopOpacity="0.55" />
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </linearGradient>
+        {/* The rounded rim the stamp leaves: lit on the upper left, shaded lower right. */}
+        <linearGradient id={`${id}-rim`} x1="0.15" y1="0.1" x2="0.85" y2="0.9">
+          <stop offset="0" stopColor="white" stopOpacity="0.42" />
+          <stop offset="0.45" stopColor="white" stopOpacity="0" />
+          <stop offset="1" style={{ stopColor: 'var(--seal-lo)' }} stopOpacity="0.45" />
+        </linearGradient>
         <clipPath id={`${id}-outline`}>
           <path d={OUTLINE} />
         </clipPath>
       </defs>
 
       <g>
+        {/* The wax's thickness, showing under its lower edge */}
+        <path d={OUTLINE} transform="translate(0 1.6)" style={{ fill: 'var(--seal-lo)' }} />
         <path d={OUTLINE} fill={`url(#${id}-wax)`} />
         <path d={OUTLINE} fill="none" style={{ stroke: 'var(--seal-lo)' }} strokeOpacity="0.35" />
+        <circle
+          cx="60"
+          cy="60"
+          r="43.5"
+          fill="none"
+          stroke={`url(#${id}-rim)`}
+          strokeWidth="9"
+          clipPath={`url(#${id}-outline)`}
+        />
+        {/* Glints where the light catches the wax */}
+        <ellipse
+          cx="34"
+          cy="25"
+          rx="7.5"
+          ry="2.3"
+          transform="rotate(-38 34 25)"
+          fill="white"
+          fillOpacity="0.55"
+        />
+        <ellipse cx="25.5" cy="34.5" rx="2" ry="1.1" fill="white" fillOpacity="0.45" />
+        <ellipse
+          cx="88"
+          cy="93"
+          rx="6"
+          ry="1.6"
+          transform="rotate(-40 88 93)"
+          fill="white"
+          fillOpacity="0.18"
+        />
 
         {/* Pressed well with a light rim on the bottom-right and shadow on the top-left */}
         <circle cx="60" cy="60" r="37" fill={`url(#${id}-well)`} />

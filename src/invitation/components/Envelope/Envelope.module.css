@@ -120,6 +120,8 @@
 .pocket {
   z-index: 3;
   overflow: visible;
+  /* Soft corners, as folded paper has. */
+  clip-path: inset(0 round 6px);
 }
 
 .inside {
@@ -144,8 +146,31 @@
   transform-style: preserve-3d;
 }
 
+/* The flap lifts a little off the envelope: a soft shadow under its edge. */
 .flapFront {
-  filter: drop-shadow(0 3px 3px rgb(30 40 70 / 0.18));
+  clip-path: inset(0 round 6px 6px 0 0);
+  filter: drop-shadow(0 3px 5px rgb(30 25 20 / 0.24));
+}
+
+/* A gilded edge on the flap, like fine stationery. */
+.gilt {
+  stroke: var(--color-accent);
+  stroke-opacity: 0.9;
+}
+
+.embossShadow {
+  fill: rgb(40 30 20 / 0.14);
+  stroke: rgb(40 30 20 / 0.14);
+}
+
+.embossLight {
+  fill: rgb(255 255 255 / 0.6);
+  stroke: rgb(255 255 255 / 0.6);
+}
+
+.embossPaper {
+  fill: var(--env-bottom);
+  stroke: var(--env-bottom);
 }
 
 .flapFront,

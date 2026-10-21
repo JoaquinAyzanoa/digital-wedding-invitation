@@ -103,6 +103,17 @@ export function CardFace({ ids, monogram, bride, groom, date }: CardFaceProps) {
           className={styles.cardPaper}
           filter={`url(#${ids.grain})`}
         />
+        {/* Gilded edges, like a fine printed card */}
+        <rect
+          x="0.6"
+          y="0.6"
+          width="262.8"
+          height="174.8"
+          rx="2.2"
+          fill="none"
+          strokeWidth="1.2"
+          className={styles.gilt}
+        />
         <rect
           x="6.5"
           y="6.5"

@@ -4,6 +4,8 @@ export interface PaperIds {
   liner: string;
   fold: string;
   lift: string;
+  light: string;
+  vine: string;
 }
 
 export function paperIds(base: string): PaperIds {
@@ -13,5 +15,7 @@ export function paperIds(base: string): PaperIds {
     liner: `${id}-liner`,
     fold: `${id}-fold`,
     lift: `${id}-lift`,
+    light: `${id}-light`,
+    vine: `${id}-vine`,
   };
 }

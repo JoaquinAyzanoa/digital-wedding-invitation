@@ -2,7 +2,8 @@ import { useId } from 'react';
 import { GARLAND, TILE_HEIGHT, TILE_WIDTH } from './garlandArt';
 import styles from './Stationery.module.css';
 
-function Art() {
+/** The garland's drawing, in the current fill and stroke (one tile). */
+export function GarlandArt() {
   return (
     <>
       {GARLAND.lines.map((d) => (
@@ -45,13 +46,13 @@ export function Garland({ className }: { className?: string }) {
       <defs>
         <pattern id={id} width={TILE_WIDTH} height={TILE_HEIGHT} patternUnits="userSpaceOnUse">
           <g className={styles.garlandShadow} transform="translate(0.8 0.9)">
-            <Art />
+            <GarlandArt />
           </g>
           <g className={styles.garlandLight} transform="translate(-0.6 -0.6)">
-            <Art />
+            <GarlandArt />
           </g>
           <g className={styles.garlandPaper}>
-            <Art />
+            <GarlandArt />
           </g>
         </pattern>
       </defs>

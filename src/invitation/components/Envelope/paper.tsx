@@ -1,11 +1,18 @@
 // The envelope's paper: shapes (viewBox 300 × 200), a grain texture and the patterned liner.
 // Every colour comes from CSS variables, so it follows the theme (and the video cover's paper).
+import { GarlandArt } from '../Stationery/Garland';
+import { TILE_HEIGHT, TILE_WIDTH } from '../Stationery/garlandArt';
 import styles from './Envelope.module.css';
 import type { PaperIds } from './paperIds';
 
 const FLAP = 'M0 0H300V5C272 30 206 80 172 104Q150 120 128 104C94 80 28 30 0 5Z';
 // The flap's edge, raised a few units: a debossed line that follows it inside.
 const FLAP_LINE = 'M0 -6C28 19 94 69 128 93Q150 109 172 93C206 69 272 19 300 -6';
+// The flap's lower edge itself, gilded.
+const FLAP_EDGE = 'M0 5C28 30 94 80 128 104Q150 120 172 104C206 80 272 30 300 5';
+// The garland pressed along the bottom of the envelope: the page's garland, smaller.
+const VINE_SCALE = 0.4;
+const VINE_TOP = 200 - TILE_HEIGHT * VINE_SCALE;
 const SIDE_LEFT = 'M0 2Q72 52 141 104Q72 154 0 198Z';
 const SIDE_RIGHT = 'M300 2Q228 52 159 104Q228 154 300 198Z';
 const BOTTOM = 'M0 200C46 166 106 122 136 101Q150 91 164 101C194 122 254 166 300 200Z';
@@ -91,6 +98,30 @@ export function PaperDefs({ ids }: { ids: PaperIds }) {
           <stop offset="0.75" stopColor="#000" stopOpacity="0.035" />
           <stop offset="1" stopColor="#000" stopOpacity="0.09" />
         </linearGradient>
+        {/* Soft daylight from the upper left over the whole front. */}
+        <radialGradient id={ids.light} cx="0.2" cy="0" r="1.15">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
+          <stop offset="0.55" stopColor="#fff" stopOpacity="0" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.07" />
+        </radialGradient>
+        {/* The garland, blind-embossed: a light edge, a soft shadow and the paper itself. */}
+        <pattern
+          id={ids.vine}
+          width={TILE_WIDTH}
+          height={TILE_HEIGHT}
+          patternUnits="userSpaceOnUse"
+          patternTransform={`translate(0 ${VINE_TOP}) scale(${VINE_SCALE})`}
+        >
+          <g className={styles.embossShadow} transform="translate(1.4 1.6)">
+            <GarlandArt />
+          </g>
+          <g className={styles.embossLight} transform="translate(-1.2 -1.2)">
+            <GarlandArt />
+          </g>
+          <g className={styles.embossPaper}>
+            <GarlandArt />
+          </g>
+        </pattern>
         {/* Light from above on the bottom flap. */}
         <linearGradient id={ids.lift} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff" stopOpacity="0.28" />
@@ -149,7 +180,20 @@ export function Pocket({ ids }: { ids: PaperIds }) {
       />
       <path d={BOTTOM} className={styles.bottom} filter={`url(#${ids.grain})`} />
       <path d={BOTTOM} fill={`url(#${ids.lift})`} />
+      <defs>
+        <clipPath id={`${ids.vine}-bottom`}>
+          <path d={BOTTOM} />
+        </clipPath>
+      </defs>
+      <rect
+        y={VINE_TOP}
+        width="300"
+        height={200 - VINE_TOP}
+        fill={`url(#${ids.vine})`}
+        clipPath={`url(#${ids.vine}-bottom)`}
+      />
       <path d={BOTTOM_EDGE} fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="0.8" />
+      <rect width="300" height="200" fill={`url(#${ids.light})`} />
     </svg>
   );
 }
@@ -174,7 +218,8 @@ export function FlapFront({ ids }: { ids: PaperIds }) {
         <path d={FLAP_LINE} stroke="#000" strokeOpacity="0.13" />
         <path d={FLAP_LINE} stroke="#fff" strokeOpacity="0.5" transform="translate(0 0.8)" />
       </g>
-      <path d={FLAP} fill="none" stroke="#fff" strokeOpacity="0.35" strokeWidth="0.8" />
+      <path d={FLAP} fill={`url(#${ids.light})`} />
+      <path d={FLAP_EDGE} fill="none" className={styles.gilt} strokeWidth="1.1" />
     </svg>
   );
 }
