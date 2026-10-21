@@ -3,11 +3,14 @@ import { UiIcon } from '@/shared/icons/UiIcon';
 import { useAudioActions, useAudioState } from './audioContext';
 import styles from './MuteButton.module.css';
 
-/** Floating button, always reachable once the envelope is open. */
-export function MuteButton() {
+/**
+ * Floating button, always reachable once the envelope is open. Over the envelope it only
+ * shows while the song plays (it started with the page), in the top-left corner.
+ */
+export function MuteButton({ overEnvelope = false }: { overEnvelope?: boolean }) {
   const { available, playing, muted } = useAudioState();
   const { toggleMute } = useAudioActions();
-  if (!available) return null;
+  if (!available || (overEnvelope && !playing)) return null;
 
   const silent = !playing || muted;
 
@@ -15,6 +18,7 @@ export function MuteButton() {
     <motion.button
       type="button"
       className={styles.button}
+      data-over-envelope={overEnvelope}
       onClick={toggleMute}
       aria-label={silent ? 'Activar la música' : 'Silenciar la música'}
       initial={{ opacity: 0, scale: 0.8 }}

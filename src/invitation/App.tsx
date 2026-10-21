@@ -37,6 +37,7 @@ export default function App() {
       invitation={invitation}
       codeStatus={state.codeStatus}
       showDesignPanel={showDesignPanel}
+      autoplayMusic={!preview}
     />
   );
 }

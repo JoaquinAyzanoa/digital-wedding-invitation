@@ -11,7 +11,8 @@ import type { CodeStatus } from './useInvitationData';
 function renderInvitation({
   content = demoContent,
   codeStatus = 'valid',
-}: { content?: PublicContent; codeStatus?: CodeStatus } = {}) {
+  autoplayMusic = false,
+}: { content?: PublicContent; codeStatus?: CodeStatus; autoplayMusic?: boolean } = {}) {
   return render(
     <Invitation
       api={createDemoApi()}
@@ -19,6 +20,7 @@ function renderInvitation({
       invitation={codeStatus === 'valid' ? demoInvitation : null}
       codeStatus={codeStatus}
       showDesignPanel={false}
+      autoplayMusic={autoplayMusic}
     />,
   );
 }
@@ -153,4 +155,56 @@ describe('Music', () => {
       load.mockRestore();
     },
   );
+
+  it('starts as the page opens when the browser allows it, with a mute button', async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    const paused = vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(true);
+    const content = structuredClone(demoContent);
+    content.music = { url: 'https://example.com/song.mp3' };
+    renderInvitation({ content, autoplayMusic: true });
+
+    // No tap yet: the envelope is still closed.
+    expect(play).toHaveBeenCalledTimes(1);
+    const song = play.mock.contexts[0] as HTMLMediaElement;
+    paused.mockReturnValue(false);
+    song.dispatchEvent(new Event('play'));
+    expect(await screen.findByRole('button', { name: 'Silenciar la música' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Opening the envelope does not restart it.
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir la invitación' }));
+    expect(play).toHaveBeenCalledTimes(1);
+    play.mockRestore();
+    paused.mockRestore();
+  });
+
+  it('when the browser refuses, it starts on the first touch anywhere', async () => {
+    let playing = false;
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockRejectedValueOnce(new DOMException('blocked', 'NotAllowedError'))
+      .mockImplementation(() => {
+        playing = true;
+        return Promise.resolve();
+      });
+    const paused = vi
+      .spyOn(HTMLMediaElement.prototype, 'paused', 'get')
+      .mockImplementation(() => !playing);
+    const load = vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
+    const content = structuredClone(demoContent);
+    content.music = { url: 'https://example.com/song.mp3' };
+    renderInvitation({ content, autoplayMusic: true });
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    // Refused: no mute button over the envelope.
+    expect(screen.queryByRole('button', { name: /música/ })).not.toBeInTheDocument();
+
+    await userEvent.click(within(screen.getByRole('dialog')).getByText('Familia Demo'));
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(2));
+    // Playing now: later touches (the envelope's too) do not start it again.
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir la invitación' }));
+    expect(play).toHaveBeenCalledTimes(2);
+    play.mockRestore();
+    paused.mockRestore();
+    load.mockRestore();
+  });
 });

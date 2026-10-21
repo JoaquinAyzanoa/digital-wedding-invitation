@@ -16,3 +16,12 @@
   cursor: pointer;
   backdrop-filter: blur(4px);
 }
+
+/* Over the envelope (above its overlay), away from the countdown and the skip button. */
+.button[data-over-envelope='true'] {
+  top: max(14px, env(safe-area-inset-top));
+  right: auto;
+  bottom: auto;
+  left: 14px;
+  z-index: 110;
+}

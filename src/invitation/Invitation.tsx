@@ -23,12 +23,14 @@ interface InvitationProps {
   invitation: InvitationView | null;
   codeStatus: CodeStatus;
   showDesignPanel: boolean;
+  /** Start the song as the page opens (not in the admin's preview). */
+  autoplayMusic?: boolean;
 }
 
 export function Invitation(props: InvitationProps) {
   return (
     <MotionConfig reducedMotion="user">
-      <AudioProvider src={props.content.music?.url ?? null}>
+      <AudioProvider src={props.content.music?.url ?? null} autoplay={props.autoplayMusic}>
         <ToastProvider>
           <InvitationPage {...props} />
         </ToastProvider>
@@ -114,7 +116,8 @@ function InvitationPage({
           codeNotFound={codeStatus === 'not_found'}
           ready={fontsReady}
           onOpen={() => {
-            audio.start();
+            // Usually already playing; if not, the tap starts it.
+            void audio.start();
             setPetals(true);
           }}
           onOpened={() => {
@@ -126,7 +129,7 @@ function InvitationPage({
       )}
 
       {petals && <Petals onDone={hidePetals} />}
-      {envelopeOpen && <MuteButton />}
+      <MuteButton overEnvelope={!envelopeOpen} />
 
       {showDesignPanel && (
         <DesignPanel

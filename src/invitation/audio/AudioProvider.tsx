@@ -11,10 +11,25 @@ const FADE_IN_MS = 3000;
 // Buffering starts once the page has settled, while the guest looks at the envelope.
 const PRELOAD_AFTER_MS = 1500;
 
+// Interactions that let a page start sound (a scroll does not count; the touch's end does).
+const GESTURES = ['pointerdown', 'touchend', 'keydown', 'click'] as const;
+
+interface AudioProviderProps {
+  src: string | null;
+  /**
+   * Start the song as the page opens. Browsers only allow sound once the visitor has touched
+   * the page (some allow it at once, e.g. on a site already visited): when refused, it
+   * starts on the first touch anywhere, not only on the envelope.
+   */
+  autoplay?: boolean;
+  children: ReactNode;
+}
+
 /** Owns the single <audio> element shared by the player and the floating mute button. */
-export function AudioProvider({ src, children }: { src: string | null; children: ReactNode }) {
+export function AudioProvider({ src, autoplay = false, children }: AudioProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fadeRef = useRef(0);
+  const riseRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [loop, setLoop] = useState(true);
@@ -59,18 +74,30 @@ export function AudioProvider({ src, children }: { src: string | null; children:
   // Built once: everything goes through the ref, so consumers never re-render for these.
   const actions = useMemo<AudioActions>(() => {
     const audio = () => audioRef.current;
-    const play = () => {
-      // In-app browsers may still refuse: stay paused, never break the page.
-      audio()
-        ?.play()
-        .catch(() => setPlaying(false));
+    // Called synchronously (phones only allow it inside the touch). Resolves whether it plays;
+    // when refused (autoplay rules, in-app browsers) it stays paused, never breaks the page.
+    const play = (): Promise<boolean> => {
+      const a = audio();
+      if (!a) return Promise.resolve(false);
+      const refused = () => {
+        setPlaying(false);
+        return false;
+      };
+      try {
+        return Promise.resolve(a.play()).then(() => true, refused);
+      } catch {
+        return Promise.resolve(refused());
+      }
     };
     // From silence to full volume once the sound really starts (not while it still loads).
     // iPhones do not let pages set the volume: there it simply starts at full volume.
     const start = () => {
       const a = audio();
-      if (!a) return;
+      if (!a) return Promise.resolve(false);
+      // Already playing (it started with the page): the envelope's tap changes nothing.
+      if (!a.paused) return Promise.resolve(true);
       cancelAnimationFrame(fadeRef.current);
+      if (riseRef.current) a.removeEventListener('playing', riseRef.current);
       a.volume = 0;
       const rise = () => {
         const begin = performance.now();
@@ -81,19 +108,20 @@ export function AudioProvider({ src, children }: { src: string | null; children:
         };
         fadeRef.current = requestAnimationFrame(step);
       };
+      riseRef.current = rise;
       a.addEventListener('playing', rise, { once: true });
-      play();
+      return play();
     };
     return {
-      play,
+      play: () => void play(),
       start,
       pause: () => audio()?.pause(),
-      toggle: () => (audio()?.paused ? play() : audio()?.pause()),
+      toggle: () => (audio()?.paused ? void play() : audio()?.pause()),
       restart: () => {
         const a = audio();
         if (!a) return;
         a.currentTime = 0;
-        if (a.paused) play();
+        if (a.paused) void play();
       },
       seek: (seconds) => {
         const a = audio();
@@ -110,7 +138,7 @@ export function AudioProvider({ src, children }: { src: string | null; children:
         if (a.paused) {
           a.muted = false;
           setMuted(false);
-          play();
+          void play();
           return;
         }
         a.muted = !a.muted;
@@ -118,6 +146,24 @@ export function AudioProvider({ src, children }: { src: string | null; children:
       },
     };
   }, []);
+
+  // Try as the page opens; if the browser refuses, on every touch until it plays.
+  useEffect(() => {
+    if (!src || !autoplay) return;
+    let done = false;
+    const stop = () => {
+      done = true;
+      GESTURES.forEach((event) => document.removeEventListener(event, onGesture, true));
+    };
+    function onGesture() {
+      void actions.start().then((ok) => ok && stop());
+    }
+    void actions.start().then((ok) => {
+      if (ok || done) return stop();
+      GESTURES.forEach((event) => document.addEventListener(event, onGesture, true));
+    });
+    return stop;
+  }, [src, autoplay, actions]);
 
   const state = useMemo(
     () => ({ available: Boolean(src), playing, muted, loop }),
