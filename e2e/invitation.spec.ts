@@ -126,11 +126,11 @@ test.describe('invitation (demo)', () => {
     await context.close();
   });
 
-  test('second visit offers to skip the envelope', async ({ page }) => {
+  test('every visit opens with the envelope, with no way to skip it', async ({ page }) => {
     await page.goto('/?i=demo');
     await openEnvelope(page);
     await page.reload();
-    await page.getByRole('button', { name: 'Saltar' }).click();
-    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Abrir la invitación' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Saltar' })).toHaveCount(0);
   });
 });

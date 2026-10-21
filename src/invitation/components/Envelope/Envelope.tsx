@@ -11,25 +11,8 @@ import { Back, FlapFront, FlapInside, PaperDefs, Pocket } from './paper';
 import { paperIds } from './paperIds';
 import { WaxSeal } from './WaxSeal';
 
-const OPENED_KEY = 'wi-envelope-opened';
-// The full sequence takes ~3.5 s; past this, open anyway (e.g. animation frames paused).
+// The full sequence takes ~3 s; past this, open anyway (e.g. animation frames paused).
 const SAFETY_TIMEOUT_MS = 6000;
-
-function readOpenedBefore() {
-  try {
-    return localStorage.getItem(OPENED_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function rememberOpened() {
-  try {
-    localStorage.setItem(OPENED_KEY, '1');
-  } catch {
-    // Private mode or blocked storage: the skip button just won't show next time.
-  }
-}
 
 interface EnvelopeProps {
   content: Pick<PublicContent, 'couple' | 'date' | 'decorations' | 'coverVideo'>;
@@ -55,7 +38,6 @@ export function Envelope({
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const reducedMotion = useReducedMotion();
   const [opening, setOpening] = useState(false);
-  const [canSkip] = useState(readOpenedBefore);
   const titleId = useId();
   const ids = paperIds(titleId);
 
@@ -88,14 +70,13 @@ export function Envelope({
     };
   }, []);
 
-  async function open(skip = false) {
+  async function open() {
     if (opening) return;
     setOpening(true);
     onOpen?.();
-    rememberOpened();
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, SAFETY_TIMEOUT_MS));
     try {
-      await Promise.race([play(skip || !!reducedMotion), timeout]);
+      await Promise.race([play(!!reducedMotion), timeout]);
     } finally {
       // Never leave the guest stuck behind the envelope, even if an animation fails or stalls.
       onOpened();
@@ -211,12 +192,6 @@ export function Envelope({
       )}
 
       <PaperDefs ids={ids} />
-
-      {canSkip && (
-        <button type="button" className={styles.skip} onClick={() => open(true)}>
-          Saltar
-        </button>
-      )}
 
       <div className={styles.content} data-ready={ready}>
         <p className={styles.kicker} data-fade-on-open>

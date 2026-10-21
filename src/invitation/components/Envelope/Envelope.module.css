@@ -53,22 +53,6 @@
   left: 0;
 }
 
-.skip {
-  position: absolute;
-  top: max(14px, env(safe-area-inset-top));
-  right: 14px;
-  z-index: 2;
-  padding: 8px 12px;
-  border: 0;
-  background: none;
-  color: var(--color-muted);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
 .kicker {
   font-size: clamp(20px, 5.6vw, 24px);
   font-weight: 500;
@@ -516,10 +500,6 @@
 .overlay[data-video='true'] {
   --hint-ink: var(--seal-lo);
   --card-ink: var(--seal-lo);
-}
-
-.overlay[data-video='true'] .skip {
-  color: rgb(255 255 255 / 0.85);
 }
 
 .overlay[data-video='true'] .notFound {
