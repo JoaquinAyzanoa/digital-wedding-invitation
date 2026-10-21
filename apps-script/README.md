@@ -67,7 +67,7 @@ fotos del todo (además de cerrar el álbum en el panel), archiva la implementac
 
 ### Álbum
 
-- El invitado sube fotos desde su invitación o desde `/photos/` (el QR de las mesas, que se
+- El invitado sube fotos desde su invitación o desde `/fotos/` (el QR de las mesas, que se
   descarga en el panel → Álbum). El botón solo aparece mientras el álbum está abierto
   (Contenido: activo y fechas) y conectado (la URL de la aplicación web).
 - **Directo a Drive** (fotos de hasta 50 MB y videos de hasta 1 GB): el navegador pide a

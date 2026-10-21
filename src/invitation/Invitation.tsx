@@ -13,6 +13,7 @@ import { Petals } from './components/Petals/Petals';
 import { RevealContext } from './components/revealContext';
 import styles from './Invitation.module.css';
 import { RsvpContext } from './rsvpContext';
+import { PaperEdgeContext } from './sections/paperEdgeContext';
 import { SECTION_COMPONENTS } from './sections/registry';
 import { ToastProvider } from '@/shared/toast/ToastProvider';
 import type { CodeStatus } from './useInvitationData';
@@ -96,13 +97,11 @@ function InvitationPage({
             {sections.map((entry, i) => {
               const Component =
                 SECTION_COMPONENTS[entry.id as Exclude<typeof entry.id, 'envelope'>];
+              const paperEdge = i === 0 || sections[i - 1]?.id === 'photo';
               return (
-                <Component
-                  key={`${entry.id}-${i}`}
-                  content={content}
-                  invitation={invitation}
-                  entry={entry}
-                />
+                <PaperEdgeContext key={`${entry.id}-${i}`} value={paperEdge}>
+                  <Component content={content} invitation={invitation} entry={entry} />
+                </PaperEdgeContext>
               );
             })}
           </main>

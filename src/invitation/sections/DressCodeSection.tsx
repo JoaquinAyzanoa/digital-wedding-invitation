@@ -12,8 +12,8 @@ export function DressCodeSection({ content, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry} labelledBy="dresscode-title">
       <Reveal className={styles.icons}>
-        <Icon name="dress" size={84} className={text.primaryIcon} />
-        <Icon name="suit" size={84} className={text.inkIcon} />
+        <Icon name="dress" size={84} className={text.goldIcon} />
+        <Icon name="suit" size={84} className={text.goldIcon} />
       </Reveal>
       <Reveal>
         <SectionTitle id="dresscode-title">{sectionTitle(content, 'dressCode')}</SectionTitle>

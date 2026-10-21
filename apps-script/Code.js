@@ -9,7 +9,7 @@
  * Deployed as a web app, the same code receives the guests' album photos (`doPost`) and
  * saves them, at their original quality, in a Google Drive folder (property FOLDER_ID). It
  * does not talk to Supabase: no codes, no limits, anyone with the page can upload (the
- * invitation and the /photos/ page with the QR on the tables).
+ * invitation and the /fotos/ page with the QR on the tables).
  *
  * The Sheet and the photos can live in different Google accounts: the same file goes into
  * two projects (see README.md in this folder).

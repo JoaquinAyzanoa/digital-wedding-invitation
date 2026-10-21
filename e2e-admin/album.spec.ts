@@ -131,7 +131,7 @@ test('the admin connects the album and gets the QR for the tables', async ({ pag
     'href',
     FOLDER,
   );
-  const qr = page.getByRole('img', { name: /Código QR de .*\/photos\/$/ });
+  const qr = page.getByRole('img', { name: /Código QR de .*\/fotos\/$/ });
   await expect(qr).toBeVisible();
   const downloading = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Descargar QR (PNG)' }).click();
@@ -141,11 +141,11 @@ test('the admin connects the album and gets the QR for the tables', async ({ pag
   await expect(page.getByText(/^Álbum conectado/)).toBeVisible();
 });
 
-test('anyone uploads from /photos/ (the QR), at original quality', async ({ page }) => {
+test('anyone uploads from /fotos/ (the QR), at original quality', async ({ page }) => {
   test.setTimeout(120_000);
   const received: Received = [];
   await fakeWebApp(page, received);
-  await page.goto('/photos/');
+  await page.goto('/fotos/');
   await expect(page.getByRole('heading', { name: 'Comparte tus fotos y videos' })).toBeVisible();
 
   const photos = Array.from({ length: 20 }, (_, i) => photo(i));
@@ -179,7 +179,7 @@ test('a video goes up in parts, straight to Drive', async ({ page }) => {
   test.setTimeout(120_000);
   const received: Received = [];
   await fakeWebApp(page, received);
-  await page.goto('/photos/');
+  await page.goto('/fotos/');
   // 20 MB: three parts of 8 MB.
   const video = Buffer.alloc(20 * 1024 * 1024 + 99, 7);
   await page
@@ -194,7 +194,7 @@ test('a video goes up in parts, straight to Drive', async ({ page }) => {
 test('with a script from before sessions, photos still go up (the older way)', async ({ page }) => {
   const received: Received = [];
   await page.route(`${WEB_APP}*`, oldWebApp(received));
-  await page.goto('/photos/');
+  await page.goto('/fotos/');
   await page.locator('input[type="file"]').setInputFiles([photo(7)]);
   await expect(page.getByText('¡Gracias! Subiste 1 foto.')).toBeVisible({ timeout: 30_000 });
   expect(received[0]!.bytes.equals(photo(7).buffer)).toBe(true);
@@ -204,7 +204,7 @@ test('a refused photo is reported and not retried', async ({ page }) => {
   await page.route(`${WEB_APP}*`, (route) =>
     route.fulfill({ headers: cors, json: { ok: false, error: 'too_large' } }),
   );
-  await page.goto('/photos/');
+  await page.goto('/fotos/');
   await page.locator('input[type="file"]').setInputFiles([photo(99)]);
   await expect(page.getByText('Pesa demasiado para el álbum.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reintentar' })).toHaveCount(0);

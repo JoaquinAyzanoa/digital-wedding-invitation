@@ -6,16 +6,21 @@
   overflow: visible;
 }
 
-.crestLines {
-  stroke: var(--color-accent);
+.crestInk {
+  stroke: var(--crest-ink, var(--color-accent));
 }
 
-.crestDots {
-  fill: var(--color-accent);
+/* The hollow of the ribbons: the colour of the paper the crest sits on. */
+.crestPaper {
+  stroke: var(--crest-paper, var(--color-bg));
+}
+
+.crestDot {
+  fill: var(--crest-ink, var(--color-accent));
 }
 
 .crestMonogram {
-  fill: var(--color-primary);
+  fill: var(--crest-letters, var(--color-primary));
   font-family: var(--font-script);
   text-anchor: middle;
   dominant-baseline: central;

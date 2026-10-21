@@ -51,10 +51,10 @@ test.describe('invitation (demo)', () => {
     await expect(page.getByText('Este archivo no es una foto ni un video.')).toBeVisible();
   });
 
-  test('the /photos/ page (QR on the tables) lets anyone upload, without a code', async ({
+  test('the /fotos/ page (QR on the tables) lets anyone upload, without a code', async ({
     page,
   }) => {
-    await page.goto('/photos/');
+    await page.goto('/fotos/');
     await expect(page.getByRole('heading', { name: 'Comparte tus fotos y videos' })).toBeVisible();
     await expect(page.getByText('Valeria & Mateo')).toBeVisible();
     await page.locator('input[type="file"]').setInputFiles([

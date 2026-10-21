@@ -26,7 +26,7 @@ function closedMessage(album: PublicContent['album'], now = new Date()) {
   return 'El álbum ya se cerró. ¡Gracias por compartir tus recuerdos!';
 }
 
-/** /photos/: names, the album text and "Subir fotos", in the invitation's look. */
+/** /fotos/: names, the album text and "Subir fotos", in the invitation's look. */
 export function PhotosApp() {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ status: 'loading' });

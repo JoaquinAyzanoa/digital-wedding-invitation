@@ -20,7 +20,7 @@ export function GiftsSection({ content, invitation, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry} labelledBy="gifts-title">
       <Reveal className={styles.card}>
-        <Icon name="gift" size={72} className={text.inkIcon} />
+        <Icon name="gift" size={72} className={text.goldIcon} />
         <SectionTitle id="gifts-title">{sectionTitle(content, 'gifts')}</SectionTitle>
         {content.gifts.text && <p className={text.body}>{content.gifts.text}</p>}
 

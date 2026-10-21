@@ -31,14 +31,6 @@
   color: var(--color-accent);
 }
 
-.inkIcon {
-  color: var(--color-ink);
-}
-
-.primaryIcon {
-  color: var(--color-primary);
-}
-
 .small {
   font-size: 17px;
   color: var(--color-muted);

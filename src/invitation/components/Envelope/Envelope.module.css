@@ -3,7 +3,8 @@
   --hint-ink: rgb(255 255 255 / 0.92);
   --liner: #fbf7ef;
   --liner-ink: var(--color-accent);
-  --card: #fffdf8;
+  /* Ivory, not white: the light edge of the embossing shows on it. */
+  --card: #fbf6ec;
   --card-ink: var(--color-primary);
   --card-line: var(--color-accent);
 
@@ -255,16 +256,30 @@
   line-height: 1;
 }
 
-.cartouche {
-  width: 15cqw;
-  overflow: visible;
+/* The page's crest, small, in the card's inks. */
+.cardCrest {
+  --crest-ink: var(--card-line);
+  --crest-paper: var(--card);
+  --crest-letters: var(--card-ink);
+
+  width: 17cqw;
+  margin-bottom: 0.6cqw;
 }
 
-.cartoucheText {
-  fill: var(--card-ink);
-  font-family: var(--font-script);
-  text-anchor: middle;
-  dominant-baseline: central;
+/* Garlands pressed into the card: a light edge, a soft shadow and the card itself. */
+.cardEmbossShadow {
+  fill: rgb(70 50 30 / 0.16);
+  stroke: rgb(70 50 30 / 0.16);
+}
+
+.cardEmbossLight {
+  fill: rgb(255 255 255 / 0.95);
+  stroke: rgb(255 255 255 / 0.95);
+}
+
+.cardEmbossPaper {
+  fill: var(--card);
+  stroke: var(--card);
 }
 
 .cardNames {

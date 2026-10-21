@@ -101,7 +101,7 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry} labelledBy="rsvp-title">
       <Reveal>
-        <Icon name="calendar" size={84} className={text.primaryIcon} />
+        <Icon name="calendar" size={84} className={text.goldIcon} />
       </Reveal>
       <Reveal>
         <SectionTitle id="rsvp-title">{sectionTitle(content, 'rsvp')}</SectionTitle>

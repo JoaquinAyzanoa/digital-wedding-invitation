@@ -16,7 +16,7 @@ export function AlbumSection({ content, invitation, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry} labelledBy="album-title">
       <Reveal>
-        <Icon name="album" size={84} className={text.primaryIcon} />
+        <Icon name="album" size={84} className={text.goldIcon} />
       </Reveal>
       <Reveal>
         <SectionTitle id="album-title">{sectionTitle(content, 'album')}</SectionTitle>
@@ -27,7 +27,7 @@ export function AlbumSection({ content, invitation, entry }: SectionProps) {
         </Reveal>
       )}
       {/* Anyone can upload while the album is open (no code needed: the QR on the tables
-          leads to /photos/ with the same uploader). */}
+          leads to /fotos/ with the same uploader). */}
       {open && content.album.uploadUrl && (
         <Reveal>
           <AlbumUploader api={api} uploadUrl={content.album.uploadUrl} />

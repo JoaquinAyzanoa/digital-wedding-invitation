@@ -1,4 +1,4 @@
-// The baroque cartouche around the monogram (viewBox -104 -122 208 236, centred on the
+// The baroque cartouche around the monogram (viewBox -108 -126 216 244, centred on the
 // monogram). Only the left half is built; the component mirrors it. Everything is line art:
 // scrolls along ellipses that end in volutes, slender curled leaves and a shell at the crown.
 
@@ -59,7 +59,7 @@ interface ScrollEnds {
   turns?: number;
 }
 
-/** A scroll along an ellipse from `from`° to `to`°, ending in volutes. */
+/** A scroll along an ellipse from `from`° to `to`°, ending in volutes (and their eyes). */
 function scroll(rx: number, ry: number, from: number, to: number, ends: ScrollEnds = {}) {
   const { start = 1, end = 1, r0 = 8, r1 = 8, turns = 1.35 } = ends;
   const sign = to > from ? 1 : -1;
@@ -73,12 +73,18 @@ function scroll(rx: number, ry: number, from: number, to: number, ends: ScrollEn
     return way > 0 === rightIsOuter ? right.points : left.points;
   };
   let points = arc;
-  if (end) points = [...points, ...curl(arc.at(-1)!, tangent(rx, ry, to, sign), end, r1).slice(1)];
+  const eyes: Point[] = [];
+  if (end) {
+    const spiral = curl(arc.at(-1)!, tangent(rx, ry, to, sign), end, r1);
+    points = [...points, ...spiral.slice(1)];
+    eyes.push(spiral.at(-1)!);
+  }
   if (start) {
     const spiral = curl(arc[0]!, tangent(rx, ry, from, -sign), start, r0);
     points = [...spiral.slice(1).reverse(), ...points];
+    eyes.push(spiral.at(-1)!);
   }
-  return smooth(points);
+  return { d: smooth(points), eyes };
 }
 
 /** A scallop shell opening up (sign -1) or down (+1) from (0, y). */
@@ -112,28 +118,36 @@ export const LEAF =
   'M0 0C4 -4.5 10 -6.2 15 -4.8C17.6 -4 19.6 -2.2 20.2 0.6C18.2 -1.2 15.6 -1.4 13.6 -0.3C10 1.8 4.6 2.1 0 0Z';
 export const LEAF_RIB = 'M1.6 -0.3C6 -2.2 11 -3.1 16.4 -2.5';
 
-/** The left half's scrolls (heavier lines) and their inner echoes (hairlines). */
-export const SCROLLS = [
-  scroll(70, 84, 145, 215, { r0: 9, r1: 9 }),
-  scroll(78, 92, 224, 252, { start: -1, r0: 7, r1: 6, turns: 1.2 }),
-  scroll(62, 84, 238, 268, { start: -1, r0: 6, r1: 7.5 }),
-  scroll(78, 90, 136, 110, { start: -1, r0: 7, r1: 6, turns: 1.2 }),
-  scroll(64, 84, 126, 96, { start: -1, r0: 6, r1: 6.5 }),
+const scrolls = [
+  { ...scroll(70, 84, 145, 215, { r0: 10, r1: 10 }), width: 3.4 },
+  { ...scroll(80, 94, 222, 254, { start: -1, r0: 7, r1: 6.5, turns: 1.25 }), width: 2.6 },
+  { ...scroll(62, 84, 238, 268, { start: -1, r0: 6, r1: 7.5 }), width: 2.4 },
+  { ...scroll(80, 92, 138, 108, { start: -1, r0: 7, r1: 6.5, turns: 1.25 }), width: 2.6 },
+  { ...scroll(64, 84, 126, 96, { start: -1, r0: 6, r1: 6.5 }), width: 2.4 },
 ];
+
+/** The left half's scrolls: drawn as hollow ribbons (a gold line with paper inside). */
+export const RIBBONS = scrolls.map(({ d, width }) => ({ d, width }));
+/** A small bead at the eye of every volute. */
+export const EYES = scrolls.flatMap(({ eyes }) => eyes);
+/** Hairlines echoing the big scroll. */
 export const ECHOES = [
-  scroll(64, 78, 152, 208, { start: 0, end: 0 }),
-  scroll(73, 87, 150, 210, { start: 0, end: 0 }),
+  scroll(64, 78, 152, 208, { start: 0, end: 0 }).d,
+  scroll(75.5, 89.5, 150, 210, { start: 0, end: 0 }).d,
 ];
+/** Leaves fanning at the middle of the side, in pairs at the shoulder and hip, by the crown. */
 export const LEAVES = [
-  leafOn(73, 87, 176, 160, 0.95),
-  leafOn(73, 87, 184, 200, 0.95),
-  leafOn(72, 86, 166, 128, 0.7),
-  leafOn(72, 86, 194, 232, 0.7),
-  leafOn(80, 94, 220, 235, 0.8),
-  leafOn(80, 92, 140, 125, 0.8),
-  'translate(-13 -88) rotate(200) scale(0.75)',
-  'translate(-10 88) rotate(160) scale(0.7)',
+  leafOn(77, 91, 180, 180, 1.25),
+  leafOn(76, 90, 170, 150, 1),
+  leafOn(76, 90, 190, 210, 1),
+  leafOn(74, 88, 160, 128, 0.75),
+  leafOn(74, 88, 200, 232, 0.75),
+  leafOn(84, 98, 226, 240, 0.85),
+  leafOn(84, 96, 134, 120, 0.85),
+  'translate(-15 -90) rotate(196) scale(0.85)',
+  'translate(-12 90) rotate(164) scale(0.8)',
 ];
-export const CROWN = shell(-86, -1, 15, 7);
-export const BASE_SHELL = shell(88, 1, 10, 5);
-export const FINIAL = 'M0 -101C-4 -106 -4 -112 0 -117C4 -112 4 -106 0 -101Z';
+export const CROWN = shell(-87, -1, 16, 9);
+export const BASE_SHELL = shell(88, 1, 11, 7);
+export const FINIAL = 'M0 -103C-5 -109 -5 -116 0 -122C5 -116 5 -109 0 -103Z';
+export const DROP = 'M0 100C-3 104 -3 108 0 112C3 108 3 104 0 100Z';
