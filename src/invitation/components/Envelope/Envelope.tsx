@@ -5,7 +5,10 @@ import type { InvitationView } from '@/shared/schemas/invitation';
 import { datePartsInLima } from '@/shared/utils/date';
 import { CodeEntry } from '../CodeEntry/CodeEntry';
 import { Countdown } from '../Countdown/Countdown';
+import { CardFace } from './CardFace';
 import styles from './Envelope.module.css';
+import { Back, FlapFront, FlapInside, PaperDefs, Pocket } from './paper';
+import { paperIds } from './paperIds';
 import { WaxSeal } from './WaxSeal';
 
 const OPENED_KEY = 'wi-envelope-opened';
@@ -54,7 +57,7 @@ export function Envelope({
   const [opening, setOpening] = useState(false);
   const [canSkip] = useState(readOpenedBefore);
   const titleId = useId();
-  const arcId = `${titleId.replace(/[^a-zA-Z0-9_-]/g, '')}-arc`;
+  const ids = paperIds(titleId);
 
   const { bride, groom, monogram } = content.couple;
   const video = content.coverVideo;
@@ -72,7 +75,8 @@ export function Envelope({
       .then(() => element.play())
       .catch(() => {});
   }, [video, reducedMotion]);
-  const { day, month, year } = datePartsInLima(content.date);
+  const date = datePartsInLima(content.date);
+  const { day, month, year } = date;
 
   // Keep the page behind from scrolling while the envelope covers it.
   useEffect(() => {
@@ -126,8 +130,9 @@ export function Envelope({
     // Past 90° the flap is behind the card and we see its inside.
     flap.dataset.open = 'true';
     await animate(flap, { rotateX: 180 }, { duration: 0.35, ease: 'easeOut' });
-    await animate('[data-card]', { y: '-58%' }, { duration: 0.8, ease: [0.22, 1, 0.36, 1] });
-    await animate(root, { opacity: 0, y: -24 }, { duration: 0.7, ease: 'easeInOut', delay: 0.25 });
+    await animate('[data-card]', { y: '-62%' }, { duration: 0.9, ease: [0.22, 1, 0.36, 1] });
+    // A moment to see the card before the page appears.
+    await animate(root, { opacity: 0, y: -24 }, { duration: 0.7, ease: 'easeInOut', delay: 0.55 });
   }
 
   const seats = invitation?.seats ?? 0;
@@ -143,6 +148,12 @@ export function Envelope({
     >
       {video && (
         <>
+          {/* Wide screens: the video stands in a column over a blurred copy of its frame. */}
+          <span
+            className={styles.backdrop}
+            style={{ backgroundImage: `url("${coverPoster(video)}")` }}
+            aria-hidden="true"
+          />
           <video
             ref={videoRef}
             className={styles.video}
@@ -173,6 +184,8 @@ export function Envelope({
         />
       )}
 
+      <PaperDefs ids={ids} />
+
       {canSkip && (
         <button type="button" className={styles.skip} onClick={() => open(true)}>
           Saltar
@@ -197,24 +210,17 @@ export function Envelope({
           disabled={opening}
           aria-label="Abrir la invitación"
         >
-          <span className={styles.back} />
+          <Back ids={ids} />
           <span className={styles.card} data-card>
-            <span className={styles.cardMonogram}>{monogram}</span>
+            <CardFace ids={ids} monogram={monogram} bride={bride} groom={groom} date={date} />
           </span>
-          <svg
-            className={styles.pocket}
-            viewBox="0 0 300 200"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path className={styles.side} d="M0 0 140 106 0 200Z" />
-            <path className={styles.side} d="M300 0 160 106 300 200Z" />
-            <path className={styles.bottom} d="M0 200 136 99Q150 89 164 99L300 200Z" />
-          </svg>
+          <Pocket ids={ids} />
           <span className={styles.flap} data-flap>
-            <svg viewBox="0 0 300 200" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M0 0H300L162 109Q150 118 138 109Z" />
-            </svg>
+            <FlapFront ids={ids} />
+            <FlapInside ids={ids} />
+            <span className={styles.hint} aria-hidden="true" data-hint>
+              Clic para abrir
+            </span>
           </span>
           <span className={styles.seal}>
             <span className={styles.sealWhole} data-seal-whole>
@@ -226,14 +232,6 @@ export function Envelope({
             <span className={styles.sealHalf} data-seal-half="right">
               <WaxSeal monogram={monogram} half="right" />
             </span>
-            <svg className={styles.hint} viewBox="-22 -22 164 164" aria-hidden="true" data-hint>
-              <path id={arcId} d="M-4 60A64 64 0 0 0 124 60" fill="none" />
-              <text>
-                <textPath href={`#${arcId}`} startOffset="50%" textAnchor="middle">
-                  Clic aquí para abrir
-                </textPath>
-              </text>
-            </svg>
           </span>
         </button>
 
