@@ -396,19 +396,21 @@
   color: #fff;
 }
 
+/* Fixed, not absolute: if the words are taller than a short screen and the guest scrolls,
+   the video, its veil and backdrop still cover the whole screen behind them. */
 .video {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center bottom;
-  /* A little softer and quieter than the original, so the words lead. Slightly enlarged from
-     the bottom: whatever is written at the top of the video (a monogram) rises under the
-     darker part of the veil instead of sitting between the names. */
+  /* Soft and milky, like a faded photograph, so the words lead. Slightly enlarged from the
+     bottom: whatever is written at the top of the video (a monogram) rises under the darker
+     part of the veil instead of sitting between the names. */
   transform: scale(1.14);
   transform-origin: center bottom;
-  filter: saturate(0.85) brightness(0.95);
+  filter: saturate(0.7) contrast(0.86) brightness(1.04);
 }
 
 .backdrop {
@@ -419,7 +421,7 @@
    melting into a blurred, darker copy of the first frame. */
 @media (min-aspect-ratio: 4 / 5) {
   .backdrop {
-    position: absolute;
+    position: fixed;
     inset: -40px;
     display: block;
     background: center / cover no-repeat;
@@ -434,21 +436,26 @@
   }
 }
 
-/* A warm veil, deeper at the top and bottom where the words sit. */
+/* A translucent white wash over the whole video, with a light warm shade at the top and
+   bottom so the white words stay readable. */
 .veil {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(28 21 17 / 0.62) 0%,
-    rgb(28 21 17 / 0.3) 34%,
-    rgb(28 21 17 / 0.26) 58%,
-    rgb(28 21 17 / 0.68) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      rgb(28 21 17 / 0.4) 0%,
+      rgb(28 21 17 / 0.08) 30%,
+      rgb(28 21 17 / 0.06) 62%,
+      rgb(28 21 17 / 0.46) 100%
+    ),
+    rgb(255 251 246 / 0.26);
 }
 
 .overlay[data-video='true'] .content {
-  text-shadow: 0 1px 16px rgb(0 0 0 / 0.35);
+  text-shadow:
+    0 1px 14px rgb(40 28 20 / 0.5),
+    0 0 2px rgb(40 28 20 / 0.25);
 }
 
 .overlay[data-video='true'] .kicker {
