@@ -416,9 +416,18 @@
 }
 
 /* Fixed, not absolute: if the words are taller than a short screen and the guest scrolls,
-   the video, its veil and backdrop still cover the whole screen behind them. */
-.video {
+   the video, its veil and backdrop still cover the whole screen behind them. The frame (an
+   ordinary box) stretches with the screen as the phone's browser bars shrink or grow; the
+   video fills the frame. A video sized by itself (height: 100%) would keep the height the
+   screen had at first, leaving a dark band at the bottom once the bars shrink. */
+.videoFrame {
   position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.video {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -449,7 +458,9 @@
 
   .video {
     left: 50%;
-    width: min(100%, 56.25svh);
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 9 / 16;
     transform: translateX(-50%);
     mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
   }

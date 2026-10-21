@@ -179,18 +179,19 @@ export function Envelope({
             style={{ backgroundImage: `url("${coverPoster(video)}")` }}
             aria-hidden="true"
           />
-          <video
-            ref={videoRef}
-            className={styles.video}
-            src={video}
-            poster={coverPoster(video)}
-            muted
-            loop
-            playsInline
-            autoPlay={!reducedMotion}
-            preload="auto"
-            aria-hidden="true"
-          />
+          <span className={styles.videoFrame} aria-hidden="true">
+            <video
+              ref={videoRef}
+              className={styles.video}
+              src={video}
+              poster={coverPoster(video)}
+              muted
+              loop
+              playsInline
+              autoPlay={!reducedMotion}
+              preload="auto"
+            />
+          </span>
           <span className={styles.veil} aria-hidden="true" />
         </>
       )}
