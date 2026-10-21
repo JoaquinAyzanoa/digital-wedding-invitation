@@ -7,8 +7,11 @@ export interface UploadItem {
   id: string;
   name: string;
   status: UploadStatus;
-  /** 0–1 while uploading. */
+  /** 0–1 while uploading, when the upload reports it (the Drive one cannot: see driveUpload). */
   progress: number;
+  /** When it started going up, and how long it should take (to show an estimated bar). */
+  startedAt?: number;
+  expectedMs?: number;
   error?: string;
   /** The guest can try again (not for a file that is not a photo or is too big). */
   retryable?: boolean;
@@ -16,7 +19,7 @@ export interface UploadItem {
 
 /** Original photos go up as they are; the web app accepts up to 25 MB. */
 export const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
-export const CONCURRENCY = 2;
+export const CONCURRENCY = 3;
 /** Automatic retries after the first try (network hiccups on a phone). */
 export const RETRIES = 2;
 
@@ -33,6 +36,19 @@ const FINAL: Partial<Record<ApiErrorCode, string>> = {
   too_large: MESSAGES.tooLarge,
   invalid_payload: MESSAGES.notPhoto,
 };
+
+/**
+ * The bar while a photo goes up: the real progress when the upload reports it, otherwise an
+ * estimate from the photo's size that slows down near the end and never claims it is done
+ * (0.95 at most) until the answer arrives.
+ */
+export function shownProgress(item: UploadItem, now: number): number {
+  if (item.status === 'done') return 1;
+  if (item.status !== 'uploading') return 0;
+  if (!item.startedAt || !item.expectedMs) return item.progress;
+  const estimate = 0.95 * (1 - Math.exp((-2.3 * (now - item.startedAt)) / item.expectedMs));
+  return Math.max(item.progress, estimate);
+}
 
 type Sleep = (ms: number) => Promise<void>;
 
@@ -51,6 +67,10 @@ export class AlbumUploadQueue {
   private running = 0;
   private controller = new AbortController();
   private nextId = 0;
+  // Measured against the real Apps Script web app: about 4 s to answer at all, then about
+  // 5 s per MB (it is far slower than the guest's connection). Recalibrated as photos finish.
+  private overheadMs = 4000;
+  private msPerByte = 0.005;
 
   constructor(
     private api: PublicApi,
@@ -105,6 +125,18 @@ export class AlbumUploadQueue {
     this.controller = new AbortController();
   }
 
+  /** Learns the real speed from each finished photo (halfway between old and new). */
+  private calibrate(bytes: number, ms: number) {
+    if (bytes <= 0 || ms <= this.overheadMs) return;
+    const observed = (ms - this.overheadMs) / bytes;
+    this.msPerByte = Math.max(0.0002, (this.msPerByte + observed) / 2);
+  }
+
+  /** How long a photo of this size should take now (for tests and the bar). */
+  expectedMs(bytes: number) {
+    return this.overheadMs + bytes * this.msPerByte;
+  }
+
   private set(items: UploadItem[]) {
     this.items = items;
     for (const listener of this.listeners) listener();
@@ -130,12 +162,19 @@ export class AlbumUploadQueue {
     const signal = this.controller.signal;
 
     for (let attempt = 0; ; attempt++) {
-      this.update(id, { status: 'uploading', progress: 0 });
+      const startedAt = Date.now();
+      this.update(id, {
+        status: 'uploading',
+        progress: 0,
+        startedAt,
+        expectedMs: this.overheadMs + file.size * this.msPerByte,
+      });
       try {
         await this.api.uploadAlbumPhoto(this.uploadUrl, file, {
           signal,
           onProgress: (progress) => this.update(id, { progress }),
         });
+        this.calibrate(file.size, Date.now() - startedAt);
         this.files.delete(id); // free the memory (a phone may send dozens of photos)
         this.update(id, { status: 'done', progress: 1 });
         return;

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError, type PublicApi } from '@/shared/api';
-import { AlbumUploadQueue, CONCURRENCY, MAX_PHOTO_BYTES, RETRIES } from './uploadQueue';
+import {
+  AlbumUploadQueue,
+  CONCURRENCY,
+  MAX_PHOTO_BYTES,
+  RETRIES,
+  shownProgress,
+  type UploadItem,
+} from './uploadQueue';
 
 const URL = 'https://script.google.com/macros/s/x/exec';
 
@@ -107,5 +114,44 @@ describe('AlbumUploadQueue', () => {
     await done(queue);
     expect(new Set(snapshots).size).toBe(snapshots.length);
     expect(snapshots.length).toBeGreaterThan(2);
+  });
+});
+
+describe('the bar while a photo goes up', () => {
+  const uploading: UploadItem = {
+    id: '0',
+    name: 'a.jpg',
+    status: 'uploading',
+    progress: 0,
+    startedAt: 1000,
+    expectedMs: 10_000,
+  };
+
+  it('advances from the estimate, slowing down, and never reaches the end by itself', () => {
+    const at = (ms: number) => shownProgress(uploading, 1000 + ms);
+    expect(at(0)).toBe(0);
+    expect(at(2_500)).toBeGreaterThan(0.3);
+    expect(at(10_000)).toBeGreaterThan(0.8);
+    expect(at(10_000)).toBeLessThan(0.9);
+    expect(at(60_000)).toBeLessThanOrEqual(0.95);
+    expect(at(5_000)).toBeGreaterThan(at(2_500));
+  });
+
+  it('uses the real progress when the upload reports more, and is full when done', () => {
+    expect(shownProgress({ ...uploading, progress: 0.99 }, 1001)).toBe(0.99);
+    expect(shownProgress({ ...uploading, status: 'done' }, 0)).toBe(1);
+    expect(shownProgress({ ...uploading, status: 'waiting' }, 99_999)).toBe(0);
+  });
+
+  it('learns the real speed from the photos that finish', async () => {
+    const { queue } = setup(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    const before = queue.expectedMs(4 * 1024 * 1024);
+    queue.add([file('a.jpg', { size: 4 * 1024 * 1024 })]);
+    expect(queue.getSnapshot()[0]!.expectedMs).toBeCloseTo(before);
+    await done(queue);
+    // It finished far faster than the 4 s overhead: no learning from an impossible time.
+    expect(queue.expectedMs(4 * 1024 * 1024)).toBe(before);
   });
 });

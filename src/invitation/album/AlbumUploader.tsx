@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import type { PublicApi } from '@/shared/api';
 import { Button } from '@/shared/ui/Button';
 import styles from './AlbumUploader.module.css';
-import { AlbumUploadQueue, type UploadItem } from './uploadQueue';
+import { AlbumUploadQueue, shownProgress, type UploadItem } from './uploadQueue';
 
 function statusText(item: UploadItem) {
   switch (item.status) {
@@ -33,6 +33,14 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
   const busy = items.some((i) => i.status === 'waiting' || i.status === 'uploading');
 
   useEffect(() => () => queue.abort(), [queue]);
+
+  // The estimated bars move on their own: redraw a few times a second while uploading.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!busy) return;
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [busy]);
 
   // Leaving mid-upload loses the photos still going up: ask first.
   useEffect(() => {
@@ -86,9 +94,7 @@ export function AlbumUploader({ api, uploadUrl }: { api: PublicApi; uploadUrl: s
                 <progress
                   className={styles.bar}
                   max={1}
-                  // No value while going up: an indeterminate bar (the upload cannot report
-                  // its progress, see driveUpload).
-                  value={item.status === 'done' ? 1 : item.status === 'uploading' ? undefined : 0}
+                  value={shownProgress(item, now)}
                   aria-label={`${item.name}: ${statusText(item)}`}
                 />
                 {item.status === 'error' && item.retryable && (
