@@ -130,11 +130,50 @@ const scrolls = [
 export const RIBBONS = scrolls.map(({ d, width }) => ({ d, width }));
 /** A small bead at the eye of every volute. */
 export const EYES = scrolls.flatMap(({ eyes }) => eyes);
-/** Hairlines echoing the big scroll. */
-export const ECHOES = [
-  scroll(64, 78, 152, 208, { start: 0, end: 0 }).d,
-  scroll(75.5, 89.5, 150, 210, { start: 0, end: 0 }).d,
-];
+/**
+ * A laurel branch up the left side, between the oval and the big scroll: a stem with pairs of
+ * leaves, smaller towards the tip, and a bud at the end. The two branches meet at a bow.
+ */
+export const LAUREL = (() => {
+  const rx = 63;
+  const ry = 77;
+  const from = 104;
+  const to = 236;
+  const pairs = 11;
+  const stem: string[] = [];
+  for (let i = 0; i <= 40; i++) {
+    const [x, y] = onEllipse(rx, ry, from + ((to - from) * i) / 40);
+    stem.push(`${fmt(x)} ${fmt(y)}`);
+  }
+  // Direction of growth along the stem (towards growing angles), in degrees.
+  const growth = (deg: number) =>
+    (Math.atan2(ry * Math.cos(deg * RAD), -rx * Math.sin(deg * RAD)) * 180) / Math.PI;
+  const leaves: string[] = [];
+  for (let i = 0; i < pairs; i++) {
+    const t = (i + 0.6) / (pairs + 0.4);
+    const deg = from + (to - from) * t;
+    const [x, y] = onEllipse(rx, ry, deg);
+    const scale = 1.05 - t * 0.45;
+    for (const side of [-1, 1]) {
+      leaves.push(
+        `translate(${fmt(x)} ${fmt(y)}) rotate(${fmt(growth(deg) + side * 38)}) scale(${fmt(scale)})`,
+      );
+    }
+  }
+  const [tx, ty] = onEllipse(rx, ry, to + 2);
+  leaves.push(`translate(${fmt(tx)} ${fmt(ty)}) rotate(${fmt(growth(to))}) scale(0.55)`);
+  return { stem: `M${stem.join('L')}`, leaves, bowY: onEllipse(rx, ry, 90)[1] + 1 };
+})();
+/** A laurel leaf pointing along +x (about 11 long), and its vein. */
+export const LAUREL_LEAF = 'M0 0C2.2 -2.9 6.6 -3.6 11 0C6.6 3.2 2.2 2.6 0 0Z';
+export const LAUREL_VEIN = 'M0.8 0C4 -0.5 7.5 -0.5 10 0';
+/** The bow where the branches meet: two loops, a knot and two notched tails. */
+export const BOW = {
+  loops: 'M0 0C-5 -6 -15 -7 -16 -2C-17 3 -7 3 0 0ZM0 0C5 -6 15 -7 16 -2C17 3 7 3 0 0Z',
+  tails:
+    'M-1 1C-4 6 -8 10 -12 14L-8 14.5L-9.5 17.5C-5 13 -2 8 0 2ZM1 1C4 6 8 10 12 14L8 14.5L9.5 17.5C5 13 2 8 0 2Z',
+  knot: 'M-2.4 -1.2C-2.4 -3 2.4 -3 2.4 -1.2C2.4 1.6 -2.4 1.6 -2.4 -1.2Z',
+};
 /** Leaves fanning at the middle of the side, in pairs at the shoulder and hip, by the crown. */
 export const LEAVES = [
   leafOn(77, 91, 180, 180, 1.25),

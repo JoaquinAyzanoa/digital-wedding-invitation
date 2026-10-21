@@ -15,6 +15,15 @@
   stroke: var(--crest-paper, var(--color-bg));
 }
 
+.crestLeaf {
+  fill: var(--crest-ink, var(--color-accent));
+}
+
+.crestBow {
+  fill: var(--crest-paper, var(--color-bg));
+  stroke: var(--crest-ink, var(--color-accent));
+}
+
 .crestDot {
   fill: var(--crest-ink, var(--color-accent));
 }
@@ -35,13 +44,13 @@
 
 /* Blind embossing: the paper's own colour, a light edge and a soft shadow. */
 .garlandShadow {
-  fill: rgb(60 45 30 / 0.2);
-  stroke: rgb(60 45 30 / 0.2);
+  fill: rgb(60 45 30 / 0.11);
+  stroke: rgb(60 45 30 / 0.11);
 }
 
 .garlandLight {
-  fill: rgb(255 255 255 / 0.95);
-  stroke: rgb(255 255 255 / 0.95);
+  fill: rgb(255 255 255 / 0.75);
+  stroke: rgb(255 255 255 / 0.75);
 }
 
 .garlandPaper {

@@ -160,13 +160,13 @@
 }
 
 .embossShadow {
-  fill: rgb(40 30 20 / 0.14);
-  stroke: rgb(40 30 20 / 0.14);
+  fill: rgb(40 30 20 / 0.08);
+  stroke: rgb(40 30 20 / 0.08);
 }
 
 .embossLight {
-  fill: rgb(255 255 255 / 0.6);
-  stroke: rgb(255 255 255 / 0.6);
+  fill: rgb(255 255 255 / 0.4);
+  stroke: rgb(255 255 255 / 0.4);
 }
 
 .embossPaper {
@@ -268,13 +268,13 @@
 
 /* Garlands pressed into the card: a light edge, a soft shadow and the card itself. */
 .cardEmbossShadow {
-  fill: rgb(70 50 30 / 0.16);
-  stroke: rgb(70 50 30 / 0.16);
+  fill: rgb(70 50 30 / 0.09);
+  stroke: rgb(70 50 30 / 0.09);
 }
 
 .cardEmbossLight {
-  fill: rgb(255 255 255 / 0.95);
-  stroke: rgb(255 255 255 / 0.95);
+  fill: rgb(255 255 255 / 0.7);
+  stroke: rgb(255 255 255 / 0.7);
 }
 
 .cardEmbossPaper {
