@@ -57,3 +57,31 @@
   font-size: 44px;
   color: var(--color-primary);
 }
+
+/* Over the cover video: white, lighter and a little smaller, like an engraved card. */
+.countdown[data-variant='cover'] .title {
+  font-size: 13px;
+  letter-spacing: 0.3em;
+}
+
+.countdown[data-variant='cover'] .value {
+  font-size: clamp(38px, 11vw, 50px);
+  font-weight: 400;
+  color: #fff;
+}
+
+.countdown[data-variant='cover'] .colon {
+  font-size: clamp(30px, 8.5vw, 40px);
+  color: rgb(255 255 255 / 0.75);
+}
+
+.countdown[data-variant='cover'] .label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.85);
+}
+
+.done[data-variant='cover'] {
+  color: #fff;
+}

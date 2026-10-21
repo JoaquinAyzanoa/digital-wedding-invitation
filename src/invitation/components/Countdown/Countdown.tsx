@@ -26,16 +26,27 @@ function Unit({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function Countdown({ target }: { target: string }) {
+export function Countdown({
+  target,
+  variant = 'section',
+}: {
+  target: string;
+  /** `cover`: smaller and white, over the envelope's video. */
+  variant?: 'section' | 'cover';
+}) {
   const now = useNow();
   const left = countdown(new Date(target), now);
 
   if (left.done) {
-    return <p className={styles.done}>¡Llegó el gran día!</p>;
+    return (
+      <p className={styles.done} data-variant={variant}>
+        ¡Llegó el gran día!
+      </p>
+    );
   }
 
   return (
-    <div className={styles.countdown}>
+    <div className={styles.countdown} data-variant={variant}>
       <p className={styles.title}>Faltan:</p>
       {/* Screen readers get a calm summary instead of a value changing every second. */}
       <p className="visually-hidden">
@@ -46,9 +57,9 @@ export function Countdown({ target }: { target: string }) {
         <span className={styles.colon}>:</span>
         <Unit value={left.hours} label="Horas" />
         <span className={styles.colon}>:</span>
-        <Unit value={left.minutes} label="Min" />
+        <Unit value={left.minutes} label={variant === 'cover' ? 'Minutos' : 'Min'} />
         <span className={styles.colon}>:</span>
-        <Unit value={left.seconds} label="Seg" />
+        <Unit value={left.seconds} label={variant === 'cover' ? 'Segundos' : 'Seg'} />
       </div>
     </div>
   );

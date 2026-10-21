@@ -289,3 +289,116 @@
   gap: 10px;
   font-size: 20px;
 }
+
+/* ------------------------------------------------- the pre-wedding video cover */
+
+.overlay[data-video='true'] {
+  /* The envelope turns warm paper over the video (derived from the theme's gold). */
+  --env: var(--paper);
+  --env-side: var(--paper-side);
+  --env-bottom: var(--paper-bottom);
+  --env-inside: var(--paper-inside);
+  background: #1c1714;
+  color: #fff;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  /* A little softer and quieter than the original, so the words lead. Slightly enlarged from
+     the bottom: whatever is written at the top of the video (a monogram) rises under the
+     darker part of the veil instead of sitting between the names. */
+  transform: scale(1.14);
+  transform-origin: center bottom;
+  filter: saturate(0.85) brightness(0.95);
+}
+
+/* A warm veil, deeper at the top and bottom where the words sit. */
+.veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(28 21 17 / 0.62) 0%,
+    rgb(28 21 17 / 0.3) 34%,
+    rgb(28 21 17 / 0.26) 58%,
+    rgb(28 21 17 / 0.68) 100%
+  );
+}
+
+.overlay[data-video='true'] .content {
+  text-shadow: 0 1px 16px rgb(0 0 0 / 0.35);
+}
+
+.overlay[data-video='true'] .kicker {
+  font-size: clamp(13px, 3.7vw, 16px);
+  letter-spacing: 0.24em;
+}
+
+.overlay[data-video='true'] .names {
+  color: #fff;
+}
+
+.overlay[data-video='true'] .amp {
+  color: var(--seal-hi);
+}
+
+.overlay[data-video='true'] .date {
+  font-size: clamp(13px, 3.6vw, 15px);
+  letter-spacing: 0.34em;
+}
+
+.overlay[data-video='true'] .envelope {
+  width: min(78vw, 320px);
+  margin: clamp(6px, 1.4svh, 14px) 0 clamp(2px, 0.8svh, 8px);
+  filter: drop-shadow(0 18px 26px rgb(0 0 0 / 0.38));
+}
+
+/* On light paper the hint is engraved in dark gold, not white. */
+.overlay[data-video='true'] .hint text {
+  fill: var(--seal-lo);
+  text-shadow: none;
+}
+
+.overlay[data-video='true'] .skip {
+  color: rgb(255 255 255 / 0.85);
+}
+
+.overlay[data-video='true'] .notFound {
+  color: #fff;
+}
+
+.reservedCover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.overlay[data-video='true'] .guest {
+  color: #fff;
+}
+
+.reservedLine {
+  max-width: 30ch;
+  font-size: clamp(12px, 3.4vw, 14px);
+  line-height: 1.7;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.reservedLine strong {
+  font-weight: 600;
+  font-size: 1.35em;
+  letter-spacing: 0.04em;
+  color: var(--seal-hi);
+}
+
+.countdown {
+  margin-top: clamp(4px, 1.5svh, 14px);
+}

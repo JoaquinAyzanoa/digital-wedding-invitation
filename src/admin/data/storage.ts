@@ -60,3 +60,48 @@ export async function uploadFont(file: File): Promise<string> {
   const extension = file.name.toLowerCase().endsWith('.otf') ? 'otf' : 'ttf';
   return upload(`fonts/${randomName()}.${extension}`, file, `font/${extension}`);
 }
+
+export const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
+
+/**
+ * A frame of the video as a JPEG (about 0.4 s in, past any fade from black), to show while
+ * the video loads or when the phone does not autoplay. Null if this browser cannot decode it.
+ */
+async function posterFrame(file: File): Promise<Blob | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.src = url;
+    await new Promise<void>((resolve, reject) => {
+      video.onloadeddata = () => resolve();
+      video.onerror = () => reject(new Error('cannot decode'));
+    });
+    video.currentTime = Math.min(0.4, video.duration / 2);
+    await new Promise<void>((resolve) => (video.onseeked = () => resolve()));
+    const scale = Math.min(1, 1080 / Math.max(video.videoWidth, video.videoHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** The cover video (MP4, so every phone plays it) and its poster frame next to it. */
+export async function uploadVideo(file: File): Promise<string> {
+  if (file.size > MAX_VIDEO_BYTES) throw new Error('El video pesa más de 20 MB.');
+  if (file.type && file.type !== 'video/mp4') {
+    throw new Error('Sube el video en MP4 (los .mov de iPhone no se ven en todos los celulares).');
+  }
+  const name = randomName();
+  const poster = await posterFrame(file);
+  if (poster) await upload(`videos/${name}-poster.jpg`, poster, 'image/jpeg');
+  return upload(`videos/${name}.mp4`, file, 'video/mp4');
+}

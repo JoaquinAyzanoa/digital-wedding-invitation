@@ -76,6 +76,33 @@ describe('Invitation states', () => {
     expect(headings).toEqual(['Dress code', 'Itinerario de actividades']);
   });
 
+  it('with a pre-wedding video: it plays muted behind the envelope, with the countdown', async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    const content = structuredClone(demoContent);
+    content.coverVideo = 'https://example.com/storage/videos/abc.mp4';
+    renderInvitation({ content });
+    const envelope = screen.getByRole('dialog');
+    const video = envelope.querySelector('video')!;
+    expect(video).toHaveAttribute('src', content.coverVideo);
+    expect(video).toHaveAttribute('poster', 'https://example.com/storage/videos/abc-poster.jpg');
+    expect(video.muted).toBe(true);
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    expect(within(envelope).getByText('Te invitamos a nuestra boda')).toBeInTheDocument();
+    expect(within(envelope).getByText('Familia Demo')).toBeInTheDocument();
+    expect(within(envelope).getByText(/lugares en su honor/)).toBeInTheDocument();
+    expect(within(envelope).getByText('Faltan:')).toBeInTheDocument();
+    expect(within(envelope).getByText('Segundos')).toBeInTheDocument();
+    play.mockRestore();
+  });
+
+  it('without a video the envelope keeps its flowers and no countdown', () => {
+    renderInvitation();
+    const envelope = screen.getByRole('dialog');
+    expect(envelope.querySelector('video')).toBeNull();
+    expect(within(envelope).getByText('¡Nos casamos!')).toBeInTheDocument();
+    expect(within(envelope).queryByText('Segundos')).not.toBeInTheDocument();
+  });
+
   it('without the envelope section the page is visible right away', () => {
     const content = structuredClone(demoContent);
     content.sections = content.sections.filter((s) => s.id !== 'envelope');

@@ -28,6 +28,11 @@ export function derivedColors({ primary, accent }: Theme['colors']): Record<stri
     '--env-inside': mix(primary, '#e3e9f2', 0.68),
     '--primary-a55': withAlpha(primary, 0.55),
     '--primary-a25': withAlpha(primary, 0.25),
+    // Over the cover video the envelope is warm paper (from the gold), not the primary.
+    '--paper': mix(accent, '#f5ece0', 0.3),
+    '--paper-side': mix(accent, '#f8f1e6', 0.26),
+    '--paper-bottom': mix(accent, '#fbf6ee', 0.22),
+    '--paper-inside': mix(accent, '#eadfcd', 0.42),
     '--seal-hi': mix(accent, '#ffffff', 0.45),
     '--seal-lo': mix(accent, '#3b2a12', 0.62),
     '--seal-well-hi': mix(accent, '#ffffff', 0.7),

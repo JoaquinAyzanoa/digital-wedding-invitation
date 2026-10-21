@@ -419,7 +419,7 @@ export function UploadField({
   accept: string;
   hint?: string;
   upload: (file: File) => Promise<string>;
-  kind: 'image' | 'audio';
+  kind: 'image' | 'audio' | 'video';
   /** What "Quitar" stores: null for photo slots, undefined for optional fields. */
   clearTo?: null | undefined;
 }) {
@@ -452,6 +452,16 @@ export function UploadField({
               {url &&
                 (kind === 'image' ? (
                   <img src={url} alt="" className={styles.thumb} />
+                ) : kind === 'video' ? (
+                  <video
+                    src={url}
+                    className={styles.videoThumb}
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                    aria-label="Vista previa del video"
+                  />
                 ) : (
                   <audio src={url} controls preload="none" className={styles.audio} />
                 ))}

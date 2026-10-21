@@ -61,6 +61,45 @@ test('edits texts and a photo, and the invitation shows them', async ({ page, br
   await guest.close();
 });
 
+test('the pre-wedding video plays behind the envelope', async ({ page, browser }) => {
+  await login(page);
+  await openContent(page);
+  await group(page, 'Fotos y flores').click();
+  // Not a real video: the poster frame is skipped and the video still goes up.
+  await page
+    .getByLabel('Video de fondo del sobre: subir archivo')
+    .setInputFiles({ name: 'preboda.mp4', mimeType: 'video/mp4', buffer: Buffer.alloc(2048, 1) });
+  await expect(page.getByLabel('Vista previa del video')).toHaveAttribute(
+    'src',
+    /\/videos\/[\w-]+\.mp4$/,
+    { timeout: 20_000 },
+  );
+  await save(page);
+
+  const guest = await browser.newPage();
+  await guest.goto('/?abc234');
+  const envelope = guest.getByRole('dialog');
+  const video = envelope.locator('video');
+  await expect(video).toHaveAttribute('src', /\/videos\/[\w-]+\.mp4$/);
+  await expect(video).toHaveAttribute('poster', /\/videos\/[\w-]+-poster\.jpg$/);
+  await expect(envelope.getByText('Te invitamos a nuestra boda')).toBeVisible();
+  await expect(envelope.getByText('Segundos')).toBeVisible();
+  await guest.close();
+
+  // Without it, the envelope is back to its flowers.
+  await page
+    .getByLabel('Vista previa del video')
+    .locator('xpath=..')
+    .getByRole('button', { name: 'Quitar' })
+    .click();
+  await save(page);
+  const again = await browser.newPage();
+  await again.goto('/?abc234');
+  await expect(again.getByRole('dialog').getByText('¡Nos casamos!')).toBeVisible();
+  await expect(again.locator('video')).toHaveCount(0);
+  await again.close();
+});
+
 test('an invalid field opens its section and is focused', async ({ page }) => {
   await login(page);
   await openContent(page);

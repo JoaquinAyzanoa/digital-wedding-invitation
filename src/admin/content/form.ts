@@ -43,7 +43,7 @@ export function toFormValues(content: PublicContent, privateContent: PrivateCont
 export const CONTENT_SECTIONS = {
   couple: ['couple', 'date', 'dateIntro'],
   welcome: ['welcome', 'music'],
-  photos: ['photos', 'decorations'],
+  photos: ['photos', 'decorations', 'coverVideo'],
   family: ['family'],
   events: ['events'],
   itinerary: ['itinerary', 'closingPhrase'],

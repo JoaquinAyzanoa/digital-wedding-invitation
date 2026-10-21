@@ -118,6 +118,11 @@ export const publicContentSchema = z.object({
     .nullable()
     .optional(),
   photos: z.record(z.enum(PHOTO_SLOTS), httpUrl.nullable()),
+  /**
+   * A short pre-wedding video behind the envelope (muted, in a loop). Its poster frame is
+   * stored next to it: the same name ending in `-poster.jpg` (see coverPoster).
+   */
+  coverVideo: httpUrl.optional(),
   decorations: z.object({
     cornerTL: httpUrl.optional(),
     cornerBR: httpUrl.optional(),
@@ -203,3 +208,8 @@ export const privateContentSchema = z.object({
 });
 
 export type PrivateContent = z.infer<typeof privateContentSchema>;
+
+/** The cover video's poster: uploaded next to it (`…/x.mp4` → `…/x-poster.jpg`). */
+export function coverPoster(videoUrl: string): string {
+  return videoUrl.replace(/\.\w+$/, '-poster.jpg');
+}

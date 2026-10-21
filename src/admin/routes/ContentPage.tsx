@@ -12,7 +12,7 @@ import {
   WeddingDateTimeField,
 } from '@/admin/content/fields';
 import { sectionOfPath, type ContentForm, type ContentSectionKey } from '@/admin/content/form';
-import { uploadDecoration, uploadMusic, uploadPhoto } from '@/admin/data/storage';
+import { uploadDecoration, uploadMusic, uploadPhoto, uploadVideo } from '@/admin/data/storage';
 import { Btn } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import { ICON_KEYS, PHOTO_SLOTS, SECTION_IDS, type SectionId } from '@/shared/schemas/content';
@@ -263,6 +263,14 @@ export function ContentPage() {
             <p className={ui.hint}>
               Las fotos se reducen en tu navegador (WebP de 2000 y 1000 px) antes de subirlas.
             </p>
+            <UploadField
+              name="public.coverVideo"
+              label="Video de fondo del sobre"
+              accept="video/mp4"
+              kind="video"
+              hint="El de su preboda: vertical, MP4, de 10 a 20 segundos y hasta 20 MB. Se ve detrás del sobre, sin sonido y en bucle."
+              upload={uploadVideo}
+            />
             <div className={styles.grid}>
               <UploadField
                 name="public.decorations.cornerTL"

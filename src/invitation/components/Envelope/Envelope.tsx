@@ -1,9 +1,10 @@
 import { useAnimate, useReducedMotion } from 'motion/react';
-import { useEffect, useId, useState } from 'react';
-import type { PublicContent } from '@/shared/schemas/content';
+import { useEffect, useId, useRef, useState } from 'react';
+import { coverPoster, type PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 import { datePartsInLima } from '@/shared/utils/date';
 import { CodeEntry } from '../CodeEntry/CodeEntry';
+import { Countdown } from '../Countdown/Countdown';
 import styles from './Envelope.module.css';
 import { WaxSeal } from './WaxSeal';
 
@@ -28,7 +29,7 @@ function rememberOpened() {
 }
 
 interface EnvelopeProps {
-  content: Pick<PublicContent, 'couple' | 'date' | 'decorations'>;
+  content: Pick<PublicContent, 'couple' | 'date' | 'decorations' | 'coverVideo'>;
   invitation: Pick<InvitationView, 'displayName' | 'seats'> | null;
   /** The link had a code that does not exist: offer to type it again. */
   codeNotFound?: boolean;
@@ -56,6 +57,21 @@ export function Envelope({
   const arcId = `${titleId.replace(/[^a-zA-Z0-9_-]/g, '')}-arc`;
 
   const { bride, groom, monogram } = content.couple;
+  const video = content.coverVideo;
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Phones only autoplay muted video, and React does not always set the muted attribute in
+  // time: set it here and start it (Low Power Mode may still refuse: the poster stays).
+  useEffect(() => {
+    const element = videoRef.current;
+    if (!element || reducedMotion) return;
+    element.muted = true;
+    element.defaultMuted = true;
+    // Older browsers return nothing from play(), and some throw instead of rejecting.
+    Promise.resolve()
+      .then(() => element.play())
+      .catch(() => {});
+  }, [video, reducedMotion]);
   const { day, month, year } = datePartsInLima(content.date);
 
   // Keep the page behind from scrolling while the envelope covers it.
@@ -120,18 +136,36 @@ export function Envelope({
     <div
       ref={scope}
       className={styles.overlay}
+      data-video={Boolean(video)}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      {content.decorations.cornerTL && (
+      {video && (
+        <>
+          <video
+            ref={videoRef}
+            className={styles.video}
+            src={video}
+            poster={coverPoster(video)}
+            muted
+            loop
+            playsInline
+            autoPlay={!reducedMotion}
+            preload="auto"
+            aria-hidden="true"
+          />
+          <span className={styles.veil} aria-hidden="true" />
+        </>
+      )}
+      {!video && content.decorations.cornerTL && (
         <img
           className={`${styles.decoration} ${styles.decorationTop}`}
           src={content.decorations.cornerTL}
           alt=""
         />
       )}
-      {content.decorations.cornerBR && (
+      {!video && content.decorations.cornerBR && (
         <img
           className={`${styles.decoration} ${styles.decorationBottom}`}
           src={content.decorations.cornerBR}
@@ -147,7 +181,7 @@ export function Envelope({
 
       <div className={styles.content} data-ready={ready}>
         <p className={styles.kicker} data-fade-on-open>
-          ¡Nos casamos!
+          {video ? 'Te invitamos a nuestra boda' : '¡Nos casamos!'}
         </p>
         <h1 id={titleId} className={styles.names} data-fade-on-open>
           {bride} <span className={styles.amp}>&amp;</span> {groom}
@@ -203,7 +237,17 @@ export function Envelope({
           </span>
         </button>
 
-        {invitation && (
+        {invitation && video && (
+          <div className={styles.reservedCover} data-fade-on-open>
+            <p className={styles.guest}>{invitation.displayName}</p>
+            <p className={styles.reservedLine}>
+              Hemos reservado <strong>{seats}</strong>{' '}
+              {seats === 1 ? 'lugar en su honor' : 'lugares en su honor'}
+            </p>
+          </div>
+        )}
+
+        {invitation && !video && (
           <div className={styles.reserved} data-fade-on-open>
             <p className={styles.guest}>{invitation.displayName}</p>
             <p className={styles.reservedText}>Hemos reservado</p>
@@ -211,6 +255,12 @@ export function Envelope({
             <p className={styles.reservedText}>
               {seats === 1 ? 'lugar en su honor' : 'lugares en su honor'}
             </p>
+          </div>
+        )}
+
+        {video && (
+          <div className={styles.countdown} data-fade-on-open>
+            <Countdown target={content.date} variant="cover" />
           </div>
         )}
 

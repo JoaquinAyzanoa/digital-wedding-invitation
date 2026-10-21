@@ -113,3 +113,11 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.videoThumb {
+  width: 96px;
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  background: var(--color-line);
+  object-fit: cover;
+}

@@ -15,6 +15,10 @@
   --env-inside: #7e8fb3;
   --primary-a55: rgb(79 100 150 / 0.55);
   --primary-a25: rgb(79 100 150 / 0.25);
+  --paper: #e8d6bd;
+  --paper-side: #ecddc6;
+  --paper-bottom: #f0e4d1;
+  --paper-inside: #dcc6a4;
   --seal-hi: #e7d6bd;
   --seal-lo: #93764a;
   --seal-well-hi: #d9bf98;
