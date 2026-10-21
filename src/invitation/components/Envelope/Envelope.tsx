@@ -110,23 +110,24 @@ export function Envelope({
     }
 
     const flap = root.querySelector<HTMLElement>('[data-flap]')!;
+    // The seal is not broken: it answers the tap with a soft press and a warm glow, then stays
+    // on the flap and rises with it, as real wax does.
     await Promise.all([
-      animate('[data-seal-whole]', { opacity: 0 }, { duration: 0.01 }),
       animate(
-        '[data-seal-half="left"]',
-        { opacity: [1, 1, 0], x: -16, y: 34, rotate: -24 },
-        { duration: 0.7, ease: 'easeIn' },
+        '[data-seal-whole]',
+        { scale: [1, 0.9, 1.05, 1] },
+        { duration: 0.6, ease: 'easeInOut', times: [0, 0.3, 0.7, 1] },
       ),
       animate(
-        '[data-seal-half="right"]',
-        { opacity: [1, 1, 0], x: 16, y: 34, rotate: 24 },
-        { duration: 0.7, ease: 'easeIn' },
+        '[data-seal-glow]',
+        { opacity: [0, 0.9, 0], scale: [0.6, 1.2, 1.5] },
+        { duration: 0.8, ease: 'easeOut' },
       ),
       animate('[data-hint]', { opacity: 0 }, { duration: 0.3 }),
       // The open flap rises over the text above the envelope: clear the stage first.
       animate('[data-fade-on-open]', { opacity: 0 }, { duration: 0.4 }),
     ]);
-    await animate(flap, { rotateX: 90 }, { duration: 0.35, ease: 'easeIn' });
+    await animate(flap, { rotateX: 90 }, { duration: 0.4, ease: 'easeIn' });
     // Past 90° the flap is behind the card and we see its inside.
     flap.dataset.open = 'true';
     await animate(flap, { rotateX: 180 }, { duration: 0.35, ease: 'easeOut' });
@@ -221,16 +222,11 @@ export function Envelope({
             <span className={styles.hint} aria-hidden="true" data-hint>
               Clic para abrir
             </span>
-          </span>
-          <span className={styles.seal}>
-            <span className={styles.sealWhole} data-seal-whole>
-              <WaxSeal monogram={monogram} shine={!opening} />
-            </span>
-            <span className={styles.sealHalf} data-seal-half="left">
-              <WaxSeal monogram={monogram} half="left" />
-            </span>
-            <span className={styles.sealHalf} data-seal-half="right">
-              <WaxSeal monogram={monogram} half="right" />
+            <span className={styles.seal}>
+              <span className={styles.sealGlow} data-seal-glow />
+              <span className={styles.sealWhole} data-seal-whole>
+                <WaxSeal monogram={monogram} shine={!opening} />
+              </span>
             </span>
           </span>
         </button>

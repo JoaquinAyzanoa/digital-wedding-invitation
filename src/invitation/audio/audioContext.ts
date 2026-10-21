@@ -6,6 +6,8 @@ import { createContext, useContext } from 'react';
 export interface AudioActions {
   /** Must be called inside a user gesture the first time (autoplay rules). Never throws. */
   play: () => void;
+  /** Like play, fading in: for the envelope's tap, so the song rises as the page opens. */
+  start: () => void;
   pause: () => void;
   toggle: () => void;
   restart: () => void;
@@ -31,6 +33,7 @@ const noop = () => {};
 
 export const AudioActionsContext = createContext<AudioActions>({
   play: noop,
+  start: noop,
   pause: noop,
   toggle: noop,
   restart: noop,

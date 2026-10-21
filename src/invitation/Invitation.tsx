@@ -114,7 +114,7 @@ function InvitationPage({
           codeNotFound={codeStatus === 'not_found'}
           ready={fontsReady}
           onOpen={() => {
-            audio.play();
+            audio.start();
             setPetals(true);
           }}
           onOpened={() => {

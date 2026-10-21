@@ -127,7 +127,9 @@ describe('Music', () => {
     'starts on the envelope tap and shows the mute button afterwards',
     { timeout: 10_000 },
     async () => {
-      const play = vi.spyOn(HTMLMediaElement.prototype, 'play');
+      const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+      // jsdom cannot buffer media: the early preload is a no-op here.
+      const load = vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
       const content = structuredClone(demoContent);
       content.music = { url: 'https://example.com/song.mp3' };
       renderInvitation({ content });
@@ -136,13 +138,19 @@ describe('Music', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Abrir la invitación' }));
       // Called inside the tap itself, which is what unlocks audio on phones.
       expect(play).toHaveBeenCalledTimes(1);
+      const song = play.mock.contexts[0] as HTMLMediaElement;
+      // It starts silent and rises once the sound really starts, while the envelope opens.
+      expect(song.volume).toBe(0);
+      song.dispatchEvent(new Event('playing'));
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
         timeout: 7000,
       });
       expect(screen.getByRole('button', { name: /música/ })).toBeInTheDocument();
       expect(screen.getByText('Dale play a nuestra canción')).toBeInTheDocument();
+      await waitFor(() => expect(song.volume).toBe(1));
       play.mockRestore();
+      load.mockRestore();
     },
   );
 });

@@ -67,19 +67,13 @@ function Laurel({ style, dx = 0 }: { style: CSSProperties; dx?: number }) {
   );
 }
 
-// Jagged crack through the middle, used to split the seal in two halves.
-const CRACK_LEFT = 'M-10 -10H63L57 22L65 41L55 63L64 82L58 130H-10Z';
-const CRACK_RIGHT = 'M130 -10H63L57 22L65 41L55 63L64 82L58 130H130Z';
-
 interface WaxSealProps {
   monogram: string;
-  /** Draw only one half (for the cracking animation). */
-  half?: 'left' | 'right';
   shine?: boolean;
   className?: string;
 }
 
-export function WaxSeal({ monogram, half, shine = false, className }: WaxSealProps) {
+export function WaxSeal({ monogram, shine = false, className }: WaxSealProps) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const fontSize = monogram.length <= 3 ? 23 : monogram.length <= 5 ? 16 : 12;
 
@@ -104,14 +98,9 @@ export function WaxSeal({ monogram, half, shine = false, className }: WaxSealPro
         <clipPath id={`${id}-outline`}>
           <path d={OUTLINE} />
         </clipPath>
-        {half && (
-          <clipPath id={`${id}-half`}>
-            <path d={half === 'left' ? CRACK_LEFT : CRACK_RIGHT} />
-          </clipPath>
-        )}
       </defs>
 
-      <g clipPath={half ? `url(#${id}-half)` : undefined}>
+      <g>
         <path d={OUTLINE} fill={`url(#${id}-wax)`} />
         <path d={OUTLINE} fill="none" style={{ stroke: 'var(--seal-lo)' }} strokeOpacity="0.35" />
 
