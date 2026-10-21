@@ -1,6 +1,13 @@
 .section {
   position: relative;
-  padding: 64px var(--gutter);
+  padding: 92px var(--gutter) 64px;
+}
+
+.garland {
+  position: absolute;
+  top: 8px;
+  right: 0;
+  left: 0;
 }
 
 .inner {

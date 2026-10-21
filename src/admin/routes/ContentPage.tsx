@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { ContentEditor } from '@/admin/content/ContentEditor';
 import {
+  ColorListField,
   DateField,
   ObjectListField,
   SelectField,
@@ -424,6 +425,20 @@ export function ContentPage() {
           <Group {...group('dressCode')} title="Dress code">
             <TextField name="public.dressCode.title" label="Código" placeholder="Elegante" />
             <StringListField name="public.dressCode.notes" label="Notas" addLabel="Agregar nota" />
+            <ColorListField
+              name="public.dressCode.avoidColors"
+              label="Colores a evitar"
+              hint="Se muestran como círculos de color (hasta 6), p. ej. blanco para la novia."
+              addLabel="Agregar color"
+              max={6}
+            />
+            <TextField
+              name="public.dressCode.inspirationUrl"
+              label="Enlace de inspiración (opcional)"
+              hint="Un tablero de Pinterest con ideas de vestimenta: aparece el botón «Ver inspiración»."
+              type="url"
+              emptyAsUndefined
+            />
           </Group>
 
           <Group {...group('rsvp')} title="Confirmación de asistencia">

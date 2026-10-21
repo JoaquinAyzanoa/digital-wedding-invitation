@@ -4,6 +4,7 @@ import {
   eventCalendarEntry,
 } from '@/invitation/components/AddToCalendar/weddingEvents';
 import { Reveal } from '@/invitation/components/Reveal';
+import { Flourish } from '@/invitation/components/Stationery/Flourish';
 import { Icon } from '@/shared/icons/Icon';
 import { ButtonLink } from '@/shared/ui/Button';
 import { formatTime12 } from '@/shared/utils/time';
@@ -24,6 +25,7 @@ export function EventsSection({ content, entry }: SectionProps) {
             className={text.goldIcon}
           />
           <h2 className={styles.title}>{event.title}</h2>
+          <Flourish />
           {event.intro && <p className={text.body}>{event.intro}</p>}
           <p className={styles.time}>Hora: {formatTime12(event.time)}</p>
           <p className={text.upper}>{event.venue}</p>

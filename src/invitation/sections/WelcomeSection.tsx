@@ -1,7 +1,7 @@
 import { AudioPlayer } from '@/invitation/audio/AudioPlayer';
 import { Reveal } from '@/invitation/components/Reveal';
+import { Crest } from '@/invitation/components/Stationery/Crest';
 import { Section } from './Section';
-import styles from './WelcomeSection.module.css';
 import text from './text.module.css';
 import type { SectionProps } from './types';
 
@@ -10,9 +10,7 @@ export function WelcomeSection({ content, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry}>
       <Reveal>
-        <p className={styles.monogram} aria-label={`${couple.bride} y ${couple.groom}`}>
-          {couple.monogram}
-        </p>
+        <Crest monogram={couple.monogram} label={`${couple.bride} y ${couple.groom}`} />
       </Reveal>
       {welcome.text && (
         <Reveal>

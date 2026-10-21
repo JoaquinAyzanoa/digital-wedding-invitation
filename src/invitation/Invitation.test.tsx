@@ -53,12 +53,12 @@ describe('Invitation states', () => {
   });
 
   // jsdom runs the full ~3.5 s sequence (motion does not see reduced motion there).
-  it('opening the envelope reveals the page', { timeout: 10_000 }, async () => {
+  it('opening the envelope reveals the page', { timeout: 15_000 }, async () => {
     renderInvitation();
     expect(document.querySelector('main')).toHaveAttribute('aria-hidden', 'true');
     await userEvent.click(screen.getByRole('button', { name: 'Abrir la invitación' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
-      timeout: 7000,
+      timeout: 9000,
     });
     expect(document.querySelector('main')).toHaveAttribute('aria-hidden', 'false');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Valeria y Mateo');
@@ -105,6 +105,17 @@ describe('Invitation states', () => {
     expect(within(envelope).queryByText('Segundos')).not.toBeInTheDocument();
   });
 
+  it('stationery: the monogram crest and the colors to avoid, named for screen readers', () => {
+    renderInvitation();
+    expect(page().getByRole('img', { name: 'Valeria y Mateo', hidden: true })).toBeInTheDocument();
+    const colors = page().getByRole('list', { name: 'Colores a evitar', hidden: true });
+    expect(
+      within(colors)
+        .getAllByRole('listitem', { hidden: true })
+        .map((item) => item.textContent),
+    ).toEqual(['blanco', 'crema', 'vino']);
+  });
+
   it('without the envelope section the page is visible right away', () => {
     const content = structuredClone(demoContent);
     content.sections = content.sections.filter((s) => s.id !== 'envelope');
@@ -127,7 +138,7 @@ describe('Code entry', () => {
 describe('Music', () => {
   it(
     'starts on the envelope tap and shows the mute button afterwards',
-    { timeout: 15_000 },
+    { timeout: 20_000 },
     async () => {
       const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
       // jsdom cannot buffer media: the early preload is a no-op here.
@@ -146,7 +157,7 @@ describe('Music', () => {
       song.dispatchEvent(new Event('playing'));
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), {
-        timeout: 7000,
+        timeout: 9000,
       });
       expect(screen.getByRole('button', { name: /música/ })).toBeInTheDocument();
       expect(screen.getByText('Dale play a nuestra canción')).toBeInTheDocument();

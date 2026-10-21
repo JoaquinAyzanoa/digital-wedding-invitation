@@ -100,6 +100,30 @@ test('the pre-wedding video plays behind the envelope', async ({ page, browser }
   await again.close();
 });
 
+test('colors to avoid: picked in the editor, shown as swatches', async ({ page, browser }) => {
+  await login(page);
+  await openContent(page);
+  await group(page, 'Dress code').click();
+  await page.getByRole('button', { name: 'Agregar color' }).click();
+  // The seed has white and wine: the new one is the third.
+  const added = page.getByLabel('Colores a evitar 3', { exact: true });
+  await expect(added).toHaveValue('#FFFFFF');
+  await added.fill('#C8102E');
+  await page.getByLabel('Enlace de inspiración (opcional)').fill('https://pinterest.com/tablero');
+  await save(page);
+
+  const guest = await browser.newPage();
+  await guest.goto('/?abc234');
+  await guest.getByRole('button', { name: 'Abrir la invitación' }).click();
+  const colors = guest.getByRole('list', { name: 'Colores a evitar' });
+  await expect(colors.getByRole('listitem').last()).toHaveText('rojo');
+  await expect(guest.getByRole('link', { name: 'Ver inspiración' })).toHaveAttribute(
+    'href',
+    'https://pinterest.com/tablero',
+  );
+  await guest.close();
+});
+
 test('an invalid field opens its section and is focused', async ({ page }) => {
   await login(page);
   await openContent(page);

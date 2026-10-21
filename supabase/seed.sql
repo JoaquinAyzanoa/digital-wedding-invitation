@@ -54,7 +54,8 @@ set public_data = $json$
   "closingPhrase": "Y vivirán felices por siempre",
   "dressCode": {
     "title": "Elegante",
-    "notes": ["Color blanco reservado para la novia"]
+    "notes": ["Color blanco reservado para la novia"],
+    "avoidColors": ["#FFFFFF", "#7A1020"]
   },
   "gifts": {
     "text": "Tu presencia hace que este día sea inolvidable. Si te nace tener un gesto especial con nosotros, estos son los medios disponibles:"

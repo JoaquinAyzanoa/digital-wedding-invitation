@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
 import { useContext, type ReactNode } from 'react';
 import { RevealContext } from '@/invitation/components/revealContext';
+import { Flourish } from '@/invitation/components/Stationery/Flourish';
+import { Garland } from '@/invitation/components/Stationery/Garland';
 import styles from './Section.module.css';
 import type { SectionProps } from './types';
 
@@ -10,7 +12,10 @@ interface SectionShellProps extends Pick<SectionProps, 'content' | 'entry'> {
   labelledBy?: string;
 }
 
-/** Common padding and the optional watercolor flowers (`decorations.side`) on one side. */
+/**
+ * Common padding, an embossed garland along the top (like a printed sheet's border) and the
+ * optional watercolor flowers (`decorations.side`) on one side.
+ */
 export function Section({ content, entry, children, className, labelledBy }: SectionShellProps) {
   const flowers = entry.decor ? content.decorations.side : undefined;
   const revealEnabled = useContext(RevealContext);
@@ -19,6 +24,7 @@ export function Section({ content, entry, children, className, labelledBy }: Sec
       className={[styles.section, className].filter(Boolean).join(' ')}
       aria-labelledby={labelledBy}
     >
+      <Garland className={styles.garland} />
       {flowers && revealEnabled && (
         // Wrapper animates; the image keeps its mirror transform for the left side.
         <motion.div
@@ -37,10 +43,14 @@ export function Section({ content, entry, children, className, labelledBy }: Sec
   );
 }
 
+/** A section's script title, with the small rule under it. */
 export function SectionTitle({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h2 id={id} className={styles.title}>
-      {children}
-    </h2>
+    <>
+      <h2 id={id} className={styles.title}>
+        {children}
+      </h2>
+      <Flourish />
+    </>
   );
 }

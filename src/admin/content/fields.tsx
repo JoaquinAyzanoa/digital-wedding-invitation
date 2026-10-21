@@ -356,6 +356,90 @@ export function StringListField({
 }
 
 /** A list of objects (events, itinerary, gifts, sections): `render` draws one item. */
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/** A short list of colors: a swatch to pick each one and its code, e.g. colors to avoid. */
+export function ColorListField({
+  name,
+  label,
+  hint,
+  addLabel,
+  max,
+}: {
+  name: Path;
+  label: string;
+  hint?: string;
+  addLabel: string;
+  max: number;
+}) {
+  const id = useId();
+  const { control } = useFormContext<ContentForm>();
+  const error = useFieldError(name);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => {
+        const items = (Array.isArray(field.value) ? field.value : []) as string[];
+        const set = (next: string[]) => field.onChange(next);
+        const update = (index: number, value: string) =>
+          set(items.map((v, i) => (i === index ? value : v)));
+        const itemErrors = fieldState.error as unknown as Array<{ message?: string }> | undefined;
+        return (
+          <fieldset className={styles.fieldset} aria-describedby={hint ? `${id}-hint` : undefined}>
+            <legend className={ui.label}>{label}</legend>
+            {hint && (
+              <span id={`${id}-hint`} className={ui.hint}>
+                {hint}
+              </span>
+            )}
+            {items.map((item, index) => (
+              <div key={index} className={styles.stringItem}>
+                <input
+                  type="color"
+                  className={styles.colorSwatch}
+                  value={HEX.test(item) ? item : '#000000'}
+                  onChange={(e) => update(index, e.target.value.toUpperCase())}
+                  aria-label={`${label} ${index + 1}: elegir color`}
+                />
+                <input
+                  className={ui.input}
+                  value={item}
+                  aria-label={`${label} ${index + 1}`}
+                  aria-invalid={Boolean(itemErrors?.[index])}
+                  spellCheck={false}
+                  onChange={(e) => update(index, e.target.value)}
+                  onBlur={field.onBlur}
+                />
+                <MoveButtons
+                  index={index}
+                  count={items.length}
+                  label={`${label} ${index + 1}`}
+                  onMove={(from, to) => {
+                    const next = [...items];
+                    next.splice(to, 0, next.splice(from, 1)[0]!);
+                    set(next);
+                  }}
+                  onRemove={() => set(items.filter((_, i) => i !== index))}
+                />
+              </div>
+            ))}
+            <ErrorText
+              id={`${id}-error`}
+              message={error ?? itemErrors?.find((e) => e?.message)?.message}
+            />
+            {items.length < max && (
+              <Btn size="sm" variant="secondary" onClick={() => set([...items, '#FFFFFF'])}>
+                {addLabel}
+              </Btn>
+            )}
+          </fieldset>
+        );
+      }}
+    />
+  );
+}
+
 export function ObjectListField<N extends ArrayPath<ContentForm>>({
   name,
   label,

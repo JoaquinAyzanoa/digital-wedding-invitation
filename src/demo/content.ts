@@ -55,7 +55,11 @@ export const demoContent: PublicContent = {
     { time: '19:00', label: 'Fiesta', icon: 'confetti' },
   ],
   closingPhrase: 'Y vivirán felices por siempre',
-  dressCode: { title: 'Elegante', notes: ['Color blanco reservado para la novia'] },
+  dressCode: {
+    title: 'Elegante',
+    notes: ['Damas: vestido largo', 'Caballeros: terno'],
+    avoidColors: ['#FFFFFF', '#E9DCCB', '#7A1020'],
+  },
   gifts: {
     text: 'Tu presencia hace que este día sea inolvidable. Si te nace tener un gesto especial con nosotros, estos son los medios disponibles:',
   },

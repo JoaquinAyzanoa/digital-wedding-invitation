@@ -1,0 +1,56 @@
+/* ------------------------------------------------------------------- crest */
+
+.crest {
+  width: min(66vw, 270px);
+  height: auto;
+  overflow: visible;
+}
+
+.crestLines {
+  stroke: var(--color-accent);
+}
+
+.crestDots {
+  fill: var(--color-accent);
+}
+
+.crestMonogram {
+  fill: var(--color-primary);
+  font-family: var(--font-script);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ----------------------------------------------------------------- garland */
+
+.garland {
+  display: block;
+  width: 100%;
+}
+
+/* Blind embossing: the paper's own colour, a light edge and a soft shadow. */
+.garlandShadow {
+  fill: rgb(60 45 30 / 0.2);
+  stroke: rgb(60 45 30 / 0.2);
+}
+
+.garlandLight {
+  fill: rgb(255 255 255 / 0.95);
+  stroke: rgb(255 255 255 / 0.95);
+}
+
+.garlandPaper {
+  fill: var(--color-bg);
+  stroke: var(--color-bg);
+}
+
+/* ---------------------------------------------------------------- flourish */
+
+.flourish {
+  display: block;
+  width: 116px;
+  height: auto;
+  margin: -8px auto 0;
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}

@@ -149,7 +149,14 @@ export const publicContentSchema = z.object({
   ),
   itinerary: z.array(z.object({ time, label: requiredText(60), icon: z.enum(ICON_KEYS) })),
   closingPhrase: text(120),
-  dressCode: z.object({ title: text(60), notes: z.array(requiredText(160)) }),
+  dressCode: z.object({
+    title: text(60),
+    notes: z.array(requiredText(160)),
+    /** Colors guests should not wear (white for the bride, the bridesmaids'…). */
+    avoidColors: z.array(hexColor).max(6).default([]),
+    /** A board of outfit ideas (Pinterest…), behind "Ver inspiración". */
+    inspirationUrl: httpUrl.optional(),
+  }),
   gifts: z.object({ text: text(500) }),
   rsvp: z.object({
     deadline: dateOrDateTime,
