@@ -1,5 +1,5 @@
 import { MotionConfig } from 'motion/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PublicApi } from '@/shared/api';
 import type { FontRef, PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
@@ -52,8 +52,8 @@ function InvitationPage({
   const rsvp = useMemo(() => ({ api, onInvitationChange: setInvitation }), [api]);
   const hasEnvelope = content.sections.some((s) => s.id === 'envelope' && s.visible);
   const [envelopeOpen, setEnvelopeOpen] = useState(!hasEnvelope);
-  const [petals, setPetals] = useState(false);
-  const hidePetals = useCallback(() => setPetals(false), []);
+  // Petals start straight on the element: no re-render of the page during the tap.
+  const petalsRef = useRef<HTMLDivElement>(null);
   // The ?design=1 panel's pick overrides the content's font; without a pick, content changes
   // (the admin's live preview) always show.
   const [scriptOverride, setScriptOverride] = useState<FontRef | null>(null);
@@ -118,7 +118,7 @@ function InvitationPage({
           onOpen={() => {
             // Usually already playing; if not, the tap starts it.
             void audio.start();
-            setPetals(true);
+            if (petalsRef.current) petalsRef.current.dataset.falling = 'true';
           }}
           onOpened={() => {
             setEnvelopeOpen(true);
@@ -128,7 +128,7 @@ function InvitationPage({
         />
       )}
 
-      {petals && <Petals onDone={hidePetals} />}
+      {hasEnvelope && <Petals ref={petalsRef} cover={Boolean(content.coverVideo)} />}
       <MuteButton overEnvelope={!envelopeOpen} />
 
       {showDesignPanel && (

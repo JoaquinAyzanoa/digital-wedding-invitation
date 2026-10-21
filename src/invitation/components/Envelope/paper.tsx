@@ -179,7 +179,7 @@ export function FlapFront({ ids }: { ids: PaperIds }) {
   );
 }
 
-/** The flap once open: its inside, lined like the back. */
+/** The flap's inside, lined like the back (drawn upside down: see .flapInside). */
 export function FlapInside({ ids }: { ids: PaperIds }) {
   return (
     <svg
@@ -188,12 +188,14 @@ export function FlapInside({ ids }: { ids: PaperIds }) {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <path d={FLAP} className={styles.inside} filter={`url(#${ids.grain})`} />
-      <path
-        d={FLAP}
-        fill={`url(#${ids.liner})`}
-        transform="translate(150 0) scale(0.95 0.9) translate(-150 0)"
-      />
+      <g transform="matrix(1 0 0 -1 0 200)">
+        <path d={FLAP} className={styles.inside} filter={`url(#${ids.grain})`} />
+        <path
+          d={FLAP}
+          fill={`url(#${ids.liner})`}
+          transform="translate(150 0) scale(0.95 0.9) translate(-150 0)"
+        />
+      </g>
     </svg>
   );
 }

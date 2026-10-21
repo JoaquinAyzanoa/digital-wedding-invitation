@@ -2,13 +2,49 @@
   position: fixed;
   inset: 0;
   z-index: 101;
+  display: none;
   overflow: hidden;
   pointer-events: none;
+}
+
+.petals[data-falling='true'] {
+  display: block;
 }
 
 .petal {
   position: absolute;
   top: 0;
   height: auto;
+  opacity: 0;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.08));
+  animation: fall var(--duration) linear var(--delay) both;
+}
+
+@keyframes fall {
+  0% {
+    transform: translate3d(0, -8vh, 0) rotate(var(--rotate));
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 0.95;
+  }
+
+  33% {
+    transform: translate3d(var(--drift), 28vh, 0) rotate(calc(var(--rotate) + var(--spin) * 0.33));
+  }
+
+  66% {
+    transform: translate3d(calc(var(--drift) * -0.5), 64vh, 0)
+      rotate(calc(var(--rotate) + var(--spin) * 0.66));
+  }
+
+  85% {
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translate3d(var(--drift), 108vh, 0) rotate(calc(var(--rotate) + var(--spin)));
+    opacity: 0;
+  }
 }

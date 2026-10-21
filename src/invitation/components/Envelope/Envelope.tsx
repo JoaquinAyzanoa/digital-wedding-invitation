@@ -110,30 +110,54 @@ export function Envelope({
     }
 
     const flap = root.querySelector<HTMLElement>('[data-flap]')!;
-    // The seal is not broken: it answers the tap with a soft press and a warm glow, then stays
-    // on the flap and rises with it, as real wax does.
-    await Promise.all([
-      animate(
-        '[data-seal-whole]',
-        { scale: [1, 0.9, 1.05, 1] },
-        { duration: 0.6, ease: 'easeInOut', times: [0, 0.3, 0.7, 1] },
-      ),
-      animate(
-        '[data-seal-glow]',
-        { opacity: [0, 0.9, 0], scale: [0.6, 1.2, 1.5] },
-        { duration: 0.8, ease: 'easeOut' },
-      ),
-      animate('[data-hint]', { opacity: 0 }, { duration: 0.3 }),
-      // The open flap rises over the text above the envelope: clear the stage first.
-      animate('[data-fade-on-open]', { opacity: 0 }, { duration: 0.4 }),
-    ]);
-    await animate(flap, { rotateX: 90 }, { duration: 0.4, ease: 'easeIn' });
-    // Past 90° the flap is behind the card and we see its inside.
-    flap.dataset.open = 'true';
-    await animate(flap, { rotateX: 180 }, { duration: 0.35, ease: 'easeOut' });
-    await animate('[data-card]', { y: '-62%' }, { duration: 0.9, ease: [0.22, 1, 0.36, 1] });
-    // A moment to see the card before the page appears.
-    await animate(root, { opacity: 0, y: -24 }, { duration: 0.7, ease: 'easeInOut', delay: 0.55 });
+    const envelope = root.querySelector<HTMLElement>('[data-envelope]')!;
+    // One continuous movement: each step starts before the previous one ends, and it never
+    // stands still before the page appears.
+    const flapDelay = 0.25;
+    const flapDuration = 0.9;
+    // The flap is edge-on halfway through (its curve is symmetric): from then on it lies
+    // behind the card. Its faces swap by themselves (3D backfaces), nothing is repainted.
+    const flip = setTimeout(
+      () => (flap.dataset.open = 'true'),
+      (flapDelay + flapDuration / 2) * 1000,
+    );
+    try {
+      await Promise.all([
+        // The seal is not broken: a soft press and a warm glow, then it rises with the flap.
+        animate(
+          '[data-seal-whole]',
+          { scale: [1, 0.92, 1.03, 1] },
+          { duration: 0.45, ease: 'easeInOut', times: [0, 0.3, 0.7, 1] },
+        ),
+        animate(
+          '[data-seal-glow]',
+          { opacity: [0, 0.9, 0], scale: [0.6, 1.2, 1.5] },
+          { duration: 0.7, ease: 'easeOut' },
+        ),
+        animate('[data-hint]', { opacity: 0 }, { duration: 0.3 }),
+        // The open flap rises over the text above the envelope: clear the stage first.
+        animate('[data-fade-on-open]', { opacity: 0 }, { duration: 0.45 }),
+        animate(
+          flap,
+          { rotateX: 180 },
+          { duration: flapDuration, delay: flapDelay, ease: [0.45, 0, 0.55, 1] },
+        ),
+        animate(
+          '[data-card]',
+          { y: '-62%' },
+          { duration: 1.1, delay: 0.85, ease: [0.22, 1, 0.36, 1] },
+        ),
+        // A slow push towards the guest while the page appears behind.
+        animate(
+          envelope,
+          { scale: 1.1, y: 24 },
+          { duration: 1.6, delay: 1.45, ease: [0.4, 0, 0.2, 1] },
+        ),
+        animate(root, { opacity: 0 }, { duration: 0.9, delay: 2.1, ease: 'easeInOut' }),
+      ]);
+    } finally {
+      clearTimeout(flip);
+    }
   }
 
   const seats = invitation?.seats ?? 0;
@@ -207,6 +231,7 @@ export function Envelope({
         <button
           type="button"
           className={styles.envelope}
+          data-envelope
           onClick={() => open()}
           disabled={opening}
           aria-label="Abrir la invitación"

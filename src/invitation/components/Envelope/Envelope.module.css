@@ -150,33 +150,38 @@
   fill: var(--env-bottom);
 }
 
+/* A real 3D leaf: the front (with the hint and the seal) shows until it is edge-on, then
+   its lined inside. No filter here: it would flatten the 3D and show both faces. */
 .flap {
   position: absolute;
   inset: 0;
   z-index: 4;
   transform-origin: top center;
+  transform-style: preserve-3d;
+}
+
+.flapFront {
   filter: drop-shadow(0 3px 3px rgb(30 40 70 / 0.18));
+}
+
+.flapFront,
+.hint,
+.seal {
+  backface-visibility: hidden;
+}
+
+/* Drawn mirrored and turned around, so it reads right once the flap has opened. */
+.flapInside {
+  transform: rotateX(180deg);
+  backface-visibility: hidden;
 }
 
 .flapPaper {
   fill: var(--env);
 }
 
-.flapInside {
-  display: none;
-}
-
 .flap[data-open='true'] {
   z-index: 1;
-}
-
-.flap[data-open='true'] .flapFront,
-.flap[data-open='true'] .hint {
-  display: none;
-}
-
-.flap[data-open='true'] .flapInside {
-  display: block;
 }
 
 /* Engraved on the flap, like a printed line on the envelope. */
@@ -337,11 +342,6 @@
   );
   opacity: 0;
   pointer-events: none;
-}
-
-/* On the flap, the seal goes with it; once the flap shows its inside, the seal is behind. */
-.flap[data-open='true'] .seal {
-  display: none;
 }
 
 .sealWhole svg {

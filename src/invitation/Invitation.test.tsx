@@ -127,7 +127,7 @@ describe('Code entry', () => {
 describe('Music', () => {
   it(
     'starts on the envelope tap and shows the mute button afterwards',
-    { timeout: 10_000 },
+    { timeout: 15_000 },
     async () => {
       const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
       // jsdom cannot buffer media: the early preload is a no-op here.
@@ -150,7 +150,8 @@ describe('Music', () => {
       });
       expect(screen.getByRole('button', { name: /música/ })).toBeInTheDocument();
       expect(screen.getByText('Dale play a nuestra canción')).toBeInTheDocument();
-      await waitFor(() => expect(song.volume).toBe(1));
+      // Three seconds of fade, on a busy test machine: allow it time.
+      await waitFor(() => expect(song.volume).toBe(1), { timeout: 5000 });
       play.mockRestore();
       load.mockRestore();
     },
