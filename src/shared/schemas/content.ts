@@ -147,7 +147,15 @@ export const publicContentSchema = z.object({
       intro: text(200).optional(),
     }),
   ),
-  itinerary: z.array(z.object({ time, label: requiredText(60), icon: z.enum(ICON_KEYS) })),
+  itinerary: z.array(
+    z.object({
+      time,
+      label: requiredText(60),
+      icon: z.enum(ICON_KEYS),
+      /** A drawing for this moment (black ink on white); without one, the icon shows. */
+      image: httpUrl.optional(),
+    }),
+  ),
   closingPhrase: text(120),
   dressCode: z.object({
     title: text(60),

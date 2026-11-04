@@ -46,6 +46,57 @@ export async function uploadDecoration(file: File): Promise<string> {
   return upload(`decorations/${randomName()}.webp`, image, 'image/webp');
 }
 
+const ILLUSTRATION_SIDE = 900;
+// The ink colour drawings are turned into: a warm near-black, like printed ink.
+const INK = [32, 27, 24] as const;
+
+/**
+ * A drawing on white paper turned into ink on nothing: every pixel becomes the ink colour,
+ * as opaque as it was dark (white disappears, greys stay as light washes). So it sits on
+ * the invitation's paper, whatever its colour, without a white box around it.
+ */
+async function inkOnly(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, ILLUSTRATION_SIDE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext('2d')!;
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  const px = image.data;
+  for (let i = 0; i < px.length; i += 4) {
+    const light = 0.299 * px[i]! + 0.587 * px[i + 1]! + 0.114 * px[i + 2]!;
+    // Paper-white (and the faint grey of a scan) goes fully clear.
+    const ink = Math.max(0, Math.min(1, (245 - light) / 215));
+    px[i] = INK[0];
+    px[i + 1] = INK[1];
+    px[i + 2] = INK[2];
+    px[i + 3] = Math.round(ink * (px[i + 3]! / 255) * 255);
+  }
+  context.putImageData(image, 0, 0);
+  // WebP keeps the transparency; a browser that cannot write it (Safari) gives PNG.
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('No se pudo procesar el dibujo.'))),
+      'image/webp',
+      0.9,
+    ),
+  );
+}
+
+/** Drawings for the itinerary: ink only, at most 900 px (plenty on a phone). */
+export async function uploadIllustration(file: File): Promise<string> {
+  const image = await inkOnly(file);
+  const webp = image.type === 'image/webp';
+  return upload(
+    `illustrations/${randomName()}.${webp ? 'webp' : 'png'}`,
+    image,
+    webp ? 'image/webp' : 'image/png',
+  );
+}
+
 export const MAX_MUSIC_BYTES = 15 * 1024 * 1024;
 
 export async function uploadMusic(file: File): Promise<string> {

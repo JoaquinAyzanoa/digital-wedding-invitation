@@ -124,6 +124,55 @@ test('colors to avoid: picked in the editor, shown as swatches', async ({ page, 
   await guest.close();
 });
 
+test('an itinerary drawing becomes ink on the paper', async ({ page, browser }) => {
+  await login(page);
+  await openContent(page);
+  await group(page, 'Itinerario y cierre').click();
+  // A white square with a black one inside: the white must turn clear, the black stay.
+  const drawing = await page.evaluate(async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 40, 40);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(10, 10, 20, 20);
+    return canvas.toDataURL('image/png').split(',')[1]!;
+  });
+  await page
+    .getByLabel(/^Ilustración \(opcional\): subir archivo$/)
+    .first()
+    .setInputFiles({
+      name: 'iglesia.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(drawing, 'base64'),
+    });
+  await expect(page.locator('img[src*="/illustrations/"]')).toHaveCount(1, { timeout: 20_000 });
+  await save(page);
+
+  const guest = await browser.newPage();
+  await guest.goto('/?abc234');
+  await guest.getByRole('button', { name: 'Abrir la invitación' }).click();
+  const img = guest.locator('section[aria-labelledby="itinerary-title"] img').first();
+  await img.scrollIntoViewIfNeeded();
+  await expect(img).toHaveAttribute('src', /\/illustrations\/[\w-]+\.(webp|png)$/);
+  // Read the stored file itself (the image element is cross-origin: its pixels are hidden).
+  const corners = await img.evaluate(async (element: HTMLImageElement) => {
+    const bitmap = await createImageBitmap(await (await fetch(element.src)).blob());
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(bitmap, 0, 0);
+    const alpha = (x: number, y: number) => ctx.getImageData(x, y, 1, 1).data[3];
+    return { paper: alpha(2, 2), ink: alpha(20, 20) };
+  });
+  expect(corners.paper).toBeLessThan(10);
+  expect(corners.ink).toBeGreaterThan(240);
+  await guest.close();
+});
+
 test('an invalid field opens its section and is focused', async ({ page }) => {
   await login(page);
   await openContent(page);

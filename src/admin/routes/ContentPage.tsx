@@ -13,7 +13,13 @@ import {
   WeddingDateTimeField,
 } from '@/admin/content/fields';
 import { sectionOfPath, type ContentForm, type ContentSectionKey } from '@/admin/content/form';
-import { uploadDecoration, uploadMusic, uploadPhoto, uploadVideo } from '@/admin/data/storage';
+import {
+  uploadDecoration,
+  uploadIllustration,
+  uploadMusic,
+  uploadPhoto,
+  uploadVideo,
+} from '@/admin/data/storage';
 import { Btn } from '@/admin/ui/Btn';
 import ui from '@/admin/ui/ui.module.css';
 import { ICON_KEYS, PHOTO_SLOTS, SECTION_IDS, type SectionId } from '@/shared/schemas/content';
@@ -381,15 +387,25 @@ export function ContentPage() {
               addLabel="Agregar actividad"
               newItem={() => ({ time: '20:00', label: '', icon: 'heart' })}
               render={(i) => (
-                <div className={ui.row}>
-                  <TextField name={`public.itinerary.${i}.time`} label="Hora" type="time" />
-                  <TextField name={`public.itinerary.${i}.label`} label="Actividad" />
-                  <SelectField
-                    name={`public.itinerary.${i}.icon`}
-                    label="Ícono"
-                    options={ICON_KEYS.map((k) => [k, ICON_LABELS[k]] as const)}
+                <>
+                  <div className={ui.row}>
+                    <TextField name={`public.itinerary.${i}.time`} label="Hora" type="time" />
+                    <TextField name={`public.itinerary.${i}.label`} label="Actividad" />
+                    <SelectField
+                      name={`public.itinerary.${i}.icon`}
+                      label="Ícono"
+                      options={ICON_KEYS.map((k) => [k, ICON_LABELS[k]] as const)}
+                    />
+                  </div>
+                  <UploadField
+                    name={`public.itinerary.${i}.image`}
+                    label="Ilustración (opcional)"
+                    accept="image/png,image/jpeg,image/webp"
+                    kind="image"
+                    hint="Un dibujo a tinta sobre fondo blanco (el blanco se funde con el papel). Sin ilustración se muestra el ícono."
+                    upload={uploadIllustration}
                   />
-                </div>
+                </>
               )}
             />
             <TextField name="public.closingPhrase" label="Frase de cierre" />

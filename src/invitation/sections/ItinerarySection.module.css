@@ -1,89 +1,82 @@
 /*
- * Zigzag timeline: a 3-column grid (left item | line | right item). Each item spans two
- * half-height rows starting one row after the previous one, so the sides interleave.
+ * "Programa del día": rows of two halves, a drawing and the words, swapping sides each row,
+ * with an ink line between the words of one row and the next.
  */
-.wrap {
-  --row: 82px;
-  position: relative;
+.program {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: 400px;
-  margin-top: 8px;
-}
-
-.timeline {
-  display: grid;
-  grid-template-columns: 1fr 44px 1fr;
-  margin: 0;
+  max-width: 420px;
+  margin: 4px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.line {
-  position: absolute;
-  top: 12px;
-  bottom: calc(var(--row) - 12px);
-  left: 50%;
-  width: 3px;
-  margin-left: -1.5px;
-  border-radius: 2px;
-  background: var(--color-accent);
-  transform-origin: top;
-}
-
-.item {
-  display: contents;
-}
-
-.heart {
-  grid-column: 2;
-  z-index: 1;
-  align-self: start;
-  justify-self: center;
-  width: 24px;
-  height: 24px;
-  fill: var(--color-bg);
-  stroke: var(--color-accent);
-  stroke-width: 2.4;
-}
-
-.heart path {
-  fill: var(--color-accent);
-  stroke: none;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
+.moment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 2px;
-  padding-top: 4px;
+  column-gap: 14px;
 }
 
-.item[data-side='left'] .content {
-  grid-column: 1;
+.moment[data-picture='right'] .picture {
+  order: 2;
 }
 
-.item[data-side='right'] .content {
-  grid-column: 3;
+.picture {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
 }
 
-/* `display: contents` drops the li's grid placement, so place the children directly. */
-.item .heart,
-.item .content {
-  grid-row: var(--item-row);
+/* The drawings are ink only (made transparent when uploaded): they sit on the paper. */
+.picture img {
+  display: block;
+  width: 100%;
+  max-width: 170px;
+  max-height: 150px;
+  object-fit: contain;
 }
 
 .icon {
-  margin-bottom: 4px;
   color: var(--color-accent);
 }
 
+.words {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
 .time {
-  font-size: 19px;
+  font-size: 18px;
+  letter-spacing: 0.04em;
   font-variant-numeric: lining-nums;
+  text-transform: uppercase;
 }
 
 .label {
-  font-size: 19px;
-  line-height: 1.3;
+  font-size: 16px;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The line runs across the whole row, between this moment's words and the next one's. */
+.connector {
+  grid-column: 1 / -1;
+  order: 3;
+  display: block;
+  width: 100%;
+  height: 52px;
+  margin: -4px 0;
+  overflow: visible;
+}
+
+.connector path {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
 }
