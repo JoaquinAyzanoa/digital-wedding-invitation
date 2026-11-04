@@ -45,6 +45,11 @@ export function GiftsSection({ content, invitation, entry }: SectionProps) {
             )}
           </div>
         ))}
+        {/* Without a personal link the details are not sent at all: say where to find them,
+            so the text does not end on "estos son los medios disponibles:" and nothing. */}
+        {!invitation && (
+          <p className={styles.private}>Los datos están en tu invitación personal.</p>
+        )}
       </Reveal>
     </Section>
   );

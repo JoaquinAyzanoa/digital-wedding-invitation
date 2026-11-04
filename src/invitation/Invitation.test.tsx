@@ -36,12 +36,14 @@ describe('Invitation states', () => {
     expect(within(envelope).getByText('2')).toBeInTheDocument();
     expect(within(envelope).getByText('lugares en su honor')).toBeInTheDocument();
     expect(page().getAllByRole('button', { name: /^Copiar/, hidden: true })).toHaveLength(2);
+    expect(page().queryByText('Los datos están en tu invitación personal.')).toBeNull();
   });
 
   it('no code: generic envelope, no bank details, RSVP asks for the code', () => {
     renderInvitation({ codeStatus: 'none' });
     expect(screen.queryByText('Hemos reservado')).not.toBeInTheDocument();
     expect(page().queryByRole('button', { name: /^Copiar/, hidden: true })).toBeNull();
+    expect(page().getByText('Los datos están en tu invitación personal.')).toBeInTheDocument();
     expect(page().getByLabelText(/Ingresa el código de tu invitación/)).toBeInTheDocument();
   });
 
