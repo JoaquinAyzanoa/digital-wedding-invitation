@@ -184,6 +184,8 @@ export const publicContentSchema = z.object({
       dni: z.boolean().default(true),
       /** Children at the wedding (asks adult or child, and the age). Missing: no. */
       children: z.boolean().default(false),
+      /** Allergies or dietary restrictions of each person (optional). Missing: on. */
+      dietary: z.boolean().default(true),
     }),
   }),
   album: z.object({

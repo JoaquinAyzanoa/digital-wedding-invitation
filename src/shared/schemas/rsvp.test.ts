@@ -14,6 +14,7 @@ const questions = {
   parts: true,
   dni: false,
   children: true,
+  dietary: true,
 };
 const schema = rsvpFormSchema({ seats: 3, menuOptions: ['Carne', 'Infantil'], questions });
 
@@ -85,6 +86,12 @@ describe('rsvpFormSchema', () => {
 });
 
 describe('toRsvpInput', () => {
+  it('drops allergies when the question is off', () => {
+    const form = values({ attendees: [{ ...emptyAttendee('Ana Pérez'), dietary: 'Maní' }] });
+    expect(toRsvpInput(form, questions).attendees[0]!.dietary).toBe('Maní');
+    expect(toRsvpInput(form, { ...questions, dietary: false }).attendees[0]!.dietary).toBeNull();
+  });
+
   it('drops answers to disabled questions and empty texts', () => {
     const input = toRsvpInput(
       values({ needsLodging: true, songRequest: '  ', contactPhone: ' 987654321 ' }),

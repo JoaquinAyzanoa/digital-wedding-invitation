@@ -77,6 +77,7 @@ export const demoContent: PublicContent = {
       parts: false,
       dni: true,
       children: false,
+      dietary: true,
     },
   },
   album: {

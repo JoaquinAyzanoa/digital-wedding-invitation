@@ -11,6 +11,8 @@ interface AttendeeCardProps {
   askDni: boolean;
   /** Children allowed: ask adult or child, and the age (content: rsvp.questions.children). */
   allowChildren: boolean;
+  /** Ask about allergies or dietary restrictions (content: rsvp.questions.dietary). */
+  askDietary: boolean;
   onRemove?: () => void;
 }
 
@@ -22,6 +24,7 @@ export function AttendeeCard({
   menuOptions,
   askDni,
   allowChildren,
+  askDietary,
   onRemove,
 }: AttendeeCardProps) {
   const {
@@ -164,20 +167,22 @@ export function AttendeeCard({
         </div>
       )}
 
-      <div className={styles.field}>
-        <label htmlFor={id('dietary')} className={styles.label}>
-          Alergias o restricciones <span className={styles.optional}>(opcional)</span>
-        </label>
-        <input
-          id={id('dietary')}
-          className={styles.input}
-          placeholder="p. ej. alergia al maní"
-          aria-invalid={Boolean(fieldErrors?.dietary)}
-          aria-describedby={describedBy('dietary', fieldErrors?.dietary)}
-          {...register(`attendees.${index}.dietary`)}
-        />
-        <FieldError id={id('dietary-error')} message={fieldErrors?.dietary?.message} />
-      </div>
+      {askDietary && (
+        <div className={styles.field}>
+          <label htmlFor={id('dietary')} className={styles.label}>
+            Alergias o restricciones <span className={styles.optional}>(opcional)</span>
+          </label>
+          <input
+            id={id('dietary')}
+            className={styles.input}
+            placeholder="p. ej. alergia al maní"
+            aria-invalid={Boolean(fieldErrors?.dietary)}
+            aria-describedby={describedBy('dietary', fieldErrors?.dietary)}
+            {...register(`attendees.${index}.dietary`)}
+          />
+          <FieldError id={id('dietary-error')} message={fieldErrors?.dietary?.message} />
+        </div>
+      )}
     </div>
   );
 }

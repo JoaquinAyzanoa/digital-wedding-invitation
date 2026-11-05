@@ -229,7 +229,7 @@ export function toRsvpInput(values: RsvpFormValues, questions: RsvpRules['questi
       kind: questions.children ? a.kind : 'adult',
       age: questions.children && a.kind === 'child' ? a.age : null,
       menu: a.menu || null,
-      dietary: a.dietary.trim() || null,
+      dietary: questions.dietary ? a.dietary.trim() || null : null,
       // Empty: keeps the DNI already given for the same name (or none, for the admin).
       dni: questions.dni ? a.dni.trim() || null : null,
     })),

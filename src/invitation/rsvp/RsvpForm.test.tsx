@@ -202,6 +202,22 @@ describe('RSVP form', () => {
     ]);
   });
 
+  it('without the allergies question it does not ask about them', async () => {
+    const content: PublicContent = {
+      ...demoContent,
+      rsvp: {
+        ...demoContent.rsvp,
+        questions: { ...demoContent.rsvp.questions, dietary: false },
+      },
+    };
+    const { user } = setup(demoInvitation, undefined, content);
+    await openForm(user);
+    await user.click(screen.getByLabelText('Sí, asistiremos'));
+    await next(user);
+    expect(await screen.findByLabelText('Nombre completo')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Alergias o restricciones/)).not.toBeInTheDocument();
+  });
+
   it('declining takes two steps', async () => {
     const { api, user, refresh } = setup(demoInvitation);
     await openForm(user);

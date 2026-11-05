@@ -65,7 +65,7 @@ set public_data = $json$
     "closed": false,
     "intro": "Tu compañía es muy importante para nosotros. Por favor confírmanos tu presencia con anticipación.",
     "menuOptions": [],
-    "questions": { "transport": false, "lodging": false, "song": true, "parts": false, "dni": true, "children": false }
+    "questions": { "transport": false, "lodging": false, "song": true, "parts": false, "dni": true, "children": false, "dietary": true }
   },
   "album": {
     "enabled": true,

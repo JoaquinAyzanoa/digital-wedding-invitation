@@ -267,6 +267,7 @@ export function RsvpForm({ content, invitation, onDone, onCancel, autoFocus }: R
                     menuOptions={menuOptions}
                     askDni={questions.dni}
                     allowChildren={questions.children}
+                    askDietary={questions.dietary}
                     onRemove={
                       attendees.fields.length > 1 ? () => attendees.remove(index) : undefined
                     }

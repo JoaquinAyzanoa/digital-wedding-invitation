@@ -504,6 +504,10 @@ export function ContentPage() {
                 name="public.rsvp.questions.children"
                 label="Se permiten niños (pregunta adulto o niño y su edad)"
               />
+              <Toggle
+                name="public.rsvp.questions.dietary"
+                label="Alergias o restricciones de cada persona (opcional para el invitado)"
+              />
             </fieldset>
           </Group>
 

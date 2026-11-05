@@ -74,6 +74,8 @@ export function DashboardPage() {
   const d = dashboard.data;
   const pending = (invitations.data ?? []).filter((i) => i.attending === null);
   const hasMenu = (rules.data?.menuOptions.length ?? 0) > 0;
+  // Nothing to show without a menu, the allergies question or any answer to it.
+  const showFood = hasMenu || (rules.data?.questions.dietary ?? true) || d.dietary.length > 0;
 
   return (
     <div className={styles.page}>
@@ -167,35 +169,37 @@ export function DashboardPage() {
           </table>
         </section>
 
-        <section className={ui.card}>
-          <h2 className={ui.cardTitle}>{hasMenu ? 'Menús' : 'Alergias y restricciones'}</h2>
-          {!hasMenu ? (
-            d.dietary.length === 0 && <p className={ui.muted}>Nadie indicó alergias todavía.</p>
-          ) : d.menu.length === 0 ? (
-            <p className={ui.muted}>Aún no hay confirmaciones.</p>
-          ) : (
-            <ul className={styles.list}>
-              {d.menu.map((row) => (
-                <li key={row.menu ?? '—'}>
-                  <span>{row.menu ?? 'Sin menú'}</span>
-                  <strong>{row.count}</strong>
-                </li>
-              ))}
-            </ul>
-          )}
-          {d.dietary.length > 0 && (
-            <>
-              {hasMenu && <h3 className={styles.subtitle}>Alergias y restricciones</h3>}
-              <ul className={styles.notes}>
-                {d.dietary.map((row, i) => (
-                  <li key={i}>
-                    <strong>{row.fullName}</strong> ({row.invitation}): {row.dietary}
+        {showFood && (
+          <section className={ui.card}>
+            <h2 className={ui.cardTitle}>{hasMenu ? 'Menús' : 'Alergias y restricciones'}</h2>
+            {!hasMenu ? (
+              d.dietary.length === 0 && <p className={ui.muted}>Nadie indicó alergias todavía.</p>
+            ) : d.menu.length === 0 ? (
+              <p className={ui.muted}>Aún no hay confirmaciones.</p>
+            ) : (
+              <ul className={styles.list}>
+                {d.menu.map((row) => (
+                  <li key={row.menu ?? '—'}>
+                    <span>{row.menu ?? 'Sin menú'}</span>
+                    <strong>{row.count}</strong>
                   </li>
                 ))}
               </ul>
-            </>
-          )}
-        </section>
+            )}
+            {d.dietary.length > 0 && (
+              <>
+                {hasMenu && <h3 className={styles.subtitle}>Alergias y restricciones</h3>}
+                <ul className={styles.notes}>
+                  {d.dietary.map((row, i) => (
+                    <li key={i}>
+                      <strong>{row.fullName}</strong> ({row.invitation}): {row.dietary}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        )}
 
         <section className={ui.card}>
           <h2 className={ui.cardTitle}>Logística</h2>
