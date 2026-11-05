@@ -172,6 +172,8 @@ export const publicContentSchema = z.object({
     deadline: dateOrDateTime,
     closed: z.boolean(),
     intro: text(500),
+    /** A short line under the title, set apart (e.g. "only for adults"). */
+    notice: text(160).optional(),
     /** Shown once the RSVP has closed (e.g. how to reach the couple). */
     closedText: text(300).optional(),
     menuOptions: z.array(requiredText(60)),

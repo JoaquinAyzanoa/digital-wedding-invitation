@@ -106,6 +106,11 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
       <Reveal>
         <SectionTitle id="rsvp-title">{sectionTitle(content, 'rsvp')}</SectionTitle>
       </Reveal>
+      {content.rsvp.notice && (
+        <Reveal>
+          <p className={styles.notice}>{content.rsvp.notice}</p>
+        </Reveal>
+      )}
       {content.rsvp.intro && !editing && (
         <Reveal>
           <p className={text.body}>{content.rsvp.intro}</p>

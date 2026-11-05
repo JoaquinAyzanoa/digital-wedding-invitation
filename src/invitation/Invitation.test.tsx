@@ -118,6 +118,15 @@ describe('Invitation states', () => {
     ).toEqual(['blanco', 'crema', 'vino']);
   });
 
+  it('shows the RSVP notice under its title', () => {
+    const content = structuredClone(demoContent);
+    content.rsvp.notice = 'Amamos a los pequeños, pero esta celebración será solo para adultos';
+    renderInvitation({ content });
+    expect(
+      page().getByText('Amamos a los pequeños, pero esta celebración será solo para adultos'),
+    ).toBeInTheDocument();
+  });
+
   it('without the envelope section the page is visible right away', () => {
     const content = structuredClone(demoContent);
     content.sections = content.sections.filter((s) => s.id !== 'envelope');

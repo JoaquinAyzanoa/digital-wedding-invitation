@@ -5,3 +5,14 @@
   gap: 14px;
   width: 100%;
 }
+
+/* A line set apart under the title, like a printed notice: small spaced capitals. */
+.notice {
+  max-width: 340px;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.75;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}

@@ -477,6 +477,13 @@ export function ContentPage() {
             </div>
             <TextField name="public.rsvp.intro" label="Texto de introducción" multiline />
             <TextField
+              name="public.rsvp.notice"
+              label="Aviso bajo el título (opcional)"
+              placeholder="Amamos a los pequeños, pero esta celebración será solo para adultos"
+              hint="Una línea aparte, en mayúsculas pequeñas, debajo de «Confirmar asistencia»."
+              emptyAsUndefined
+            />
+            <TextField
               name="public.rsvp.closedText"
               label="Texto cuando ya cerró"
               placeholder="La confirmación ya cerró. Si necesitas cambiar algo, escríbenos."
