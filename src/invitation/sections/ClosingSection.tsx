@@ -12,26 +12,31 @@ const INFINITY =
 
 export function ClosingSection({ content, entry }: SectionProps) {
   const revealEnabled = useContext(RevealContext);
+  const { closingPhrase, closingSymbol } = content;
   return (
     <>
-      <Section content={content} entry={entry}>
-        <svg viewBox="0 0 48 48" className={styles.infinity} aria-hidden="true">
-          {revealEnabled && (
-            <motion.path
-              d={INFINITY}
-              initial={{ pathLength: 0 }}
-              whileInView={{ pathLength: 1 }}
-              viewport={{ once: true, amount: 0.8 }}
-              transition={{ duration: 1.8, ease: 'easeInOut' }}
-            />
+      {(closingSymbol || closingPhrase) && (
+        <Section content={content} entry={entry}>
+          {closingSymbol && (
+            <svg viewBox="0 0 48 48" className={styles.infinity} aria-hidden="true">
+              {revealEnabled && (
+                <motion.path
+                  d={INFINITY}
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true, amount: 0.8 }}
+                  transition={{ duration: 1.8, ease: 'easeInOut' }}
+                />
+              )}
+            </svg>
           )}
-        </svg>
-        {content.closingPhrase && (
-          <Reveal delay={0.4}>
-            <p className={styles.phrase}>{content.closingPhrase}</p>
-          </Reveal>
-        )}
-      </Section>
+          {closingPhrase && (
+            <Reveal delay={closingSymbol ? 0.4 : 0}>
+              <p className={styles.phrase}>{closingPhrase}</p>
+            </Reveal>
+          )}
+        </Section>
+      )}
       <SlotPhoto content={content} slot="closing" />
     </>
   );

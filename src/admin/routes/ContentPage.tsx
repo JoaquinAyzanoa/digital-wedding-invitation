@@ -409,6 +409,11 @@ export function ContentPage() {
               )}
             />
             <TextField name="public.closingPhrase" label="Frase de cierre" />
+            <Toggle
+              name="public.closingSymbol"
+              label="Mostrar el símbolo del infinito"
+              hint="Se dibuja sobre la frase de cierre."
+            />
           </Group>
 
           <Group {...group('gifts')} title="Regalos">

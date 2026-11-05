@@ -1,10 +1,11 @@
+/* 44 px above and below: two sections in a row leave 88 px between them. */
 .section {
   position: relative;
-  padding: 64px var(--gutter);
+  padding: 44px var(--gutter);
 }
 
 .section[data-paper-edge='true'] {
-  padding-top: 92px;
+  padding-top: 80px;
 }
 
 .garland {

@@ -46,7 +46,7 @@ export const CONTENT_SECTIONS = {
   photos: ['photos', 'decorations', 'coverVideo'],
   family: ['family'],
   events: ['events'],
-  itinerary: ['itinerary', 'closingPhrase'],
+  itinerary: ['itinerary', 'closingPhrase', 'closingSymbol'],
   gifts: ['gifts', 'private'],
   dressCode: ['dressCode'],
   rsvp: ['rsvp'],

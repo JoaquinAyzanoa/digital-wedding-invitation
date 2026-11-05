@@ -55,6 +55,7 @@ export const demoContent: PublicContent = {
     { time: '19:00', label: 'Fiesta', icon: 'confetti' },
   ],
   closingPhrase: 'Y vivirán felices por siempre',
+  closingSymbol: true,
   dressCode: {
     title: 'Elegante',
     notes: ['Damas: vestido largo', 'Caballeros: terno'],

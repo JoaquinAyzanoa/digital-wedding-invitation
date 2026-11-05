@@ -157,6 +157,8 @@ export const publicContentSchema = z.object({
     }),
   ),
   closingPhrase: text(120),
+  /** The infinity sign drawn above the closing phrase. Missing in older content: on. */
+  closingSymbol: z.boolean().default(true),
   dressCode: z.object({
     title: text(60),
     notes: z.array(requiredText(160)),
