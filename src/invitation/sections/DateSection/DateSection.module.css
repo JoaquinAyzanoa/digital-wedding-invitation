@@ -5,7 +5,9 @@
   gap: 28px;
   max-width: var(--page-width);
   margin: 0 auto;
-  padding: 72px var(--gutter);
+  /* 44 px below like every section; less above, since what comes before (the family) leads
+     straight into it. */
+  padding: 16px var(--gutter) 44px;
   text-align: center;
 }
 

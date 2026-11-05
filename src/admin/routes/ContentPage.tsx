@@ -439,7 +439,18 @@ export function ContentPage() {
 
           <Group {...group('dressCode')} title="Dress code">
             <TextField name="public.dressCode.title" label="Código" placeholder="Elegante" />
-            <StringListField name="public.dressCode.notes" label="Notas" addLabel="Agregar nota" />
+            <StringListField
+              name="public.dressCode.notes"
+              label="Notas"
+              addLabel="Agregar nota"
+              placeholder="Hombres: terno oscuro y corbata"
+            />
+            <TextField
+              name="public.dressCode.avoidColorsTitle"
+              label="Título de los colores a evitar (opcional)"
+              placeholder="Colores a evitar"
+              emptyAsUndefined
+            />
             <ColorListField
               name="public.dressCode.avoidColors"
               label="Colores a evitar"

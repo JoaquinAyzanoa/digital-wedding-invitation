@@ -164,6 +164,8 @@ export const publicContentSchema = z.object({
     notes: z.array(requiredText(160)),
     /** Colors guests should not wear (white for the bride, the bridesmaids'…). */
     avoidColors: z.array(hexColor).max(6).default([]),
+    /** The heading above those colors; empty means "Colores a evitar". */
+    avoidColorsTitle: text(60).optional(),
     /** A board of outfit ideas (Pinterest…), behind "Ver inspiración". */
     inspirationUrl: httpUrl.optional(),
   }),

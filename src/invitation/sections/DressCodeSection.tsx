@@ -8,7 +8,7 @@ import text from './text.module.css';
 import { sectionTitle, type SectionProps } from './types';
 
 export function DressCodeSection({ content, entry }: SectionProps) {
-  const { title, notes, avoidColors, inspirationUrl } = content.dressCode;
+  const { title, notes, avoidColors, avoidColorsTitle, inspirationUrl } = content.dressCode;
   return (
     <Section content={content} entry={entry} labelledBy="dresscode-title">
       <Reveal className={styles.icons}>
@@ -40,7 +40,7 @@ export function DressCodeSection({ content, entry }: SectionProps) {
       {avoidColors.length > 0 && (
         <Reveal className={styles.avoid}>
           <p id="avoid-colors" className={styles.avoidTitle}>
-            Colores a evitar
+            {avoidColorsTitle || 'Colores a evitar'}
           </p>
           <ul className={styles.swatches} aria-labelledby="avoid-colors">
             {avoidColors.map((color, i) => (
