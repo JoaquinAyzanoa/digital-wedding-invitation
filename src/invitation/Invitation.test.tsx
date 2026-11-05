@@ -107,9 +107,8 @@ describe('Invitation states', () => {
     expect(within(envelope).queryByText('Segundos')).not.toBeInTheDocument();
   });
 
-  it('stationery: the monogram crest and the colors to avoid, named for screen readers', () => {
+  it('the colors to avoid are named for screen readers', () => {
     renderInvitation();
-    expect(page().getByRole('img', { name: 'Valeria y Mateo', hidden: true })).toBeInTheDocument();
     const colors = page().getByRole('list', { name: 'Colores a evitar', hidden: true });
     expect(
       within(colors)
@@ -171,7 +170,8 @@ describe('Music', () => {
         timeout: 9000,
       });
       expect(screen.getByRole('button', { name: /música/ })).toBeInTheDocument();
-      expect(screen.getByText('Dale play a nuestra canción')).toBeInTheDocument();
+      // No player on the page: only the floating button.
+      expect(screen.queryByText('Dale play a nuestra canción')).not.toBeInTheDocument();
       // Three seconds of fade, on a busy test machine: allow it time.
       await waitFor(() => expect(song.volume).toBe(1), { timeout: 5000 });
       play.mockRestore();

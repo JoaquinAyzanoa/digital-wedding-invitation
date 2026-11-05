@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import {
-  AudioActionsContext,
-  AudioStateContext,
-  AudioTimeContext,
-  type AudioActions,
-} from './audioContext';
+import { AudioActionsContext, AudioStateContext, type AudioActions } from './audioContext';
 
 // How long the song takes to rise to full volume after the envelope's tap.
 const FADE_IN_MS = 3000;
@@ -32,9 +27,6 @@ export function AudioProvider({ src, autoplay = false, children }: AudioProvider
   const riseRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [loop, setLoop] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     if (!src) return;
@@ -52,19 +44,12 @@ export function AudioProvider({ src, autoplay = false, children }: AudioProvider
     }, PRELOAD_AFTER_MS);
 
     const syncState = () => setPlaying(!audio.paused);
-    const syncTime = () => {
-      setCurrentTime(audio.currentTime);
-      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
-    };
     const stateEvents = ['play', 'pause', 'ended'];
-    const timeEvents = ['timeupdate', 'loadedmetadata', 'durationchange'];
     stateEvents.forEach((event) => audio.addEventListener(event, syncState));
-    timeEvents.forEach((event) => audio.addEventListener(event, syncTime));
     return () => {
       window.clearTimeout(preload);
       cancelAnimationFrame(fadeRef.current);
       stateEvents.forEach((event) => audio.removeEventListener(event, syncState));
-      timeEvents.forEach((event) => audio.removeEventListener(event, syncTime));
       audio.pause();
       audio.removeAttribute('src');
       audioRef.current = null;
@@ -113,25 +98,7 @@ export function AudioProvider({ src, autoplay = false, children }: AudioProvider
       return play();
     };
     return {
-      play: () => void play(),
       start,
-      pause: () => audio()?.pause(),
-      toggle: () => (audio()?.paused ? void play() : audio()?.pause()),
-      restart: () => {
-        const a = audio();
-        if (!a) return;
-        a.currentTime = 0;
-        if (a.paused) void play();
-      },
-      seek: (seconds) => {
-        const a = audio();
-        if (a) a.currentTime = seconds;
-      },
-      setLoop: (value) => {
-        const a = audio();
-        if (a) a.loop = value;
-        setLoop(value);
-      },
       toggleMute: () => {
         const a = audio();
         if (!a) return;
@@ -165,17 +132,11 @@ export function AudioProvider({ src, autoplay = false, children }: AudioProvider
     return stop;
   }, [src, autoplay, actions]);
 
-  const state = useMemo(
-    () => ({ available: Boolean(src), playing, muted, loop }),
-    [src, playing, muted, loop],
-  );
-  const time = useMemo(() => ({ currentTime, duration }), [currentTime, duration]);
+  const state = useMemo(() => ({ available: Boolean(src), playing, muted }), [src, playing, muted]);
 
   return (
     <AudioActionsContext value={actions}>
-      <AudioStateContext value={state}>
-        <AudioTimeContext value={time}>{children}</AudioTimeContext>
-      </AudioStateContext>
+      <AudioStateContext value={state}>{children}</AudioStateContext>
     </AudioActionsContext>
   );
 }

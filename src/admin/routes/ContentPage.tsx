@@ -242,14 +242,8 @@ export function ContentPage() {
               label="Canción (MP3)"
               accept="audio/mpeg,.mp3"
               kind="audio"
-              hint="Hasta 15 MB. Empieza a sonar al abrir el sobre."
+              hint="Hasta 15 MB. Suena al abrir la invitación (o al primer toque) y se silencia con el botón de abajo a la derecha."
               upload={uploadMusic}
-            />
-            <TextField
-              name="public.music.title"
-              label="Texto sobre el reproductor"
-              placeholder="Dale play a nuestra canción"
-              emptyAsUndefined
             />
           </Group>
 
