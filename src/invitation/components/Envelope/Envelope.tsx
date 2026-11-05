@@ -4,7 +4,6 @@ import { coverPoster, type PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
 import { datePartsInLima } from '@/shared/utils/date';
 import { CodeEntry } from '../CodeEntry/CodeEntry';
-import { Countdown } from '../Countdown/Countdown';
 import { CardFace } from './CardFace';
 import styles from './Envelope.module.css';
 import { Back, FlapFront, FlapInside, PaperDefs, Pocket } from './paper';
@@ -250,12 +249,6 @@ export function Envelope({
             <p className={styles.reservedText}>
               {seats === 1 ? 'lugar en su honor' : 'lugares en su honor'}
             </p>
-          </div>
-        )}
-
-        {video && (
-          <div className={styles.countdown} data-fade-on-open>
-            <Countdown target={content.date} variant="cover" />
           </div>
         )}
 

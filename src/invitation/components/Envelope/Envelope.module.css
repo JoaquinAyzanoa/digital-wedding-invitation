@@ -572,7 +572,3 @@
   letter-spacing: 0.04em;
   color: var(--seal-hi);
 }
-
-.countdown {
-  margin-top: clamp(4px, 1.5svh, 14px);
-}

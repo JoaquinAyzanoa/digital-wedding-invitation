@@ -80,7 +80,7 @@ describe('Invitation states', () => {
     expect(headings).toEqual(['Dress code', 'Itinerario de actividades']);
   });
 
-  it('with a pre-wedding video: it plays muted behind the envelope, with the countdown', async () => {
+  it('with a pre-wedding video: it plays muted behind the envelope, no countdown', async () => {
     const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
     const content = structuredClone(demoContent);
     content.coverVideo = 'https://example.com/storage/videos/abc.mp4';
@@ -94,8 +94,8 @@ describe('Invitation states', () => {
     expect(within(envelope).getByText('Te invitamos a nuestra boda')).toBeInTheDocument();
     expect(within(envelope).getByText('Familia Demo')).toBeInTheDocument();
     expect(within(envelope).getByText(/lugares en su honor/)).toBeInTheDocument();
-    expect(within(envelope).getByText('Faltan:')).toBeInTheDocument();
-    expect(within(envelope).getByText('Segundos')).toBeInTheDocument();
+    // The countdown is on the page (the date section), not on the envelope.
+    expect(within(envelope).queryByText('Faltan:')).not.toBeInTheDocument();
     play.mockRestore();
   });
 
@@ -104,7 +104,7 @@ describe('Invitation states', () => {
     const envelope = screen.getByRole('dialog');
     expect(envelope.querySelector('video')).toBeNull();
     expect(within(envelope).getByText('¡Nos casamos!')).toBeInTheDocument();
-    expect(within(envelope).queryByText('Segundos')).not.toBeInTheDocument();
+    expect(within(envelope).queryByText('Faltan:')).not.toBeInTheDocument();
   });
 
   it('the colors to avoid are named for screen readers', () => {

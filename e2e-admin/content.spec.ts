@@ -83,7 +83,7 @@ test('the pre-wedding video plays behind the envelope', async ({ page, browser }
   await expect(video).toHaveAttribute('src', /\/videos\/[\w-]+\.mp4$/);
   await expect(video).toHaveAttribute('poster', /\/videos\/[\w-]+-poster\.jpg$/);
   await expect(envelope.getByText('Te invitamos a nuestra boda')).toBeVisible();
-  await expect(envelope.getByText('Segundos')).toBeVisible();
+  await expect(envelope.getByText('Faltan:')).toHaveCount(0);
   await guest.close();
 
   // Without it, the envelope is back to its flowers.
