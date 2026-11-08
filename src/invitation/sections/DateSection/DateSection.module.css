@@ -26,21 +26,21 @@
   color: var(--color-primary);
 }
 
-.bride {
-  justify-self: start;
-  margin-left: -0.15em;
+/* The names one above the other, centred, the ampersand between them in the serif. */
+.names {
+  justify-items: center;
+}
+
+.bride,
+.groom {
+  /* Room for the calligraphy's swashes, which reach past the letters. */
+  padding-inline: 0.12em;
 }
 
 .amp {
-  justify-self: center;
   font-family: var(--font-serif);
   font-size: 0.5em;
   line-height: 1.4;
-}
-
-.groom {
-  justify-self: end;
-  margin-right: -0.15em;
 }
 
 .intro {
