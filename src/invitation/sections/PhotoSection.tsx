@@ -1,5 +1,5 @@
-import { motion, useReducedMotion } from 'motion/react';
-import type { CSSProperties } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { useRef, type CSSProperties } from 'react';
 import type { PhotoQuote, PhotoSlot, PublicContent } from '@/shared/schemas/content';
 import styles from './PhotoSection.module.css';
 import type { SectionProps } from './types';
@@ -43,11 +43,14 @@ function Quote({ quote }: { quote: PhotoQuote }) {
 }
 
 /**
- * Full-width photo that fades into the background at the top and bottom. It stands still (no
- * parallax): moving a photo inside its faded frame stutters while scrolling on iPhones.
+ * Full-width photo that fades into the background at the top and bottom, with light parallax.
+ * The cover stands still: moving it inside its faded frame stuttered on iPhones.
  */
 export function Photo({ src, alt, priority = false, cover, quote }: PhotoProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
   const verse = quote?.text ? quote : undefined;
   const fadeIn = {
     initial: reducedMotion ? false : { opacity: 0, y: 14 },
@@ -58,12 +61,13 @@ export function Photo({ src, alt, priority = false, cover, quote }: PhotoProps) 
 
   return (
     <div
+      ref={ref}
       className={styles.photo}
       data-cover={cover ? 'true' : undefined}
       // Light words get a soft shade at the top of the photo (the cover always has one).
       data-quote={verse && !cover ? (isLight(verse.color) ? 'light' : 'dark') : undefined}
     >
-      <img
+      <motion.img
         src={src}
         // Photos uploaded from the admin come in two sizes (see admin/data/storage.ts).
         {...(src.endsWith('-2000.webp')
@@ -74,6 +78,7 @@ export function Photo({ src, alt, priority = false, cover, quote }: PhotoProps) 
           : {})}
         alt={alt}
         className={styles.image}
+        style={reducedMotion || cover ? undefined : { y }}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         {...(priority ? { fetchPriority: 'high' as const } : {})}
