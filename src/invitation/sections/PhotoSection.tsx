@@ -75,7 +75,9 @@ export function Photo({ src, alt, priority = false, cover, quote }: PhotoProps) 
           : {})}
         alt={alt}
         className={styles.image}
-        style={reducedMotion ? undefined : { y }}
+        // The cover stands still: moving it inside its faded frame stutters on iPhones, and it
+        // is the first thing on screen.
+        style={reducedMotion || cover ? undefined : { y }}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         {...(priority ? { fetchPriority: 'high' as const } : {})}

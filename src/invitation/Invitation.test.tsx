@@ -131,6 +131,16 @@ describe('Invitation states', () => {
     expect(document.querySelectorAll('main img[src*="/photos/"]')).toHaveLength(2);
   });
 
+  it('an emptied welcome leaves no space: the cover photo opens the page', () => {
+    const content = structuredClone(demoContent);
+    content.welcome = { text: '', quote: '' };
+    content.photos.hero = 'https://example.com/storage/photos/a-2000.webp';
+    renderInvitation({ content });
+    const main = document.querySelector('main')!;
+    // After the screen-reader heading, the cover comes first.
+    expect(main.children[1]).toHaveAttribute('data-cover', 'true');
+  });
+
   it('a photo can carry a verse at its top: the words, then the reference', () => {
     const content = structuredClone(demoContent);
     content.photos.hero = 'https://example.com/storage/photos/a-2000.webp';

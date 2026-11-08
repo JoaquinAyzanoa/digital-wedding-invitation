@@ -31,7 +31,6 @@
   /* Taller than the frame and hung from the top: the photo sits higher, its lower part (the
      legs) is cut off and only the faces and the names show before it fades. */
   height: 132%;
-  filter: brightness(0.9) contrast(0.95);
 }
 
 /* A soft veil behind the words, so white stays legible over a bright sky. */
@@ -39,7 +38,10 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgb(20 18 16 / 0.42), rgb(20 18 16 / 0.12) 34%, transparent 52%);
+  /* Plus a faint overall shade (a filter on the photo itself repaints slowly on phones). */
+  background:
+    linear-gradient(rgb(20 18 16 / 0.42), rgb(20 18 16 / 0.12) 34%, transparent 52%),
+    rgb(20 18 16 / 0.08);
   pointer-events: none;
 }
 
