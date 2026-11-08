@@ -7,7 +7,7 @@
   gap: 16px;
   width: 100%;
   max-width: 380px;
-  padding: 72px 28px 40px;
+  padding: 72px 22px 44px;
   border-radius: 999px 999px 6px 6px / 190px 190px 6px 6px;
   background: var(--color-surface);
 }
@@ -22,46 +22,145 @@
   pointer-events: none;
 }
 
-.method {
+/* Bank details as notes pinned on the card, like the reference: white paper, a fine double
+   rule, a pearl pin at the top and (if uploaded) flowers on the corner. */
+.notes {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.noteWrap {
+  width: 100%;
+  max-width: 300px;
+}
+
+.note {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  margin-top: 8px;
+  padding: 38px 26px 32px;
+  background-color: #fffefc;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.4 0 0 0 0 0.33 0 0 0 0 0.25 0.08 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  box-shadow:
+    0 1px 2px rgb(60 50 40 / 0.1),
+    0 10px 26px rgb(60 50 40 / 0.14);
+  transform: rotate(var(--tilt));
+  transform-origin: 50% 0;
+  animation: sway 7s ease-in-out infinite alternate;
+}
+
+.note[data-tilt='left'] {
+  --tilt: -4deg;
+}
+
+.note[data-tilt='right'] {
+  --tilt: 3.5deg;
+}
+
+/* Two fine rules inside the edge. */
+.note::before,
+.note::after {
+  content: '';
+  position: absolute;
+  border: 1px solid var(--color-accent);
+  pointer-events: none;
+}
+
+.note::before {
+  inset: 10px;
+  opacity: 0.75;
+}
+
+.note::after {
+  inset: 14px;
+  opacity: 0.4;
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(var(--tilt)) translateY(0);
+  }
+
+  to {
+    transform: rotate(calc(var(--tilt) + 0.7deg)) translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note {
+    animation: none;
+  }
+}
+
+.pin {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 30px;
+  margin-left: -15px;
+}
+
+.cardIcon {
+  width: 34px;
+  margin-bottom: 8px;
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.flowers {
+  position: absolute;
+  bottom: -54px;
+  left: -46px;
+  z-index: 1;
+  width: 170px;
+  pointer-events: none;
 }
 
 .label {
-  font-size: 21px;
+  margin-bottom: 6px;
+  font-size: 20px;
   font-weight: 500;
 }
 
 .line {
-  font-size: 19px;
+  font-size: 17px;
+  line-height: 1.45;
   font-variant-numeric: lining-nums;
+  overflow-wrap: anywhere;
 }
 
 .copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
-  padding: 6px 16px;
+  margin-top: 12px;
+  padding: 5px 14px;
   border: 1px solid var(--color-primary);
   border-radius: 999px;
   background: transparent;
   color: var(--color-primary);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
 .private {
-  margin-top: 4px;
-  font-size: 15px;
+  font-size: 17px;
   font-style: italic;
   color: var(--color-muted);
 }

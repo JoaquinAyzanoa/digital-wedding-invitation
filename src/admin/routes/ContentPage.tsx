@@ -70,7 +70,7 @@ const PHOTO_LABELS: Record<(typeof PHOTO_SLOTS)[number], string> = {
   closing: 'Cierre',
 };
 
-const TITLED_SECTIONS = ['itinerary', 'gifts', 'dressCode', 'album', 'rsvp'] as const;
+const TITLED_SECTIONS = ['events', 'itinerary', 'gifts', 'dressCode', 'album', 'rsvp'] as const;
 
 function Group({
   id,
@@ -293,6 +293,14 @@ export function ContentPage() {
                 accept="image/png,image/webp"
                 kind="image"
                 hint="PNG con fondo transparente. Dónde aparecen: en «Secciones»."
+                upload={uploadDecoration}
+              />
+              <UploadField
+                name="public.decorations.gifts"
+                label="Flores de la tarjeta de regalos"
+                accept="image/png,image/webp"
+                kind="image"
+                hint="Un ramo en PNG con fondo transparente: va en la esquina de la tarjeta con los datos bancarios."
                 upload={uploadDecoration}
               />
             </div>

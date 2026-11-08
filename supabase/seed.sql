@@ -81,16 +81,16 @@ set public_data = $json$
     { "id": "family", "visible": true },
     { "id": "date", "visible": true },
     { "id": "photo", "visible": true, "photo": "divider1" },
+    { "id": "itinerary", "visible": true, "decor": "left" },
     { "id": "events", "visible": true, "decor": "right" },
     { "id": "photo", "visible": true, "photo": "divider2" },
-    { "id": "itinerary", "visible": true, "decor": "left" },
     { "id": "closing", "visible": true },
     { "id": "gifts", "visible": true },
     { "id": "dressCode", "visible": true },
     { "id": "photo", "visible": true, "photo": "divider3" },
-    { "id": "album", "visible": true, "decor": "left" },
     { "id": "rsvp", "visible": true },
-    { "id": "farewell", "visible": true }
+    { "id": "farewell", "visible": true },
+    { "id": "album", "visible": true, "decor": "left" }
   ],
   "titles": {
     "itinerary": "Itinerario de actividades",

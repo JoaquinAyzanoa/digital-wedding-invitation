@@ -11,6 +11,7 @@ export interface SectionProps {
 }
 
 const DEFAULT_TITLES: Partial<Record<SectionId, string>> = {
+  events: '¿Cómo llegar?',
   itinerary: 'Itinerario de actividades',
   gifts: 'Gracias',
   dressCode: 'Dress code',

@@ -14,7 +14,7 @@ import styles from './ThemePage.module.css';
 
 const COLOR_LABELS: Record<ThemeColor, [string, string]> = {
   bg: ['Fondo', 'Fondo de toda la invitación'],
-  surface: ['Tarjetas', 'Tarjeta de regalos'],
+  surface: ['Recuadros', 'Fondo del álbum y de la confirmación'],
   ink: ['Texto', 'Texto principal y títulos'],
   muted: ['Texto secundario', 'Notas y ayudas'],
   primary: ['Principal', 'Botones, nombres, sobre'],

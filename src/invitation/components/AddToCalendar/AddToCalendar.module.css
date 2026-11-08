@@ -24,3 +24,12 @@
   text-underline-offset: 3px;
   cursor: pointer;
 }
+
+/* Its button sits in the parent's row; the options take a line of their own below. */
+.inline {
+  display: contents;
+}
+
+.inline .options {
+  flex-basis: 100%;
+}

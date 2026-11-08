@@ -127,6 +127,8 @@ export const publicContentSchema = z.object({
     cornerTL: httpUrl.optional(),
     cornerBR: httpUrl.optional(),
     side: httpUrl.optional(),
+    /** On the corner of the last bank-details note. */
+    gifts: httpUrl.optional(),
   }),
   family: z
     .object({
@@ -213,7 +215,8 @@ export const publicContentSchema = z.object({
     }),
   ),
   /** Script titles of the sections; missing ones use the defaults in the invitation. */
-  titles: z.partialRecord(z.enum(SECTION_IDS), text(60)).optional(),
+  // An emptied title field comes as undefined: it means the default.
+  titles: z.partialRecord(z.enum(SECTION_IDS), text(60).optional()).optional(),
   theme: themeSchema,
   customFonts: z.array(customFontSchema),
 });

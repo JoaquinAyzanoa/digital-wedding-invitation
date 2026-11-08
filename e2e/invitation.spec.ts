@@ -16,8 +16,9 @@ test.describe('invitation (demo)', () => {
     await expect(page).toHaveTitle('Valeria & Mateo · Nuestra boda');
 
     for (const heading of [
-      'Ceremonia',
-      'Recepción',
+      '¿Cómo llegar?',
+      'Ubicación ceremonia',
+      'Ubicación recepción',
       'Itinerario de actividades',
       'Gracias',
       'Dress code',
@@ -71,6 +72,8 @@ test.describe('invitation (demo)', () => {
   });
 
   test('copies a payment method', async ({ page }) => {
+    // The pinned notes sway forever: Playwright would wait for the button to stand still.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/?i=demo');
     await openEnvelope(page);
     const copy = page.getByRole('button', { name: 'Copiar Yape / Plin' });
@@ -82,7 +85,7 @@ test.describe('invitation (demo)', () => {
   test('adds the ceremony to Google Calendar at the right time', async ({ page }) => {
     await page.goto('/?i=demo');
     await openEnvelope(page);
-    await page.getByRole('button', { name: 'Agregar al calendario' }).first().click();
+    await page.getByRole('button', { name: 'Agendar' }).first().click();
     const href = await page
       .getByRole('link', { name: 'Google Calendar' })
       .first()

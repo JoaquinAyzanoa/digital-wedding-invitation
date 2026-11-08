@@ -117,6 +117,20 @@ describe('Invitation states', () => {
     ).toEqual(['blanco', 'crema', 'vino']);
   });
 
+  it('the main photo is a cover with the names over it; the others are plain', () => {
+    const content = structuredClone(demoContent);
+    content.photos.hero = 'https://example.com/storage/photos/a-2000.webp';
+    content.photos.divider1 = 'https://example.com/storage/photos/b-2000.webp';
+    renderInvitation({ content });
+    const covers = document.querySelectorAll('main [data-cover="true"]');
+    expect(covers).toHaveLength(1);
+    const cover = within(covers[0] as HTMLElement);
+    expect(cover.getByText('Nuestra boda')).toBeInTheDocument();
+    expect(cover.getByText('Valeria &')).toBeInTheDocument();
+    expect(cover.getByText('Mateo')).toBeInTheDocument();
+    expect(document.querySelectorAll('main img[src*="/photos/"]')).toHaveLength(2);
+  });
+
   it('shows the RSVP notice under its title', () => {
     const content = structuredClone(demoContent);
     content.rsvp.notice = 'Amamos a los pequeños, pero esta celebración será solo para adultos';

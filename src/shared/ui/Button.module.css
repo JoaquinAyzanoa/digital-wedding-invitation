@@ -3,16 +3,15 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-width: min(100%, 260px);
-  min-height: 52px;
-  padding: 12px 32px;
+  min-height: 42px;
+  padding: 9px 24px;
   border: 1.5px solid var(--color-primary);
   border-radius: 999px;
   background: var(--color-primary);
   color: #fff;
   font-family: var(--font-serif);
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.05em;
   text-align: center;
@@ -43,4 +42,12 @@
 .outline {
   background: transparent;
   color: var(--color-primary);
+}
+
+/* Small, like the reference's "VER MAPA". */
+.small {
+  min-height: 32px;
+  padding: 5px 16px;
+  font-size: 13px;
+  letter-spacing: 0.07em;
 }

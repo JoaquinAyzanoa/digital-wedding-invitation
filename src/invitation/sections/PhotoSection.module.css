@@ -16,3 +16,61 @@
   margin-top: -6%;
   object-fit: cover;
 }
+
+/* The main photo is a cover: taller, edge to edge at the top, the names written over the sky. */
+.photo[data-cover='true'] {
+  aspect-ratio: auto;
+  height: 100vh;
+  height: 100svh;
+  max-height: 1000px;
+  min-height: 520px;
+  mask-image: linear-gradient(transparent, #000 3%, #000 84%, transparent);
+}
+
+.photo[data-cover='true'] .image {
+  filter: brightness(0.9) contrast(0.95);
+}
+
+/* A soft veil behind the words, so white stays legible over a bright sky. */
+.photo[data-cover='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgb(20 18 16 / 0.42), rgb(20 18 16 / 0.12) 34%, transparent 52%);
+  pointer-events: none;
+}
+
+.title {
+  position: absolute;
+  inset: 7% var(--gutter) auto;
+  z-index: 1;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 14px rgb(0 0 0 / 0.28);
+}
+
+.kicker {
+  font-family: var(--font-script);
+  font-size: clamp(30px, 9vw, 44px);
+  line-height: 1.1;
+  opacity: 0.92;
+}
+
+.names {
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 10.5vw, 56px);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.names span {
+  display: block;
+}
+
+/* First thing on the page (the welcome hidden): the photo starts right at the top edge. */
+h1 + .photo[data-cover='true'] {
+  mask-image: linear-gradient(#000 84%, transparent);
+}

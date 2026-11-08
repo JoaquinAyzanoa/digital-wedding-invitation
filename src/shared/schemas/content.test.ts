@@ -20,6 +20,12 @@ describe('content schema', () => {
     expect(privateContentSchema.safeParse(privateData).error).toBeUndefined();
   });
 
+  it('an emptied section title (undefined in the form) means the default', () => {
+    const content = structuredClone(demoContent);
+    content.titles = { ...content.titles, events: undefined };
+    expect(publicContentSchema.safeParse(content).error).toBeUndefined();
+  });
+
   it('rejects an invalid color and an unknown icon', () => {
     const bad = structuredClone(demoContent) as unknown as {
       theme: { colors: { primary: string } };

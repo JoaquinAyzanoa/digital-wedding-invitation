@@ -8,17 +8,19 @@ interface PhotoProps {
   src: string;
   alt: string;
   priority?: boolean;
+  /** Written over the photo, like the cover of a wedding album. */
+  cover?: { bride: string; groom: string };
 }
 
 /** Full-width photo that fades into the background at the top and bottom, with light parallax. */
-export function Photo({ src, alt, priority = false }: PhotoProps) {
+export function Photo({ src, alt, priority = false, cover }: PhotoProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
   const y = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
 
   return (
-    <div ref={ref} className={styles.photo}>
+    <div ref={ref} className={styles.photo} data-cover={cover ? 'true' : undefined}>
       <motion.img
         src={src}
         // Photos uploaded from the admin come in two sizes (see admin/data/storage.ts).
@@ -35,6 +37,20 @@ export function Photo({ src, alt, priority = false }: PhotoProps) {
         decoding="async"
         {...(priority ? { fetchPriority: 'high' as const } : {})}
       />
+      {cover && (
+        <motion.div
+          className={styles.title}
+          initial={reducedMotion ? false : { opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className={styles.kicker}>Nuestra boda</p>
+          <p className={styles.names}>
+            <span>{cover.bride} &amp;</span> <span>{cover.groom}</span>
+          </p>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -48,6 +64,9 @@ export function SlotPhoto({ content, slot }: { content: PublicContent; slot: Pho
       src={src}
       alt={`${content.couple.bride} y ${content.couple.groom}`}
       priority={slot === 'hero'}
+      {...(slot === 'hero'
+        ? { cover: { bride: content.couple.bride, groom: content.couple.groom } }
+        : {})}
     />
   );
 }

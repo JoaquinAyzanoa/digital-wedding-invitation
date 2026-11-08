@@ -3,43 +3,53 @@ import {
   calendarUid,
   eventCalendarEntry,
 } from '@/invitation/components/AddToCalendar/weddingEvents';
+import { useEffect } from 'react';
 import { Reveal } from '@/invitation/components/Reveal';
-import { Flourish } from '@/invitation/components/Stationery/Flourish';
 import { Icon } from '@/shared/icons/Icon';
+import { loadFonts } from '@/shared/theme/fonts';
 import { ButtonLink } from '@/shared/ui/Button';
-import { formatTime12 } from '@/shared/utils/time';
 import styles from './EventsSection.module.css';
 import { Section } from './Section';
 import text from './text.module.css';
-import type { SectionProps } from './types';
+import { sectionTitle, type SectionProps } from './types';
 
+/** The reference writes "¿Cómo llegar?" with a dry brush, not the page's calligraphy. */
+const BRUSH = { source: 'google', family: 'Comforter Brush' } as const;
+
+/** "¿Cómo llegar?": where each event is, with its map (the times are in the itinerary). */
 export function EventsSection({ content, entry }: SectionProps) {
+  useEffect(() => {
+    void loadFonts([BRUSH], [], { id: 'wi-brush-font' });
+  }, []);
   if (content.events.length === 0) return null;
   return (
-    <Section content={content} entry={entry}>
-      {content.events.map((event, i) => (
-        <Reveal key={`${event.kind}-${i}`} className={styles.event}>
-          <Icon
-            name={event.kind === 'ceremony' ? 'church' : 'glasses'}
-            size={84}
-            className={text.goldIcon}
-          />
-          <h2 className={styles.title}>{event.title}</h2>
-          <Flourish />
-          {event.intro && <p className={text.body}>{event.intro}</p>}
-          <p className={styles.time}>Hora: {formatTime12(event.time)}</p>
-          <p className={text.upper}>{event.venue}</p>
-          {event.address && <p className={styles.address}>{event.address}</p>}
-          <div className={styles.actions}>
-            {event.mapsUrl && <ButtonLink href={event.mapsUrl}>Ver ubicación</ButtonLink>}
-            <AddToCalendar
-              event={eventCalendarEntry(event, content)}
-              uid={calendarUid(event.kind, content)}
-              filename={`boda-${event.kind}.ics`}
-            />
+    <Section content={content} entry={entry} labelledBy="events-title">
+      <Reveal className={styles.places}>
+        <Icon name="location" size={34} className={text.goldIcon} />
+        <h2 id="events-title" className={styles.title}>
+          {sectionTitle(content, 'events')}
+        </h2>
+        {content.events.map((event, i) => (
+          <div key={`${event.kind}-${i}`} className={styles.place}>
+            <h3 className={styles.kind}>Ubicación {event.title.toLowerCase()}</h3>
+            <p className={styles.venue}>{event.venue}</p>
+            {event.address && <p className={styles.address}>{event.address}</p>}
+            <div className={styles.actions}>
+              {event.mapsUrl && (
+                <ButtonLink href={event.mapsUrl} size="small">
+                  Ver mapa
+                </ButtonLink>
+              )}
+              <AddToCalendar
+                event={eventCalendarEntry(event, content)}
+                uid={calendarUid(event.kind, content)}
+                filename={`boda-${event.kind}.ics`}
+                inline
+              />
+            </div>
           </div>
-        </Reveal>
-      ))}
+        ))}
+      </Reveal>
     </Section>
   );
 }

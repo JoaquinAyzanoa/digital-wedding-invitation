@@ -25,6 +25,8 @@ export const CURATED_FONTS: Record<FontRole, CuratedFont[]> = {
     { family: 'Italianno' },
     { family: 'Parisienne' },
     { family: 'Alex Brush' },
+    // A dry brush, casual: the reference's «¿Cómo llegar?».
+    { family: 'Comforter Brush' },
   ],
   serif: [
     { family: 'Cormorant Garamond', axes: 'ital,wght@0,400;0,500;0,600;1,400' },
