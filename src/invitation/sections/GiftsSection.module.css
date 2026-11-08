@@ -9,12 +9,18 @@
   max-width: 380px;
   padding: 72px 22px 44px;
   border-radius: 999px 999px 6px 6px / 190px 190px 6px 6px;
-  /* Paper: the pearl paper's fibres (--pearl-texture) printed into its colour, and a soft
-     shadow on the satin. */
+  /* Paper in the chosen colour: a veil of it over the paper's fibres (--paper-grain), and a
+     soft shadow on the satin. Not a blend mode: Safari ignores it there. */
   background-color: var(--color-surface);
-  background-image: var(--pearl-texture);
-  background-size: 437px auto;
-  background-blend-mode: multiply;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-surface) 85%, transparent),
+      color-mix(in srgb, var(--color-surface) 85%, transparent)
+    ),
+    var(--paper-grain);
+  background-size:
+    100% 100%,
+    437px auto;
   box-shadow:
     0 1px 2px rgb(60 48 36 / 0.1),
     0 14px 30px -14px rgb(60 48 36 / 0.35);

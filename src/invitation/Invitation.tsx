@@ -17,11 +17,16 @@ import { PaperEdgeContext } from './sections/paperEdgeContext';
 import { SECTION_COMPONENTS } from './sections/registry';
 import { ToastProvider } from '@/shared/toast/ToastProvider';
 import type { CodeStatus } from './useInvitationData';
+import paperGrain from './assets/paper-grain.webp';
 import paperTexture from './assets/paper.webp';
 
 /** The pearl paper of the stationery cards (sections/paper.module.css). Set from here: the
  *  bundler does not rewrite a url written in a CSS variable or in a composed stylesheet. */
-const PAPER_STYLE = { '--pearl-texture': `url(${paperTexture})` } as CSSProperties;
+const PAPER_STYLE = {
+  '--pearl-texture': `url(${paperTexture})`,
+  // The fibres in strong contrast, to show through a veil of a card's colour.
+  '--paper-grain': `url(${paperGrain})`,
+} as CSSProperties;
 
 interface InvitationProps {
   api: PublicApi;
