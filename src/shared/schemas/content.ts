@@ -49,6 +49,14 @@ const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora en formato 24 h
 
 // Only http(s): content URLs end up in href/src, and `javascript:` is a valid URL.
 const httpUrl = z.url({ protocol: /^https?$/, error: 'Debe ser un enlace https://' });
+
+/** A Bible verse (or any phrase) over a photo: the words, then the reference in italics. */
+export const photoQuoteSchema = z.object({
+  text: text(300),
+  reference: text(60).optional(),
+  color: hexColor.default('#FFFFFF'),
+});
+export type PhotoQuote = z.infer<typeof photoQuoteSchema>;
 const webAppUrl = z
   .string()
   .regex(
@@ -118,6 +126,8 @@ export const publicContentSchema = z.object({
     .nullable()
     .optional(),
   photos: z.record(z.enum(PHOTO_SLOTS), httpUrl.nullable()),
+  /** A verse written at the top of a photo (only the photos that have one). */
+  photoQuotes: z.partialRecord(z.enum(PHOTO_SLOTS), photoQuoteSchema).default({}),
   /**
    * A short pre-wedding video behind the envelope (muted, in a loop). Its poster frame is
    * stored next to it: the same name ending in `-poster.jpg` (see coverPoster).
@@ -171,6 +181,15 @@ export const publicContentSchema = z.object({
     /** A board of outfit ideas (Pinterest…), behind "Ver inspiración". */
     inspirationUrl: httpUrl.optional(),
   }),
+  /** A card beside the dress code («Evento solo para adultos»); shown when it has a text. */
+  adultsOnly: z
+    .object({
+      title: text(60).optional(),
+      text: text(300).optional(),
+      /** An ink drawing (made transparent when uploaded), like the itinerary's. */
+      image: httpUrl.optional(),
+    })
+    .optional(),
   gifts: z.object({ text: text(500) }),
   rsvp: z.object({
     deadline: dateOrDateTime,

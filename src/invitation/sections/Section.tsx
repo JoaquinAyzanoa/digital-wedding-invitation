@@ -26,6 +26,7 @@ export function Section({ content, entry, children, className, labelledBy }: Sec
       className={[styles.section, className].filter(Boolean).join(' ')}
       aria-labelledby={labelledBy}
       data-paper-edge={paperEdge}
+      data-section={entry.id}
     >
       {paperEdge && <Garland className={styles.garland} />}
       {flowers && revealEnabled && (

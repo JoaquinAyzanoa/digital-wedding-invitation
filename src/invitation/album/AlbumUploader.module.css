@@ -8,14 +8,14 @@
 }
 
 .summary {
-  font-size: 19px;
-  line-height: 1.4;
+  font-size: 17px;
+  line-height: 1.25;
 }
 
 .hint {
   margin-top: -6px;
   color: var(--color-muted);
-  font-size: 16px;
+  font-size: 14.5px;
 }
 
 .list {
@@ -40,7 +40,7 @@
   border-radius: 10px;
   background: var(--color-surface);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .name {

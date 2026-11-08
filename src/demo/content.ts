@@ -17,6 +17,7 @@ export const demoContent: PublicContent = {
   dateIntro: 'Tenemos el honor de invitarte a la ceremonia religiosa que se celebrará el día:',
   music: null,
   photos: { hero: null, divider1: null, divider2: null, divider3: null, closing: null },
+  photoQuotes: {},
   decorations: {},
   family: {
     parents: {
@@ -60,6 +61,9 @@ export const demoContent: PublicContent = {
     title: 'Elegante',
     notes: ['Damas: vestido largo', 'Caballeros: terno'],
     avoidColors: ['#FFFFFF', '#E9DCCB', '#7A1020'],
+  },
+  adultsOnly: {
+    text: 'Amamos a los pequeños de la familia, pero esta vez celebraremos una noche solo para adultos.',
   },
   gifts: {
     text: 'Tu presencia hace que este día sea inolvidable. Si te nace tener un gesto especial con nosotros, estos son los medios disponibles:',
@@ -108,7 +112,7 @@ export const demoContent: PublicContent = {
     { id: 'album', visible: true, decor: 'left' },
   ],
   titles: {
-    itinerary: 'Itinerario de actividades',
+    itinerary: 'Itinerario de nuestra boda',
     gifts: 'Gracias',
     dressCode: 'Dress code',
     album: 'Álbum de recuerdos',

@@ -1,4 +1,4 @@
-﻿.places {
+.places {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6,11 +6,11 @@
   width: 100%;
 }
 
-/* Smaller than the other titles, in a dry brush, like the reference. */
+/* The titles' calligraphy, smaller than the other titles, like the reference. */
 .title {
   margin-top: 4px;
-  font-family: 'Comforter Brush', var(--font-script);
-  font-size: clamp(34px, 9.5vw, 42px);
+  font-family: var(--font-script);
+  font-size: clamp(30px, 8.4vw, 36px);
   font-weight: 400;
   line-height: 1.2;
   color: var(--color-ink);
@@ -32,7 +32,7 @@
 /* "UBICACIÓN CEREMONIA": plain serif capitals in a soft grey, like the reference. */
 .kind {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -41,14 +41,14 @@
 
 .venue {
   margin-top: 6px;
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 500;
 }
 
 .address {
   max-width: 26ch;
-  font-size: 18px;
-  line-height: 1.4;
+  font-size: 16px;
+  line-height: 1.25;
 }
 
 /* Map and calendar side by side; the calendar options open on a line below. */

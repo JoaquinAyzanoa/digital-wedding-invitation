@@ -8,7 +8,7 @@ export function FarewellSection({ content, entry }: SectionProps) {
   return (
     <Section content={content} entry={entry}>
       <Reveal>
-        <p className={text.upper} style={{ maxWidth: '22ch', fontSize: 21 }}>
+        <p className={text.upper} style={{ maxWidth: '22ch', fontSize: 19 }}>
           {content.farewell}
         </p>
       </Reveal>

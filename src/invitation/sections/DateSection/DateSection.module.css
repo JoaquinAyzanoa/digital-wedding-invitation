@@ -12,7 +12,7 @@
 }
 
 .kicker {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -21,7 +21,7 @@
 .names {
   display: grid;
   font-family: var(--font-script);
-  font-size: clamp(60px, 18vw, 84px);
+  font-size: clamp(54px, 16.2vw, 75.5px);
   line-height: 1.05;
   color: var(--color-primary);
 }
@@ -45,8 +45,8 @@
 
 .intro {
   max-width: 30ch;
-  font-size: 20px;
-  line-height: 1.55;
+  font-size: 18px;
+  line-height: 1.28;
 }
 
 .date {
@@ -58,7 +58,7 @@
 }
 
 .month {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -74,7 +74,7 @@
 .side {
   padding: 10px 0;
   border-block: 1.5px solid var(--color-accent);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -83,7 +83,7 @@
 
 .day {
   padding: 0 18px;
-  font-size: 76px;
+  font-size: 68.5px;
   font-weight: 500;
   line-height: 1;
   color: var(--color-primary);

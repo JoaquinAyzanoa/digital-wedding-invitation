@@ -15,7 +15,10 @@
   place-items: center;
   overflow: hidden auto;
   padding: max(24px, env(safe-area-inset-top)) var(--gutter) max(24px, env(safe-area-inset-bottom));
-  background: var(--color-bg);
+  /* The same ivory satin as the page, under the same veil (Invitation.module.css). */
+  background:
+    linear-gradient(rgb(254 253 251 / 0.68), rgb(254 253 251 / 0.68)),
+    #f3efe8 url('../../assets/satin.webp') center / cover no-repeat;
 }
 
 .content {

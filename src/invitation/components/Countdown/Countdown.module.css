@@ -6,7 +6,7 @@
 }
 
 .title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -31,7 +31,7 @@
   display: block;
   overflow: hidden;
   height: 1.15em;
-  font-size: clamp(44px, 13vw, 58px);
+  font-size: clamp(39.5px, 11.7vw, 52px);
   line-height: 1.15;
   color: var(--color-primary);
   font-variant-numeric: lining-nums tabular-nums;
@@ -42,18 +42,18 @@
 }
 
 .colon {
-  font-size: clamp(36px, 10vw, 48px);
+  font-size: clamp(32.5px, 9vw, 43px);
   line-height: 1.4;
   color: var(--color-ink);
 }
 
 .label {
-  font-size: 17px;
+  font-size: 15.5px;
   color: var(--color-ink);
 }
 
 .done {
   font-family: var(--font-script);
-  font-size: 44px;
+  font-size: 39.5px;
   color: var(--color-primary);
 }

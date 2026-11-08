@@ -359,6 +359,48 @@ export function StringListField({
 const HEX = /^#[0-9a-f]{6}$/i;
 
 /** A short list of colors: a swatch to pick each one and its code, e.g. colors to avoid. */
+/** One colour: a swatch to pick it and the hex code to type it. */
+export function ColorField({ name, label }: { name: Path; label: string }) {
+  const id = useId();
+  const { control } = useFormContext<ContentForm>();
+  const error = useFieldError(name);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const value = typeof field.value === 'string' ? field.value : '';
+        return (
+          <div className={ui.field}>
+            <label htmlFor={id} className={ui.label}>
+              {label}
+            </label>
+            <div className={styles.stringItem}>
+              <input
+                type="color"
+                className={styles.colorSwatch}
+                value={HEX.test(value) ? value : '#000000'}
+                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                aria-label={`${label}: elegir color`}
+              />
+              <input
+                id={id}
+                className={ui.input}
+                value={value}
+                aria-invalid={Boolean(error)}
+                spellCheck={false}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+              />
+            </div>
+            <ErrorText id={`${id}-error`} message={error} />
+          </div>
+        );
+      }}
+    />
+  );
+}
+
 export function ColorListField({
   name,
   label,

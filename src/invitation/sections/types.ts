@@ -12,7 +12,7 @@ export interface SectionProps {
 
 const DEFAULT_TITLES: Partial<Record<SectionId, string>> = {
   events: '¿Cómo llegar?',
-  itinerary: 'Itinerario de actividades',
+  itinerary: 'Itinerario de nuestra boda',
   gifts: 'Gracias',
   dressCode: 'Dress code',
   album: 'Álbum de recuerdos',

@@ -50,14 +50,14 @@
 }
 
 .time {
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0.04em;
   font-variant-numeric: lining-nums;
   text-transform: uppercase;
 }
 
 .label {
-  font-size: 16px;
+  font-size: 14.5px;
   line-height: 1.25;
   letter-spacing: 0.08em;
   text-transform: uppercase;

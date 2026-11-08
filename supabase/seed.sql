@@ -57,6 +57,9 @@ set public_data = $json$
     "notes": ["Color blanco reservado para la novia"],
     "avoidColors": ["#FFFFFF", "#7A1020"]
   },
+  "adultsOnly": {
+    "text": "Amamos a los pequeños de la familia, pero esta vez celebraremos una noche solo para adultos."
+  },
   "gifts": {
     "text": "Tu presencia hace que este día sea inolvidable. Si te nace tener un gesto especial con nosotros, estos son los medios disponibles:"
   },
@@ -93,7 +96,7 @@ set public_data = $json$
     { "id": "album", "visible": true, "decor": "left" }
   ],
   "titles": {
-    "itinerary": "Itinerario de actividades",
+    "itinerary": "Itinerario de nuestra boda",
     "gifts": "Gracias",
     "dressCode": "Dress code",
     "album": "Álbum de recuerdos",

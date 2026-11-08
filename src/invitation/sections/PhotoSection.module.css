@@ -28,6 +28,9 @@
 }
 
 .photo[data-cover='true'] .image {
+  /* Taller than the frame and hung from the top: the photo sits higher, its lower part (the
+     legs) is cut off and only the faces and the names show before it fades. */
+  height: 132%;
   filter: brightness(0.9) contrast(0.95);
 }
 
@@ -73,4 +76,49 @@
 /* First thing on the page (the welcome hidden): the photo starts right at the top edge. */
 h1 + .photo[data-cover='true'] {
   mask-image: linear-gradient(#000 84%, transparent);
+}
+
+/* Light words over a photo: a soft shade behind them, like the cover's. */
+.photo[data-quote='light']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 12%, rgb(20 18 16 / 0.32) 24%, transparent 50%);
+  pointer-events: none;
+}
+
+/* A verse at the top of a photo, where the fade into the page ends (below the names on the
+   cover). Its colour is the couple's choice, a little see-through. */
+.top {
+  position: absolute;
+  inset: 21% var(--gutter) auto;
+  z-index: 1;
+}
+
+.quote {
+  max-width: 30ch;
+  margin: 0 auto;
+  color: color-mix(in srgb, var(--quote-color) 80%, transparent);
+  text-align: center;
+  text-shadow: var(--quote-halo);
+}
+
+.title .quote {
+  margin-top: 16px;
+}
+
+.quoteText {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.quoteReference {
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-size: 15.5px;
+  font-style: italic;
+  letter-spacing: 0.02em;
 }

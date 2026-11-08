@@ -41,3 +41,10 @@
   align-self: flex-start;
   margin-top: -6px;
 }
+
+/* A photo and its verse. */
+.photoSlot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

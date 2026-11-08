@@ -3,24 +3,16 @@ import {
   calendarUid,
   eventCalendarEntry,
 } from '@/invitation/components/AddToCalendar/weddingEvents';
-import { useEffect } from 'react';
 import { Reveal } from '@/invitation/components/Reveal';
 import { Icon } from '@/shared/icons/Icon';
-import { loadFonts } from '@/shared/theme/fonts';
 import { ButtonLink } from '@/shared/ui/Button';
 import styles from './EventsSection.module.css';
 import { Section } from './Section';
 import text from './text.module.css';
 import { sectionTitle, type SectionProps } from './types';
 
-/** The reference writes "¿Cómo llegar?" with a dry brush, not the page's calligraphy. */
-const BRUSH = { source: 'google', family: 'Comforter Brush' } as const;
-
 /** "¿Cómo llegar?": where each event is, with its map (the times are in the itinerary). */
 export function EventsSection({ content, entry }: SectionProps) {
-  useEffect(() => {
-    void loadFonts([BRUSH], [], { id: 'wi-brush-font' });
-  }, []);
   if (content.events.length === 0) return null;
   return (
     <Section content={content} entry={entry} labelledBy="events-title">

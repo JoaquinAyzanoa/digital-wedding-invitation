@@ -77,7 +77,7 @@ describe('Invitation states', () => {
     const headings = page()
       .getAllByRole('heading', { level: 2, hidden: true })
       .map((h) => h.textContent);
-    expect(headings).toEqual(['Dress code', 'Itinerario de actividades']);
+    expect(headings).toEqual(['Dress code', 'Itinerario de nuestra boda']);
   });
 
   it('with a pre-wedding video: it plays muted behind the envelope, no countdown', async () => {
@@ -129,6 +129,44 @@ describe('Invitation states', () => {
     expect(cover.getByText('Valeria &')).toBeInTheDocument();
     expect(cover.getByText('Mateo')).toBeInTheDocument();
     expect(document.querySelectorAll('main img[src*="/photos/"]')).toHaveLength(2);
+  });
+
+  it('a photo can carry a verse at its top: the words, then the reference', () => {
+    const content = structuredClone(demoContent);
+    content.photos.hero = 'https://example.com/storage/photos/a-2000.webp';
+    content.photos.divider1 = 'https://example.com/storage/photos/b-2000.webp';
+    content.photoQuotes = {
+      hero: {
+        text: 'Lo que Dios juntó, no lo separe el hombre.',
+        reference: 'Mateo 19:6',
+        color: '#FFFFFF',
+      },
+      divider1: { text: 'El amor es paciente.', color: '#3A2E2A' },
+    };
+    renderInvitation({ content });
+    const cover = within(document.querySelector('main [data-cover="true"]') as HTMLElement);
+    expect(cover.getByText('Lo que Dios juntó, no lo separe el hombre.')).toBeInTheDocument();
+    expect(cover.getByText('Mateo 19:6').tagName).toBe('FIGCAPTION');
+    const divider = document.querySelector('main [data-quote="dark"]') as HTMLElement;
+    expect(within(divider).getByText('El amor es paciente.')).toBeInTheDocument();
+  });
+
+  it('the adults-only card stands beside the dress code, only with a text', () => {
+    renderInvitation();
+    expect(
+      page().getByRole('heading', { name: 'Evento solo para adultos', hidden: true }),
+    ).toBeInTheDocument();
+    expect(page().getByText(/celebraremos una noche solo para adultos/)).toBeInTheDocument();
+  });
+
+  it('without the adults text, the dress code card stands alone', () => {
+    const content = structuredClone(demoContent);
+    delete content.adultsOnly;
+    renderInvitation({ content });
+    expect(
+      page().queryByRole('heading', { name: 'Evento solo para adultos', hidden: true }),
+    ).toBeNull();
+    expect(page().getByRole('heading', { name: 'Dress code', hidden: true })).toBeInTheDocument();
   });
 
   it('shows the RSVP notice under its title', () => {

@@ -19,7 +19,7 @@ test.describe('invitation (demo)', () => {
       '¿Cómo llegar?',
       'Ubicación ceremonia',
       'Ubicación recepción',
-      'Itinerario de actividades',
+      'Itinerario de nuestra boda',
       'Gracias',
       'Dress code',
       'Álbum de recuerdos',

@@ -1,5 +1,5 @@
 import { MotionConfig } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { PublicApi } from '@/shared/api';
 import type { FontRef, PublicContent } from '@/shared/schemas/content';
 import type { InvitationView } from '@/shared/schemas/invitation';
@@ -17,6 +17,11 @@ import { PaperEdgeContext } from './sections/paperEdgeContext';
 import { SECTION_COMPONENTS } from './sections/registry';
 import { ToastProvider } from '@/shared/toast/ToastProvider';
 import type { CodeStatus } from './useInvitationData';
+import paperTexture from './assets/paper.webp';
+
+/** The pearl paper of the stationery cards (sections/paper.module.css). Set from here: the
+ *  bundler does not rewrite a url written in a CSS variable or in a composed stylesheet. */
+const PAPER_STYLE = { '--pearl-texture': `url(${paperTexture})` } as CSSProperties;
 
 interface InvitationProps {
   api: PublicApi;
@@ -89,7 +94,13 @@ function InvitationPage({
     <>
       <RsvpContext value={rsvp}>
         <RevealContext value={envelopeOpen}>
-          <main ref={mainRef} className={styles.page} aria-hidden={!envelopeOpen} tabIndex={-1}>
+          <main
+            ref={mainRef}
+            className={styles.page}
+            style={PAPER_STYLE}
+            aria-hidden={!envelopeOpen}
+            tabIndex={-1}
+          >
             {/* The envelope's heading disappears with it: keep one for screen readers. */}
             <h1 className="visually-hidden">
               Invitación a la boda de {content.couple.bride} y {content.couple.groom}

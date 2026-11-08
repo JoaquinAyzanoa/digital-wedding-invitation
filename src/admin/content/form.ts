@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  PHOTO_SLOTS,
   privateContentSchema,
   publicContentSchema,
   type PrivateContent,
@@ -16,7 +17,14 @@ export interface ContentForm {
 function normalizePublic(value: unknown): unknown {
   const content = value as Partial<PublicContent> | null;
   if (!content || typeof content !== 'object') return value;
-  return { ...content, music: content.music?.url ? content.music : null };
+  return {
+    ...content,
+    music: content.music?.url ? content.music : null,
+    // A photo whose verse was left empty has none.
+    photoQuotes: Object.fromEntries(
+      Object.entries(content.photoQuotes ?? {}).filter(([, quote]) => quote?.text?.trim()),
+    ),
+  };
 }
 
 export const contentFormSchema = z.object({
@@ -34,6 +42,13 @@ export function toFormValues(content: PublicContent, privateContent: PrivateCont
       // empty one into null.
       music: content.music ?? { url: '', title: undefined },
       titles: content.titles ?? {},
+      // Every photo has its verse fields (empty ones are dropped on save).
+      photoQuotes: Object.fromEntries(
+        PHOTO_SLOTS.map((slot) => [
+          slot,
+          { text: '', color: '#FFFFFF', ...content.photoQuotes?.[slot] },
+        ]),
+      ),
     },
     private: privateContent,
   };
@@ -43,12 +58,12 @@ export function toFormValues(content: PublicContent, privateContent: PrivateCont
 export const CONTENT_SECTIONS = {
   couple: ['couple', 'date', 'dateIntro'],
   welcome: ['welcome', 'music'],
-  photos: ['photos', 'decorations', 'coverVideo'],
+  photos: ['photos', 'photoQuotes', 'decorations', 'coverVideo'],
   family: ['family'],
   events: ['events'],
   itinerary: ['itinerary', 'closingPhrase', 'closingSymbol'],
   gifts: ['gifts', 'private'],
-  dressCode: ['dressCode'],
+  dressCode: ['dressCode', 'adultsOnly'],
   rsvp: ['rsvp'],
   album: ['album', 'farewell'],
   sections: ['sections', 'titles'],

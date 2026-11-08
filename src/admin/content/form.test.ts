@@ -21,6 +21,14 @@ describe('content form', () => {
     expect(parsed.public.couple.bride).toBe('Valeria');
   });
 
+  it('every photo has its verse fields; empty verses are not saved', () => {
+    const values = toFormValues(demoContent, demoInvitation.private);
+    expect(values.public.photoQuotes.closing).toEqual({ text: '', color: '#FFFFFF' });
+    values.public.photoQuotes.hero = { text: 'Mateo 19:6', color: '#FFFFFF' };
+    const parsed = contentFormSchema.parse(values);
+    expect(Object.keys(parsed.public.photoQuotes)).toEqual(['hero']);
+  });
+
   it('keeps a song with its url', () => {
     const values = toFormValues(
       { ...demoContent, music: { url: 'https://x.co/song.mp3', title: 'Nuestra canción' } },
@@ -37,6 +45,7 @@ describe('content form', () => {
     expect(sectionOfPath('public.couple.bride')).toBe('couple');
     expect(sectionOfPath('public.closingPhrase')).toBe('itinerary');
     expect(sectionOfPath('private.gifts.0.label')).toBe('gifts');
+    expect(sectionOfPath('public.adultsOnly.text')).toBe('dressCode');
     expect(sectionOfPath('public.theme.colors.bg')).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { ContentEditor } from '@/admin/content/ContentEditor';
 import {
+  ColorField,
   ColorListField,
   DateField,
   ObjectListField,
@@ -250,19 +251,34 @@ export function ContentPage() {
           <Group {...group('photos')} title="Fotos y flores">
             <div className={styles.grid}>
               {PHOTO_SLOTS.map((slot) => (
-                <UploadField
-                  key={slot}
-                  name={`public.photos.${slot}`}
-                  label={PHOTO_LABELS[slot]}
-                  accept="image/*"
-                  kind="image"
-                  clearTo={null}
-                  upload={uploadPhoto}
-                />
+                <div key={slot} className={styles.photoSlot}>
+                  <UploadField
+                    name={`public.photos.${slot}`}
+                    label={PHOTO_LABELS[slot]}
+                    accept="image/*"
+                    kind="image"
+                    clearTo={null}
+                    upload={uploadPhoto}
+                  />
+                  <TextField
+                    name={`public.photoQuotes.${slot}.text`}
+                    label="Cita en la foto (opcional)"
+                    placeholder="Así que no son ya más dos, sino una sola carne…"
+                    multiline
+                  />
+                  <TextField
+                    name={`public.photoQuotes.${slot}.reference`}
+                    label="Referencia"
+                    placeholder="Mateo 19:6"
+                    emptyAsUndefined
+                  />
+                  <ColorField name={`public.photoQuotes.${slot}.color`} label="Color de la cita" />
+                </div>
               ))}
             </div>
             <p className={ui.hint}>
-              Las fotos se reducen en tu navegador (WebP de 2000 y 1000 px) antes de subirlas.
+              Las fotos se reducen en tu navegador (WebP de 2000 y 1000 px) antes de subirlas. La
+              cita va arriba de la foto: el texto y debajo la referencia en cursiva.
             </p>
             <UploadField
               name="public.coverVideo"
@@ -472,6 +488,28 @@ export function ContentPage() {
               hint="Un tablero de Pinterest con ideas de vestimenta: aparece el botón «Ver inspiración»."
               type="url"
               emptyAsUndefined
+            />
+            <p className={ui.muted}>Tarjeta al lado del dress code. Sin texto no se muestra.</p>
+            <TextField
+              name="public.adultsOnly.title"
+              label="Tarjeta «Solo adultos»: título (opcional)"
+              placeholder="Evento solo para adultos"
+              emptyAsUndefined
+            />
+            <TextField
+              name="public.adultsOnly.text"
+              label="Tarjeta «Solo adultos»: texto"
+              placeholder="Amamos a los pequeños de la familia, pero esta vez celebraremos una noche solo para adultos."
+              multiline
+              emptyAsUndefined
+            />
+            <UploadField
+              name="public.adultsOnly.image"
+              label="Tarjeta «Solo adultos»: ilustración (opcional)"
+              accept="image/png,image/jpeg,image/webp"
+              kind="image"
+              hint="Un dibujo a tinta sobre fondo blanco (el blanco se funde con el papel). Sin ilustración se muestran unas copas."
+              upload={uploadIllustration}
             />
           </Group>
 

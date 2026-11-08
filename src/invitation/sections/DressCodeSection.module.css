@@ -1,28 +1,124 @@
+/* The pair spreads a little past the section's margins, so each card has room. */
+.cards {
+  display: flex;
+  justify-content: center;
+  width: calc(100% + 28px);
+  margin-inline: -14px;
+}
+
+.slot {
+  width: min(100%, 300px);
+}
+
+/* Side by side: the dress code higher on the left, the adults' card lower on the right,
+   overlapping its edge a little and lying over it. */
+.cards[data-pair='true'] {
+  align-items: flex-start;
+}
+
+.cards[data-pair='true'] .slot {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.cards[data-pair='true'] .slot + .slot {
+  position: relative;
+  z-index: 1;
+  margin-top: 96px;
+  margin-left: -12px;
+}
+
+/* Pearl paper (paper.module.css), a fine double gold rule inside its edge and a layered
+   shadow that lifts it off the satin, like a thick card. */
+.card {
+  composes: pearl from './paper.module.css';
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px 26px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(120 100 80 / 0.08),
+    0 1px 1px rgb(60 48 36 / 0.1),
+    0 4px 10px -3px rgb(60 48 36 / 0.16),
+    0 20px 38px -18px rgb(60 48 36 / 0.42);
+  text-align: center;
+}
+
+.card::before,
+.card::after {
+  content: '';
+  position: absolute;
+  border: 1px solid var(--color-accent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.card::before {
+  inset: 8px;
+  opacity: 0.75;
+}
+
+.card::after {
+  inset: 11px;
+  opacity: 0.4;
+}
+
+.card[data-arch='true'] {
+  padding-top: 54px;
+  /* A round arch, a little taller than a half circle (percent: half the card's width). */
+  border-radius: 50% 50% 0 0 / 110px 110px 0 0;
+}
+
+.title {
+  padding-inline: 0.1em;
+  font-family: var(--font-script);
+  font-size: clamp(24px, 6.8vw, 29px);
+  font-weight: 400;
+  line-height: 1.08;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
 .icons {
   display: flex;
-  gap: 4px;
-  margin-bottom: -12px;
+  gap: 2px;
+}
+
+.drawing {
+  display: block;
+  width: 78%;
+  max-height: 110px;
+  object-fit: contain;
 }
 
 .code {
-  font-size: 22px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+.text {
+  font-size: 15.5px;
+  line-height: 1.25;
 }
 
 .avoid {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .avoidTitle {
-  font-size: 17px;
+  font-size: 11.5px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
@@ -30,7 +126,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -38,10 +134,15 @@
 
 /* A little bead of color: a fine ring keeps white and ivory visible on the paper. */
 .swatch {
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   box-shadow:
     inset 0 0 0 1px rgb(0 0 0 / 0.1),
     0 2px 5px rgb(0 0 0 / 0.12);
+}
+
+.button {
+  margin-top: 6px;
+  padding-inline: 12px;
 }
