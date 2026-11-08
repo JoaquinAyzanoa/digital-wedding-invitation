@@ -11,40 +11,84 @@
   display: block;
 }
 
+.defs {
+  position: absolute;
+}
+
+/* The fall: down the screen (here), wandering sideways (.drift) and tumbling (.leaf). */
 .petal {
   position: absolute;
   top: 0;
-  height: auto;
   opacity: 0;
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.08));
-  animation: fall var(--duration) linear var(--delay) both;
+  animation: fall var(--duration) var(--ease) var(--delay) both;
 }
 
+.drift {
+  display: block;
+  perspective: 240px;
+  animation: wander var(--duration) ease-in-out var(--delay) both;
+}
+
+/* The petal itself turns over and back as it falls (3D), so it catches the light. */
+.leaf {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgb(60 30 40 / 0.14));
+  animation: flutter var(--flutter) ease-in-out var(--delay) infinite alternate;
+}
+
+/* Down the screen at its own pace, fading away before the bottom at its own height. */
 @keyframes fall {
   0% {
-    transform: translate3d(0, -8vh, 0) rotate(var(--rotate));
+    transform: translate3d(0, -6vh, 0);
     opacity: 0;
   }
 
-  12% {
-    opacity: 0.95;
+  6% {
+    opacity: 1;
   }
 
-  33% {
-    transform: translate3d(var(--drift), 28vh, 0) rotate(calc(var(--rotate) + var(--spin) * 0.33));
-  }
-
-  66% {
-    transform: translate3d(calc(var(--drift) * -0.5), 64vh, 0)
-      rotate(calc(var(--rotate) + var(--spin) * 0.66));
-  }
-
-  85% {
-    opacity: 0.95;
+  62% {
+    opacity: 1;
   }
 
   100% {
-    transform: translate3d(var(--drift), 108vh, 0) rotate(calc(var(--rotate) + var(--spin)));
+    transform: translate3d(0, var(--end), 0);
     opacity: 0;
+  }
+}
+
+/* Side to side along its own path (--x1…--x4): eased between the points, so it turns in
+   smooth curves while it keeps falling, never in sharp zigzags. */
+@keyframes wander {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--rotate));
+  }
+
+  25% {
+    transform: translate3d(var(--x1), 0, 0) rotate(calc(var(--rotate) + var(--spin) * 0.25));
+  }
+
+  50% {
+    transform: translate3d(var(--x2), 0, 0) rotate(calc(var(--rotate) + var(--spin) * 0.5));
+  }
+
+  75% {
+    transform: translate3d(var(--x3), 0, 0) rotate(calc(var(--rotate) + var(--spin) * 0.75));
+  }
+
+  100% {
+    transform: translate3d(var(--x4), 0, 0) rotate(calc(var(--rotate) + var(--spin)));
+  }
+}
+@keyframes flutter {
+  from {
+    transform: rotate3d(var(--axis), -55deg);
+  }
+
+  to {
+    transform: rotate3d(var(--axis), 55deg);
   }
 }
