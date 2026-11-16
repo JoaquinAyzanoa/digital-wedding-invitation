@@ -209,6 +209,9 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
   await expect(page.getByRole('heading', { name: 'Diseño' })).toBeVisible();
 
   await page.getByLabel('Principal', { exact: true }).fill('#8A3B5C');
+  // The seal alone can have a color of its own; empty, it follows the accent.
+  await expect(page.getByLabel('Sello de cera', { exact: true })).toHaveValue('');
+  await page.getByLabel('Sello de cera', { exact: true }).fill('#8B1E2D');
   // Each calligraphy is a card written in its own font.
   await expect(page.getByRole('radio', { name: 'Mea Culpa' })).toBeChecked();
   await page.getByText('Great Vibes', { exact: true }).click();
@@ -230,6 +233,11 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
         .evaluate((el) => getComputedStyle(el).getPropertyValue('--font-script')),
     )
     .toContain('Great Vibes');
+  await expect
+    .poll(async () =>
+      preview.locator('html').evaluate((el) => getComputedStyle(el).getPropertyValue('--seal')),
+    )
+    .toBe('#8b1e2d');
   await page.getByRole('button', { name: 'Cerrar' }).click();
   await save(page);
 
@@ -246,6 +254,7 @@ test('changes the theme, previews it and restores the defaults', async ({ page, 
 
   await page.getByRole('button', { name: 'Restaurar valores por defecto' }).click();
   await expect(page.getByLabel('Principal', { exact: true })).toHaveValue('#4F6496');
+  await expect(page.getByLabel('Sello de cera', { exact: true })).toHaveValue('');
   await expect(page.getByRole('radio', { name: 'Mea Culpa' })).toBeChecked();
   await save(page);
 });

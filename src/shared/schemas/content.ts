@@ -100,6 +100,10 @@ export const themeSchema = z.object({
     primary: hexColor,
     accent: hexColor,
     line: hexColor,
+    /** The envelope's paper; none means it follows the primary (the accent over a video). */
+    envelope: hexColor.optional(),
+    /** The wax seal; none means it follows the accent. */
+    seal: hexColor.optional(),
   }),
   fonts: z.object({
     script: fontRefSchema,

@@ -13,6 +13,13 @@ export interface ContentForm {
   private: PrivateContent;
 }
 
+/** The envelope and seal colors are empty while editing when they follow the theme. */
+function withoutEmptyColors(colors: PublicContent['theme']['colors'] | undefined) {
+  if (!colors) return colors;
+  const { envelope, seal, ...base } = colors;
+  return { ...base, ...(envelope && { envelope }), ...(seal && { seal }) };
+}
+
 /** The editor keeps `music` as an object while editing; no song means `null`. */
 function normalizePublic(value: unknown): unknown {
   const content = value as Partial<PublicContent> | null;
@@ -20,6 +27,7 @@ function normalizePublic(value: unknown): unknown {
   return {
     ...content,
     music: content.music?.url ? content.music : null,
+    theme: content.theme && { ...content.theme, colors: withoutEmptyColors(content.theme.colors) },
     // A photo whose verse was left empty has none.
     photoQuotes: Object.fromEntries(
       Object.entries(content.photoQuotes ?? {}).filter(([, quote]) => quote?.text?.trim()),
@@ -42,6 +50,15 @@ export function toFormValues(content: PublicContent, privateContent: PrivateCont
       // empty one into null.
       music: content.music ?? { url: '', title: undefined },
       titles: content.titles ?? {},
+      // An empty envelope or seal color follows the theme (dropped on save).
+      theme: {
+        ...content.theme,
+        colors: {
+          ...content.theme.colors,
+          envelope: content.theme.colors.envelope ?? '',
+          seal: content.theme.colors.seal ?? '',
+        },
+      },
       // Every photo has its verse fields (empty ones are dropped on save).
       photoQuotes: Object.fromEntries(
         PHOTO_SLOTS.map((slot) => [

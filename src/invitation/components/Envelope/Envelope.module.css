@@ -1,6 +1,6 @@
 .overlay {
   /* The paper's inks (also read by the shared SVG patterns): overridden over the video. */
-  --hint-ink: rgb(255 255 255 / 0.92);
+  --hint-ink: var(--env-ink);
   --liner: #fbf7ef;
   --liner-ink: var(--color-accent);
   /* Ivory, not white: the light edge of the embossing shows on it. */
@@ -433,7 +433,7 @@
 /* ------------------------------------------------- the pre-wedding video cover */
 
 .overlay[data-video='true'] {
-  /* The envelope turns warm paper over the video (derived from the theme's gold). */
+  /* Over the video the envelope is warm paper from the gold (or its own colour, if chosen). */
   --env: var(--paper);
   --env-side: var(--paper-side);
   --env-bottom: var(--paper-bottom);
@@ -525,7 +525,7 @@
 }
 
 .overlay[data-video='true'] .amp {
-  color: var(--seal-hi);
+  color: var(--gold-hi);
 }
 
 .overlay[data-video='true'] .date {
@@ -539,10 +539,10 @@
   filter: drop-shadow(0 18px 26px rgb(0 0 0 / 0.38));
 }
 
-/* On light paper the hint is engraved in dark gold, not white; the card is all gold ink. */
+/* On light paper the hint is engraved in dark gold (theme.ts picks it); the card is gold ink. */
 .overlay[data-video='true'] {
-  --hint-ink: var(--seal-lo);
-  --card-ink: var(--seal-lo);
+  --hint-ink: var(--paper-ink);
+  --card-ink: var(--gold-lo);
 }
 
 .overlay[data-video='true'] .notFound {
@@ -573,5 +573,5 @@
   font-weight: 600;
   font-size: 1.35em;
   letter-spacing: 0.04em;
-  color: var(--seal-hi);
+  color: var(--gold-hi);
 }

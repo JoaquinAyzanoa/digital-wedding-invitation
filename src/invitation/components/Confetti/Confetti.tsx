@@ -6,9 +6,9 @@ import styles from './Confetti.module.css';
 const COLORS = [
   'var(--color-primary)',
   'var(--color-accent)',
-  'var(--seal-hi)',
-  'var(--env-side)',
-  'var(--env-inside)',
+  'var(--gold-hi)',
+  'var(--primary-soft)',
+  'var(--primary-deep)',
 ];
 
 const PIECES = Array.from({ length: 44 }, (_, i) => {

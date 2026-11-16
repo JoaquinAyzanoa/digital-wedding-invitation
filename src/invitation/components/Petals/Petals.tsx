@@ -3,10 +3,10 @@ import type { CSSProperties, Ref } from 'react';
 import { seededRandom } from '@/shared/utils/random';
 import styles from './Petals.module.css';
 
-// Rose petals in the theme's rose (from the envelope's colours), blush and ivory.
-const COLORS = ['var(--env-side)', 'var(--env-bottom)', '#f3dfe2', '#fbf5f1'];
+// Rose petals in soft shades of the primary, blush and ivory.
+const COLORS = ['var(--primary-soft)', 'var(--primary-pale)', '#f3dfe2', '#fbf5f1'];
 // Over the cover video: ivory, blush and a touch of gold, like the envelope's paper.
-const COVER_COLORS = ['#fbf5f1', '#f3dfe2', 'var(--seal-hi)', '#f7ece4'];
+const COVER_COLORS = ['#fbf5f1', '#f3dfe2', 'var(--gold-hi)', '#f7ece4'];
 
 const PETALS = Array.from({ length: 22 }, (_, i) => {
   const r = (n: number) => seededRandom(i * 97 + n * 7919);

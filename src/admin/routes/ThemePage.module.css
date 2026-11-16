@@ -10,6 +10,13 @@
   align-items: flex-start;
 }
 
+/* The hex code, and "Automático" beside it once the color is one of its own. */
+.colorInput {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .swatch {
   flex-shrink: 0;
   width: 44px;

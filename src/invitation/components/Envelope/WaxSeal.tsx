@@ -83,12 +83,12 @@ export function WaxSeal({ monogram, shine = false, className }: WaxSealProps) {
       <defs>
         <radialGradient id={`${id}-wax`} cx="36%" cy="30%" r="78%">
           <stop offset="0" style={{ stopColor: 'var(--seal-hi)' }} />
-          <stop offset="0.45" style={{ stopColor: 'var(--color-accent)' }} />
+          <stop offset="0.45" style={{ stopColor: 'var(--seal)' }} />
           <stop offset="1" style={{ stopColor: 'var(--seal-lo)' }} />
         </radialGradient>
         <radialGradient id={`${id}-well`} cx="64%" cy="70%" r="80%">
           <stop offset="0" style={{ stopColor: 'var(--seal-well-hi)' }} />
-          <stop offset="0.6" style={{ stopColor: 'var(--color-accent)' }} />
+          <stop offset="0.6" style={{ stopColor: 'var(--seal)' }} />
           <stop offset="1" style={{ stopColor: 'var(--seal-well-lo)' }} />
         </radialGradient>
         <linearGradient id={`${id}-shine`} x1="0" x2="1">

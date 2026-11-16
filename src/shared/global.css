@@ -9,16 +9,24 @@
   --color-line: #e6e1d8;
 
   /* Derived shades (theme.ts derivedColors), computed in JS for old in-app browsers */
+  --primary-soft: #abb6cf;
+  --primary-pale: #b7c0d5;
+  --primary-deep: #7e8fb3;
+  --primary-a55: rgb(79 100 150 / 0.55);
+  --primary-a25: rgb(79 100 150 / 0.25);
   --env: #9facc8;
   --env-side: #abb6cf;
   --env-bottom: #b7c0d5;
   --env-inside: #7e8fb3;
-  --primary-a55: rgb(79 100 150 / 0.55);
-  --primary-a25: rgb(79 100 150 / 0.25);
+  --env-ink: rgb(255 255 255 / 0.92);
   --paper: #e8d6bd;
   --paper-side: #ecddc6;
   --paper-bottom: #f0e4d1;
   --paper-inside: #dcc6a4;
+  --paper-ink: #93764a;
+  --gold-hi: #e7d6bd;
+  --gold-lo: #93764a;
+  --seal: #c9a46c;
   --seal-hi: #e7d6bd;
   --seal-lo: #93764a;
   --seal-well-hi: #d9bf98;

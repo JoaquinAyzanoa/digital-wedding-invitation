@@ -9,10 +9,13 @@ import ui from '@/admin/ui/ui.module.css';
 import type { CustomFont, FontRef, ThemeColor } from '@/shared/schemas/content';
 import { contrastRatio, MIN_TEXT_CONTRAST } from '@/shared/theme/contrast';
 import { CURATED_FONTS, fontStack, loadFonts, type FontRole } from '@/shared/theme/fonts';
-import { DEFAULT_THEME } from '@/shared/theme/theme';
+import { DEFAULT_THEME, derivedColors } from '@/shared/theme/theme';
 import styles from './ThemePage.module.css';
 
-const COLOR_LABELS: Record<ThemeColor, [string, string]> = {
+/** The envelope and the seal have a color of their own only if one is chosen. */
+type OwnColor = 'envelope' | 'seal';
+
+const COLOR_LABELS: Record<Exclude<ThemeColor, OwnColor>, [string, string]> = {
   bg: ['Fondo', 'Fondo de toda la invitación'],
   surface: ['Recuadros', 'Fondo del álbum y de la confirmación'],
   ink: ['Texto', 'Texto principal y títulos'],
@@ -21,6 +24,13 @@ const COLOR_LABELS: Record<ThemeColor, [string, string]> = {
   accent: ['Acento', 'Íconos dorados, líneas y sello'],
   line: ['Líneas', 'Bordes suaves'],
 };
+
+const OWN_COLOR_LABELS: Record<OwnColor, [string, string]> = {
+  envelope: ['Papel del sobre', 'Vacío: sale del Principal (del Acento con video de portada)'],
+  seal: ['Sello de cera', 'Vacío: sale del Acento'],
+};
+
+const HEX = /^#[0-9a-f]{6}$/i;
 
 const ROLE_LABELS: Record<FontRole, [string, string]> = {
   script: ['Caligrafía', 'Nombres y títulos'],
@@ -62,44 +72,84 @@ function fontId(family: string): string {
   return `${slug || 'fuente'}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-function ColorField({ token }: { token: ThemeColor }) {
+/**
+ * A theme color. With `automatic`, the field may stay empty: the color then follows the
+ * theme, and the swatch shows the one it follows.
+ */
+function ColorField({
+  token,
+  label,
+  hint,
+  automatic,
+}: {
+  token: ThemeColor;
+  label: string;
+  hint: string;
+  automatic?: { color: string | undefined };
+}) {
   const id = useId();
   const { control } = useFormContext<ContentForm>();
-  const [label, hint] = COLOR_LABELS[token];
   return (
     <Controller
       control={control}
       name={`public.theme.colors.${token}`}
-      render={({ field, fieldState }) => (
-        <div className={styles.color}>
-          <input
-            type="color"
-            className={styles.swatch}
-            value={/^#[0-9a-f]{6}$/i.test(field.value) ? field.value : '#000000'}
-            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-            aria-label={`${label}: elegir color`}
-          />
-          <div className={ui.field}>
-            <label htmlFor={id} className={ui.label}>
-              {label}
-            </label>
+      render={({ field, fieldState }) => {
+        const value = field.value ?? '';
+        const swatch = HEX.test(value) ? value : (automatic?.color ?? '#000000');
+        return (
+          <div className={styles.color}>
             <input
-              id={id}
-              className={ui.input}
-              value={field.value}
-              onChange={(e) => field.onChange(e.target.value)}
-              onBlur={field.onBlur}
-              aria-invalid={Boolean(fieldState.error)}
-              spellCheck={false}
+              type="color"
+              className={styles.swatch}
+              value={swatch}
+              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+              aria-label={`${label}: elegir color`}
             />
-            <span className={fieldState.error ? ui.error : ui.hint}>
-              {fieldState.error?.message ?? hint}
-            </span>
+            <div className={ui.field}>
+              <label htmlFor={id} className={ui.label}>
+                {label}
+              </label>
+              <div className={styles.colorInput}>
+                <input
+                  id={id}
+                  className={ui.input}
+                  value={value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  onBlur={field.onBlur}
+                  placeholder={automatic ? 'Automático' : undefined}
+                  aria-invalid={Boolean(fieldState.error)}
+                  spellCheck={false}
+                />
+                {automatic && value && (
+                  <Btn size="sm" variant="ghost" onClick={() => field.onChange('')}>
+                    Automático
+                  </Btn>
+                )}
+              </div>
+              <span className={fieldState.error ? ui.error : ui.hint}>
+                {fieldState.error?.message ?? hint}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      }}
     />
   );
+}
+
+/** What the envelope and the seal look like while they follow the theme. */
+function useAutomaticColors(): Record<OwnColor, string | undefined> {
+  const { control } = useFormContext<ContentForm>();
+  const colors = useWatch({ control, name: 'public.theme.colors' });
+  const video = useWatch({ control, name: 'public.coverVideo' });
+  if (!HEX.test(colors?.primary ?? '') || !HEX.test(colors?.accent ?? '')) {
+    return { envelope: undefined, seal: undefined };
+  }
+  const derived = derivedColors({ ...colors, envelope: undefined, seal: undefined });
+  return {
+    envelope: (video ? derived['--paper'] : derived['--env'])?.toUpperCase(),
+    seal: derived['--seal']?.toUpperCase(),
+  };
 }
 
 function ContrastWarnings() {
@@ -319,6 +369,7 @@ function useAdminFonts() {
 function ThemeFields() {
   const { setValue, control } = useFormContext<ContentForm>();
   const couple = useWatch({ control, name: 'public.couple' });
+  const automatic = useAutomaticColors();
   useAdminFonts();
   const names = `${couple?.bride || 'Novia'} & ${couple?.groom || 'Novio'}`;
   return (
@@ -326,11 +377,30 @@ function ThemeFields() {
       <div className={ui.card}>
         <h2 className={ui.cardTitle}>Colores</h2>
         <div className={styles.colors}>
-          {(Object.keys(COLOR_LABELS) as ThemeColor[]).map((token) => (
-            <ColorField key={token} token={token} />
+          {Object.entries(COLOR_LABELS).map(([token, [label, hint]]) => (
+            <ColorField key={token} token={token as ThemeColor} label={label} hint={hint} />
           ))}
         </div>
         <ContrastWarnings />
+      </div>
+
+      <div className={ui.card}>
+        <h2 className={ui.cardTitle}>Sobre</h2>
+        <p className={ui.hint}>
+          Para cambiar solo el papel del sobre o solo su sello. Vacíos, siguen a los colores de
+          arriba.
+        </p>
+        <div className={styles.colors}>
+          {(Object.keys(OWN_COLOR_LABELS) as OwnColor[]).map((token) => (
+            <ColorField
+              key={token}
+              token={token}
+              label={OWN_COLOR_LABELS[token][0]}
+              hint={OWN_COLOR_LABELS[token][1]}
+              automatic={{ color: automatic[token] }}
+            />
+          ))}
+        </div>
       </div>
 
       <div className={ui.card}>
@@ -347,12 +417,12 @@ function ThemeFields() {
       <Btn
         variant="secondary"
         className={styles.reset}
-        onClick={() =>
-          setValue('public.theme', structuredClone(DEFAULT_THEME), {
-            shouldDirty: true,
-            shouldValidate: true,
-          })
-        }
+        onClick={() => {
+          const theme = structuredClone(DEFAULT_THEME);
+          // Empty, not missing: a missing value would show the one loaded with the page.
+          theme.colors = { ...theme.colors, envelope: '', seal: '' };
+          setValue('public.theme', theme, { shouldDirty: true, shouldValidate: true });
+        }}
       >
         Restaurar valores por defecto
       </Btn>

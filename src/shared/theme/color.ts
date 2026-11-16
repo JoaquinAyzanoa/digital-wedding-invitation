@@ -19,6 +19,11 @@ export function mix(a: string, b: string, weight: number): string {
   return toHex(ca.map((c, i) => c * weight + cb[i]! * (1 - weight)) as Rgb);
 }
 
+/** A deeper tone of `hex`, as paper in shadow: further from white, never below 80 % of it. */
+export function deepen(hex: string, amount = 0.4): string {
+  return toHex(parseHex(hex).map((c) => Math.max(c * (1 + amount) - 255 * amount, c * 0.8)) as Rgb);
+}
+
 export function withAlpha(hex: string, alpha: number): string {
   const [r, g, b] = parseHex(hex);
   return `rgb(${r} ${g} ${b} / ${alpha})`;

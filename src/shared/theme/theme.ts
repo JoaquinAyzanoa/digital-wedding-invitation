@@ -1,5 +1,6 @@
 import type { CustomFont, Theme } from '@/shared/schemas/content';
-import { mix, withAlpha } from './color';
+import { deepen, mix, withAlpha } from './color';
+import { contrastRatio } from './contrast';
 import { fontStack, loadFonts } from './fonts';
 
 export const DEFAULT_THEME: Theme = {
@@ -19,26 +20,68 @@ export const DEFAULT_THEME: Theme = {
   },
 };
 
-/** Shades derived from the base tokens: envelope paper and wax seal. */
-export function derivedColors({ primary, accent }: Theme['colors']): Record<string, string> {
+const WHITE_INK = 'rgb(255 255 255 / 0.92)';
+
+/** Paper in a chosen colour: the face as picked, lighter folds and a deeper inside. */
+function paperShades(color: string) {
   return {
-    '--env': mix(primary, '#eef3fa', 0.5),
-    '--env-side': mix(primary, '#f3f6fb', 0.44),
-    '--env-bottom': mix(primary, '#f6f8fc', 0.38),
-    '--env-inside': mix(primary, '#e3e9f2', 0.68),
+    face: color,
+    side: mix(color, '#ffffff', 0.86),
+    bottom: mix(color, '#ffffff', 0.72),
+    inside: deepen(color),
+  };
+}
+
+/**
+ * Shades derived from the base tokens: envelope paper, wax seal and the gold around them.
+ * The envelope and the seal take their own colour when one is chosen, and only they do.
+ */
+export function derivedColors({
+  primary,
+  accent,
+  envelope,
+  seal,
+}: Theme['colors']): Record<string, string> {
+  const goldLo = mix(accent, '#3b2a12', 0.62);
+  const wax = (seal || accent).toLowerCase();
+  const own = envelope ? paperShades(envelope) : null;
+  // The engraved hint on a chosen paper: white or dark gold, whichever reads better on it.
+  const ownInk =
+    envelope && contrastRatio('#ffffff', envelope) < contrastRatio(goldLo, envelope)
+      ? goldLo
+      : WHITE_INK;
+  const primarySoft = mix(primary, '#f3f6fb', 0.44);
+  const primaryPale = mix(primary, '#f6f8fc', 0.38);
+  const primaryDeep = mix(primary, '#e3e9f2', 0.68);
+  return {
+    // Petals and confetti.
+    '--primary-soft': primarySoft,
+    '--primary-pale': primaryPale,
+    '--primary-deep': primaryDeep,
     '--primary-a55': withAlpha(primary, 0.55),
     '--primary-a25': withAlpha(primary, 0.25),
-    // Over the cover video the envelope is warm paper (from the gold), not the primary.
-    '--paper': mix(accent, '#f5ece0', 0.3),
-    '--paper-side': mix(accent, '#f8f1e6', 0.26),
-    '--paper-bottom': mix(accent, '#fbf6ee', 0.22),
-    '--paper-inside': mix(accent, '#eadfcd', 0.42),
-    '--seal-hi': mix(accent, '#ffffff', 0.45),
-    '--seal-lo': mix(accent, '#3b2a12', 0.62),
-    '--seal-well-hi': mix(accent, '#ffffff', 0.7),
-    '--seal-well-lo': mix(accent, '#3b2a12', 0.75),
-    '--seal-emboss-hi': mix(accent, '#ffffff', 0.4),
-    '--seal-emboss-lo': mix(accent, '#2a1d0a', 0.55),
+    // The envelope's paper: from the primary...
+    '--env': own?.face ?? mix(primary, '#eef3fa', 0.5),
+    '--env-side': own?.side ?? primarySoft,
+    '--env-bottom': own?.bottom ?? primaryPale,
+    '--env-inside': own?.inside ?? primaryDeep,
+    '--env-ink': own ? ownInk : WHITE_INK,
+    // ...and over the cover video, warm paper from the gold.
+    '--paper': own?.face ?? mix(accent, '#f5ece0', 0.3),
+    '--paper-side': own?.side ?? mix(accent, '#f8f1e6', 0.26),
+    '--paper-bottom': own?.bottom ?? mix(accent, '#fbf6ee', 0.22),
+    '--paper-inside': own?.inside ?? mix(accent, '#eadfcd', 0.42),
+    '--paper-ink': own ? ownInk : goldLo,
+    // Gold details on the cover: the "&", the seats, the card's ink.
+    '--gold-hi': mix(accent, '#ffffff', 0.45),
+    '--gold-lo': goldLo,
+    '--seal': wax,
+    '--seal-hi': mix(wax, '#ffffff', 0.45),
+    '--seal-lo': mix(wax, '#3b2a12', 0.62),
+    '--seal-well-hi': mix(wax, '#ffffff', 0.7),
+    '--seal-well-lo': mix(wax, '#3b2a12', 0.75),
+    '--seal-emboss-hi': mix(wax, '#ffffff', 0.4),
+    '--seal-emboss-lo': mix(wax, '#2a1d0a', 0.55),
   };
 }
 
@@ -46,6 +89,8 @@ export function derivedColors({ primary, accent }: Theme['colors']): Record<stri
 export function themeVariables(theme: Theme): Record<string, string> {
   const vars: Record<string, string> = {};
   for (const [token, value] of Object.entries(theme.colors)) {
+    // Optional: the envelope and the seal reach the page only through their derived shades.
+    if (token === 'envelope' || token === 'seal') continue;
     vars[`--color-${token}`] = value;
   }
   for (const [role, ref] of Object.entries(theme.fonts)) {

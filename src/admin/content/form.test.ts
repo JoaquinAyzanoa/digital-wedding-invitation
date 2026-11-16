@@ -40,6 +40,18 @@ describe('content form', () => {
     });
   });
 
+  it('an empty envelope or seal color follows the theme; a chosen one is saved', () => {
+    const values = toFormValues(demoContent, demoInvitation.private);
+    expect(values.public.theme.colors.envelope).toBe('');
+    expect(values.public.theme.colors.seal).toBe('');
+    expect(contentFormSchema.parse(values).public.theme.colors).not.toHaveProperty('envelope');
+
+    values.public.theme.colors.seal = '#8B1E2D';
+    const colors = contentFormSchema.parse(values).public.theme.colors;
+    expect(colors.seal).toBe('#8B1E2D');
+    expect(colors).not.toHaveProperty('envelope');
+  });
+
   it('finds the editor section of an invalid field', () => {
     expect(sectionOfPath('public.events.1.time')).toBe('events');
     expect(sectionOfPath('public.couple.bride')).toBe('couple');
