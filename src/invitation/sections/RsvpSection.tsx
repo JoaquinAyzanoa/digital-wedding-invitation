@@ -89,7 +89,7 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
             Aquí
           </Button>
           <p className={text.small}>
-            Confirmanos antes del {dayMonthInLima(content.rsvp.deadline)}.
+            Confírmanos antes del {dayMonthInLima(content.rsvp.deadline)}.
           </p>
         </>
       );
