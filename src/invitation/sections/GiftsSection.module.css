@@ -26,14 +26,24 @@
     0 14px 30px -14px rgb(60 48 36 / 0.35);
 }
 
-.card::before {
+/* Two fine rules inside the edge, in the accent: like those on the notes pinned to it. */
+.card::before,
+.card::after {
   content: '';
   position: absolute;
-  inset: 12px;
-  border: 1px solid var(--color-muted);
+  border: 1px solid var(--color-accent);
   border-radius: inherit;
-  opacity: 0.6;
   pointer-events: none;
+}
+
+.card::before {
+  inset: 12px;
+  opacity: 0.75;
+}
+
+.card::after {
+  inset: 16px;
+  opacity: 0.4;
 }
 
 /* Bank details as notes pinned on the card, like the reference: white paper, a fine double
