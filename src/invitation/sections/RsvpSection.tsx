@@ -84,8 +84,13 @@ export function RsvpSection({ content, invitation, entry }: SectionProps) {
     if (invitation.rsvpOpen) {
       return (
         <>
-          <Button onClick={() => setEditing(true)}>Confirma aquí</Button>
-          <p className={text.small}>Confirma antes del {dayMonthInLima(content.rsvp.deadline)}.</p>
+          {/* Under the "Confirmar asistencia" title, the word alone is enough to read. */}
+          <Button onClick={() => setEditing(true)} aria-label="Confirma aquí">
+            Aquí
+          </Button>
+          <p className={text.small}>
+            Confirmanos antes del {dayMonthInLima(content.rsvp.deadline)}.
+          </p>
         </>
       );
     }
