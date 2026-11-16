@@ -37,6 +37,8 @@
   --font-script: 'Mea Culpa', cursive;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Jost', system-ui, sans-serif;
+  /* Fixed, not themed: the envelope's "Clic para abrir" (fonts.ts HINT_FONT). */
+  --font-hint: 'Italianno', cursive;
 
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --page-width: 480px;

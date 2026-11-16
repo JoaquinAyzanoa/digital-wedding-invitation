@@ -1,7 +1,7 @@
 import type { CustomFont, Theme } from '@/shared/schemas/content';
 import { deepen, mix, withAlpha } from './color';
 import { contrastRatio } from './contrast';
-import { fontStack, loadFonts } from './fonts';
+import { fontStack, HINT_FONT, loadFonts } from './fonts';
 
 export const DEFAULT_THEME: Theme = {
   colors: {
@@ -99,7 +99,10 @@ export function themeVariables(theme: Theme): Record<string, string> {
   return { ...vars, ...derivedColors(theme.colors) };
 }
 
-/** Applies the theme to `:root`, loads its fonts and resolves when the script font is usable. */
+/**
+ * Applies the theme to `:root`, loads its fonts (and the envelope hint's) and resolves when
+ * the calligraphies on the envelope are usable.
+ */
 export function applyTheme(
   theme: Theme,
   customFonts: CustomFont[],
@@ -110,6 +113,7 @@ export function applyTheme(
   }
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.colors.bg);
 
-  const refs = Object.values(theme.fonts);
-  return loadFonts(refs, customFonts, { waitFor: fontStack(theme.fonts.script, 'script') });
+  const refs = [...Object.values(theme.fonts), HINT_FONT];
+  const waitFor = `${fontStack(theme.fonts.script, 'script')}, ${fontStack(HINT_FONT, 'script')}`;
+  return loadFonts(refs, customFonts, { waitFor });
 }

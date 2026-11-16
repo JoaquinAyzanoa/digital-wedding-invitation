@@ -46,6 +46,9 @@ export const CURATED_FONTS: Record<FontRole, CuratedFont[]> = {
   ],
 };
 
+/** The envelope's "Clic para abrir", handwritten in this calligraphy whatever the theme's. */
+export const HINT_FONT: FontRef = { source: 'google', family: 'Italianno' };
+
 const FALLBACKS: Record<FontRole, string> = {
   script: 'cursive',
   serif: 'Georgia, "Times New Roman", serif',
