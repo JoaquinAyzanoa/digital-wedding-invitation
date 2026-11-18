@@ -567,9 +567,9 @@
   text-wrap: balance;
 }
 
-/* White like the words around it, only larger. */
+/* White like the words around it, only larger and bold. */
 .reservedLine strong {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.35em;
   letter-spacing: 0.04em;
 }

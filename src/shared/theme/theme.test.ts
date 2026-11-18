@@ -8,7 +8,7 @@ describe('googleFontsUrl', () => {
   it('builds one CSS2 URL with the curated axes', () => {
     expect(googleFontsUrl(Object.values(DEFAULT_THEME.fonts))).toBe(
       'https://fonts.googleapis.com/css2?family=Mea+Culpa' +
-        '&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400' +
+        '&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400' +
         '&family=Jost:wght@300;400;500&display=swap',
     );
   });
